@@ -1,0 +1,2885 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>PULZ — Emergency Blood Network</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+tailwind.config = {
+  darkMode:"class",
+  theme:{
+    extend:{
+      colors:{
+        "primary":"#ffb3b1","primary-container":"#ff535b","on-primary":"#680011","on-primary-container":"#5b000e",
+        "secondary":"#bdf4ff","secondary-container":"#00e3fd","on-secondary":"#00363d","on-secondary-container":"#00616d",
+        "surface":"#121414","surface-container":"#1e2020","surface-container-high":"#282a2b","surface-container-highest":"#333535",
+        "surface-container-low":"#1a1c1c","surface-container-lowest":"#0c0f0f","surface-bright":"#37393a","surface-dim":"#121414",
+        "on-surface":"#e2e2e2","on-surface-variant":"#e4bebc","outline":"#ab8987","outline-variant":"#5b403f",
+        "background":"#0c0f0f","on-background":"#e2e2e2",
+        "error":"#ffb4ab","error-container":"#93000a","on-error":"#690005","on-error-container":"#ffdad6",
+        "tertiary":"#c5c6cb","tertiary-container":"#8f9195","on-tertiary":"#2e3034",
+        "inverse-surface":"#e2e2e2","inverse-on-surface":"#2f3131","inverse-primary":"#bb152c",
+      },
+      fontFamily:{
+        "syne":["Syne","sans-serif"],"grotesk":["Space Grotesk","sans-serif"],"manrope":["Manrope","sans-serif"]
+      }
+    }
+  }
+}
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#000;font-family:'Manrope',sans-serif}
+body{display:flex;align-items:center;justify-content:center}
+
+/* ── APP SHELL ──────────────────────────────────────── */
+#app{width:100%;max-width:430px;min-height:100svh;background:#0c0f0f;color:#e2e2e2;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+.screen{display:none;flex-direction:column;height:100svh;max-height:100svh;overflow:hidden;position:relative}
+.screen.active{display:flex;animation:fadeUp .22s ease-out}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+
+/* ── GLASS SYSTEM ───────────────────────────────────── */
+.glass{background:rgba(255,255,255,.05);backdrop-filter:blur(25px);border:1px solid rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.glass-active{background:rgba(255,255,255,.08);backdrop-filter:blur(40px);border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.glass-strong{background:rgba(255,255,255,.04);backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,.18);border-left:1px solid rgba(255,255,255,.18);border-bottom:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06)}
+
+/* ── TOP BAR ────────────────────────────────────────── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:60px;background:rgba(12,15,15,.55);backdrop-filter:blur(25px);border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0;position:relative;z-index:10}
+.topbar-brand{display:flex;align-items:center;gap:10px}
+.brand-icon{color:#ff535b;font-size:22px;line-height:1}
+.brand-name{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#ff535b;letter-spacing:1px;text-transform:uppercase}
+.topbar-back{display:flex;align-items:center;gap:6px;background:none;border:none;color:#e4bebc;font-family:'Manrope',sans-serif;font-size:14px;cursor:pointer;padding:6px 0}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.status-pill{display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;border:1px solid rgba(0,227,253,.3);background:rgba(0,227,253,.08);font-family:'Manrope',sans-serif;font-size:10px;font-weight:700;letter-spacing:.8px;color:#00e3fd;text-transform:uppercase}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#00e3fd;animation:pulse-dot 1.2s ease-in-out infinite}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
+.icon-btn{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);cursor:pointer;color:#9f8c8b;font-size:18px}
+
+/* ── BOTTOM NAV ─────────────────────────────────────── */
+.bnav{display:flex;background:rgba(12,15,15,.6);backdrop-filter:blur(40px);border-top:1px solid rgba(255,255,255,.1);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0px)}
+.nt{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px 12px;border:none;background:none;cursor:pointer;font-family:'Space Grotesk',sans-serif;color:rgba(255,255,255,.35);font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;transition:color .15s}
+.nt .ni{font-size:22px;line-height:1}
+.nt.on{color:#ff535b;filter:drop-shadow(0 0 8px rgba(255,83,91,.5))}
+
+/* ── COMMON COMPONENTS ──────────────────────────────── */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border:none;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-weight:700;border-radius:14px;transition:transform .1s,box-shadow .15s;letter-spacing:.3px}
+.btn:active{transform:scale(.97)}
+.btn-primary{width:100%;padding:17px;font-size:15px;color:#5b000e;background:#ffb3b1;box-shadow:0 0 20px rgba(255,179,177,.28);border-radius:14px}
+.btn-danger{width:100%;padding:17px;font-size:15px;color:#fff;background:linear-gradient(135deg,#93000a,#ff535b);box-shadow:0 4px 20px rgba(255,83,91,.35);border-radius:14px}
+.btn-cyan{width:100%;padding:17px;font-size:15px;color:#001f24;background:#00e3fd;box-shadow:0 0 20px rgba(0,227,253,.28);border-radius:14px}
+.btn-ghost{background:none;border:none;font-family:'Manrope',sans-serif;font-size:13px;color:#9f8c8b;cursor:pointer;text-align:center}
+.sect-label{font-size:10px;font-weight:700;color:#00e3fd;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+
+/* ── AMBIENT GLOWS ──────────────────────────────────── */
+.amb-red{position:absolute;width:60%;height:60%;border-radius:50%;background:rgba(187,21,44,.15);filter:blur(80px);pointer-events:none;z-index:0}
+.amb-cyan{position:absolute;width:50%;height:50%;border-radius:50%;background:rgba(0,227,253,.1);filter:blur(80px);pointer-events:none;z-index:0}
+
+/* ══════════════════════════════════════════════════════
+   SPLASH
+══════════════════════════════════════════════════════ */
+#splash{align-items:center;justify-content:center;background:#0c0f0f;overflow:hidden}
+.splash-glow-1{top:-10%;left:-10%}
+.splash-glow-2{bottom:-10%;right:-10%;background:rgba(0,227,253,.08)}
+.sp-drop{position:relative;width:160px;height:200px;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+.sp-drop-glow{position:absolute;inset:0;filter:drop-shadow(0 0 40px rgba(255,83,91,.5));animation:drop-pulse 2.5s ease-in-out infinite}
+@keyframes drop-pulse{0%,100%{filter:drop-shadow(0 0 30px rgba(255,83,91,.4))}50%{filter:drop-shadow(0 0 60px rgba(255,83,91,.7))}}
+.sp-inner-icon{position:absolute;font-size:36px;color:rgba(255,255,255,.5)}
+.sp-title{font-family:'Syne',sans-serif;font-size:38px;font-weight:800;letter-spacing:4px;text-transform:uppercase;color:#fff;position:relative;z-index:1}
+.sp-sub{font-size:11px;color:#9f8c8b;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px;position:relative;z-index:1}
+.sp-line{display:flex;align-items:center;gap:12px;opacity:.5;margin-bottom:48px;position:relative;z-index:1}
+.sp-line::before,.sp-line::after{content:'';flex:1;height:1px;background:#5b403f}
+.sp-line-txt{font-size:10px;color:#ab8987;letter-spacing:2px;white-space:nowrap}
+.sp-cta{position:relative;z-index:1;background:#ffb3b1;color:#370d0e;border:none;border-radius:14px;padding:17px 56px;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;letter-spacing:1px;cursor:pointer;box-shadow:0 0 30px rgba(255,179,177,.4);transition:transform .1s}
+.sp-cta:active{transform:scale(.97)}
+.sp-version{position:absolute;bottom:24px;font-size:10px;color:#5b403f;letter-spacing:2px;z-index:1}
+
+/* ══════════════════════════════════════════════════════
+   ROLE SELECT
+══════════════════════════════════════════════════════ */
+#roleSelect{overflow:hidden}
+.rs-body{flex:1;overflow-y:auto;padding:32px 20px 24px;position:relative;z-index:1}
+.rs-hero{text-align:center;margin-bottom:32px}
+.rs-h{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:#fff;margin-bottom:8px}
+.rs-p{font-size:14px;color:#9f8c8b;max-width:280px;margin:0 auto;line-height:1.6}
+.role-cards{display:flex;flex-direction:column;gap:14px;margin-bottom:24px}
+.role-card{display:flex;flex-direction:column;align-items:center;gap:16px;padding:28px 20px;border-radius:20px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
+.role-card:active{transform:scale(.98)}
+.role-card.red{background:rgba(147,0,10,.15);border:1px solid rgba(255,83,91,.25)}
+.role-card.cyan{background:rgba(0,54,61,.18);border:1px solid rgba(0,227,253,.2)}
+.rc-icon-wrap{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px}
+.rc-icon-wrap.red{background:rgba(255,83,91,.12);border:1px solid rgba(255,83,91,.25);box-shadow:0 0 20px rgba(255,83,91,.2)}
+.rc-icon-wrap.cyan{background:rgba(0,227,253,.1);border:1px solid rgba(0,227,253,.2);box-shadow:0 0 20px rgba(0,227,253,.15)}
+.rc-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;text-align:center}
+.rc-sub{font-size:13px;color:#9f8c8b;text-align:center;line-height:1.5}
+.rc-badge{padding:6px 18px;border-radius:20px;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-top:4px}
+.rc-badge.red{background:rgba(147,0,10,.3);border:1px solid rgba(255,83,91,.4);color:#ffdad8}
+.rc-badge.cyan{background:rgba(0,54,61,.3);border:1px solid rgba(0,227,253,.4);color:#9cefff}
+.trust-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.trust-item{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px}
+.trust-icon{font-size:14px;color:#00e3fd;flex-shrink:0}
+.trust-txt{font-size:11px;color:#9f8c8b;line-height:1.4}
+
+/* ══════════════════════════════════════════════════════
+   AUTH
+══════════════════════════════════════════════════════ */
+#authScreen{overflow:hidden;background:#0c0f0f}
+.auth-scroll{flex:1;overflow-y:auto;padding:20px 20px 32px;display:flex;flex-direction:column;gap:0;scrollbar-width:none}
+.auth-scroll::-webkit-scrollbar{display:none}
+/* role badge */
+.auth-role-badge{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;margin-bottom:20px}
+.auth-role-badge.recipient{background:rgba(147,0,10,.18);border:1px solid rgba(255,83,91,.22)}
+.auth-role-badge.donor{background:rgba(0,54,61,.18);border:1px solid rgba(0,227,253,.18)}
+.auth-role-icon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.auth-role-icon.recipient{background:rgba(255,83,91,.14)}
+.auth-role-icon.donor{background:rgba(0,227,253,.1)}
+.auth-role-txt{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#e2e2e2}
+.auth-role-sub{font-size:11px;color:#9f8c8b;margin-top:2px}
+/* heading */
+.auth-h{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:4px}
+.auth-p{font-size:13px;color:#9f8c8b;margin-bottom:18px;line-height:1.5}
+/* tabs */
+.auth-tabs{display:flex;background:rgba(255,255,255,.05);border-radius:12px;padding:4px;margin-bottom:16px;border:1px solid rgba(255,255,255,.07)}
+.auth-tab{flex:1;padding:11px;border:none;background:none;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#9f8c8b;cursor:pointer;border-radius:10px;transition:all .2s;letter-spacing:.3px}
+.auth-tab.on{background:rgba(255,255,255,.09);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+/* fields */
+.field-wrap{display:flex;flex-direction:column;gap:10px;margin-bottom:6px}
+.field-label{font-size:10px;font-weight:700;color:#9f8c8b;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.field-group{position:relative}
+.field-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;color:#5b403f}
+.field-input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#e2e2e2;border-radius:12px;padding:15px 16px 15px 46px;font-family:'Manrope',sans-serif;font-size:15px;outline:none;transition:border-color .2s,box-shadow .2s}
+.field-input:focus{border-color:rgba(0,227,253,.45);box-shadow:0 0 0 3px rgba(0,227,253,.08)}
+.field-input::placeholder{color:#3a2e2e}
+.auth-err{font-size:12px;color:#ffb4ab;min-height:16px;text-align:center;margin-bottom:4px}
+/* divider */
+.auth-divider{display:flex;align-items:center;gap:12px;color:#3a2e2e;font-size:11px;margin:14px 0}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.07)}
+/* google */
+.google-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#333;border:none;border-radius:12px;padding:14px;font-family:'Manrope',sans-serif;font-size:14px;font-weight:600;cursor:pointer;width:100%;box-shadow:0 2px 12px rgba(0,0,0,.25);transition:transform .1s;margin-bottom:14px}
+.google-btn:active{transform:scale(.97)}
+/* skip */
+.auth-skip{text-align:center;padding:12px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;margin-bottom:12px;cursor:pointer}
+.auth-skip a{color:#00e3fd;font-size:13px;font-weight:600;display:block;margin-bottom:3px;text-decoration:none}
+.auth-skip p{font-size:11px;color:#5b403f;margin:0}
+/* footer */
+.auth-footer-note{display:flex;align-items:center;justify-content:center;gap:6px;font-size:10px;color:#3a2e2e;letter-spacing:.5px}
+.auth-chip{display:none}
+.auth-step{display:none}.auth-progress{display:none}.auth-step-num{display:none}
+
+/* ══════════════════════════════════════════════════════
+   PROFILE SETUP
+══════════════════════════════════════════════════════ */
+#profileSetup{overflow:hidden}
+.setup-bar{display:flex;align-items:center;gap:10px;padding:0 20px;height:60px;background:rgba(12,15,15,.55);backdrop-filter:blur(25px);border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0}
+.setup-steps{display:flex;align-items:center;gap:6px;flex:1;justify-content:center}
+.ss-dot{width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;color:#5b403f;transition:all .25s;flex-shrink:0}
+.ss-dot.active{border-color:#00e3fd;color:#00e3fd;background:rgba(0,227,253,.1);box-shadow:0 0 10px rgba(0,227,253,.3)}
+.ss-dot.done{border-color:#00e3fd;background:#00e3fd;color:#001f24}
+.ss-line{flex:1;height:2px;background:rgba(255,255,255,.08);border-radius:1px;max-width:32px;transition:background .25s}
+.ss-line.done{background:#00e3fd}
+.setup-step-lbl{font-size:11px;color:#5b403f;font-weight:600;flex-shrink:0;min-width:40px;text-align:right}
+.setup-pane{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.setup-scroll{flex:1;overflow-y:auto;padding:28px 22px 0;scrollbar-width:none}
+.setup-scroll::-webkit-scrollbar{display:none}
+.setup-icon-wrap{width:60px;height:60px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:20px;flex-shrink:0}
+.setup-icon-wrap.red{background:rgba(147,0,10,.2);border:1px solid rgba(255,83,91,.25)}
+.setup-icon-wrap.cyan{background:rgba(0,54,61,.2);border:1px solid rgba(0,227,253,.25)}
+.setup-h{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;margin-bottom:6px;line-height:1.2;color:#fff}
+.setup-p{font-size:14px;color:#9f8c8b;margin-bottom:28px;line-height:1.55}
+.setup-field-lbl{font-size:10px;font-weight:700;color:#9f8c8b;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.setup-input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#e2e2e2;border-radius:12px;padding:15px 16px;font-family:'Manrope',sans-serif;font-size:16px;outline:none;transition:border-color .2s;margin-bottom:18px}
+.setup-input:focus{border-color:rgba(0,227,253,.5)}
+.setup-input::placeholder{color:#5b403f}
+.setup-footer{padding:16px 22px 32px;flex-shrink:0}
+.bt-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.bt-cell{aspect-ratio:1;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;color:#e2e2e2}
+.bt-cell.sel{border-color:#00e3fd;background:rgba(0,227,253,.12);color:#00e3fd;transform:scale(1.06)}
+.hash-note{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px 14px;font-size:12px;color:#5b403f;margin-top:8px}
+.hash-val{font-family:monospace;color:#00e3fd;font-size:11px}
+.pin-dots-row{display:flex;gap:14px;justify-content:center;margin:12px 0 28px}
+.pin-dot{width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.18);transition:all .15s}
+.pin-dot.filled{background:#00e3fd;border-color:#00e3fd;box-shadow:0 0 10px rgba(0,227,253,.5)}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:280px;margin:0 auto}
+.key{aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:#e2e2e2;cursor:pointer;transition:all .1s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.key:active{transform:scale(.9);background:rgba(255,255,255,.1)}
+.key-sub{font-family:'Space Grotesk',sans-serif;font-size:7px;font-weight:600;color:#9f8c8b;letter-spacing:1px;text-transform:uppercase}
+.key-emp{background:transparent;border:none;pointer-events:none}
+.key-del{background:transparent;border:1px solid rgba(255,255,255,.08);font-size:16px}
+
+/* ══════════════════════════════════════════════════════
+   RECIPIENT HOME
+══════════════════════════════════════════════════════ */
+#recipientHome{overflow:hidden}
+.rh-header{padding:24px 20px 56px;flex-shrink:0;position:relative;overflow:hidden;background:linear-gradient(160deg,#3d0008,#1a0003 70%,#0c0f0f)}
+.rh-header::before{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:rgba(255,83,91,.08);top:-80px;right:-80px;filter:blur(60px)}
+.rh-greet{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:4px}
+.rh-name{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:14px}
+.rh-stats{display:flex;gap:10px}
+.rh-stat-pill{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:5px 12px;font-size:11px;color:rgba(255,255,255,.8);font-weight:500}
+.rh-body{flex:1;overflow-y:auto;padding:0 18px 24px;margin-top:-36px;scrollbar-width:none}
+.rh-body::-webkit-scrollbar{display:none}
+/* SOS hold button */
+.sos-card{border-radius:20px;padding:24px;margin-bottom:14px;cursor:pointer;position:relative;overflow:hidden;background:linear-gradient(135deg,rgba(147,0,10,.6),rgba(255,83,91,.3));border:1.5px solid rgba(255,83,91,.4);box-shadow:0 8px 32px rgba(255,83,91,.2);user-select:none;-webkit-user-select:none}
+.sos-card::before{content:'';position:absolute;inset:0;background:rgba(255,83,91,0);transition:background .3s;border-radius:20px}
+.sos-card.held::before{background:rgba(255,83,91,.2)}
+.sos-ring{position:absolute;top:12px;right:12px;width:56px;height:56px;border-radius:50%;border:2px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:24px}
+.sos-ring-fill{position:absolute;inset:0;border-radius:50%;background:conic-gradient(rgba(255,83,91,.6) 0%, transparent 0%);transition:none}
+.sos-label{font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.6);text-transform:uppercase;margin-bottom:8px}
+.sos-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:4px}
+.sos-sub{font-size:13px;color:rgba(255,255,255,.65);margin-bottom:16px}
+.sos-pill{display:inline-block;background:rgba(255,83,91,.3);border:1px solid rgba(255,83,91,.5);color:#ffdad8;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;padding:5px 16px;border-radius:20px;letter-spacing:.5px}
+.active-banner{display:flex;align-items:center;gap:10px;background:rgba(251,140,0,.1);border:1px solid rgba(251,140,0,.3);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.active-blink{width:8px;height:8px;border-radius:50%;background:#fb8c00;flex-shrink:0;animation:blink 1s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.active-txt{font-size:13px;color:#fb8c00;font-weight:500}
+.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.qa-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px;cursor:pointer;transition:border-color .15s}
+.qa-card:active{border-color:#00e3fd}
+.qa-icon{font-size:22px;margin-bottom:6px}
+.qa-label{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#e2e2e2}
+.qa-sub{font-size:11px;color:#5b403f;margin-top:2px}
+.bb-cta{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#0d1f3c,#112240);border:1px solid rgba(0,227,253,.25);border-radius:16px;padding:16px 18px;margin-bottom:12px;cursor:pointer;transition:border-color .15s}
+.bb-cta:active{border-color:#00e3fd}
+.bb-cta-icon{width:44px;height:44px;border-radius:13px;background:rgba(0,227,253,.1);border:1px solid rgba(0,227,253,.2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.bb-cta-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#e2e2e2;margin-bottom:2px}
+.bb-cta-sub{font-size:11px;color:#9f8c8b}
+.info-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px;margin-bottom:12px}
+.info-card-head{font-size:10px;font-weight:700;color:#9f8c8b;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:12px}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px}
+.info-row:last-child{border:none}
+.info-lbl{color:#9f8c8b}
+.info-val{font-weight:600;color:#e2e2e2}
+
+/* ══════════════════════════════════════════════════════
+   REQUEST FLOW (3 steps in one screen)
+══════════════════════════════════════════════════════ */
+#requestModal{overflow:hidden}
+.rm-progress-bar{height:3px;background:rgba(255,255,255,.08);flex-shrink:0;overflow:hidden}
+.rm-progress-fill{height:100%;background:linear-gradient(90deg,#ff535b,#00e3fd);transition:width .35s;border-radius:0 2px 2px 0}
+.rm-scroll{flex:1;overflow-y:auto;padding:24px 20px;scrollbar-width:none}
+.rm-scroll::-webkit-scrollbar{display:none}
+.rm-step-lbl{font-size:10px;font-weight:700;color:#00e3fd;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+.rm-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:4px}
+.rm-sub{font-size:13px;color:#9f8c8b;margin-bottom:20px;line-height:1.5}
+.rm-search{position:relative;margin-bottom:14px}
+.rm-search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#5b403f;font-size:18px}
+.rm-search-input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#e2e2e2;border-radius:12px;padding:14px 16px 14px 44px;font-family:'Manrope',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.rm-search-input:focus{border-color:rgba(0,227,253,.4)}
+.rm-search-input::placeholder{color:#5b403f}
+.hosp-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.hosp-item{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .15s;position:relative}
+.hosp-item:active,.hosp-item.sel{border-color:#00e3fd;background:rgba(0,227,253,.06)}
+.hosp-hfr{position:absolute;top:12px;right:12px;font-size:10px;font-weight:700;background:rgba(0,227,253,.1);color:#00e3fd;padding:2px 8px;border-radius:8px;border:1px solid rgba(0,227,253,.2)}
+.hosp-name{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:#e2e2e2}
+.hosp-dist{font-size:12px;color:#9f8c8b;margin-top:2px}
+.bt-grid-lg{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
+.bt-cell-lg{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:20px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:14px;cursor:pointer;transition:all .15s}
+.bt-cell-lg:active,.bt-cell-lg.sel{border-color:#00e3fd;background:rgba(0,227,253,.1)}
+.bt-cell-lg-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#e2e2e2}
+.bt-cell-lg.sel .bt-cell-lg-val{color:#00e3fd}
+.bt-cell-lg-dot{width:8px;height:8px;border-radius:50%;background:transparent;transition:all .15s}
+.bt-cell-lg.sel .bt-cell-lg-dot{background:#00e3fd;box-shadow:0 0 10px #00e3fd}
+.upload-zone{border:2px dashed rgba(255,255,255,.12);border-radius:14px;padding:32px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;margin-bottom:20px;transition:border-color .2s}
+.upload-zone:active{border-color:#00e3fd}
+.upload-done{display:flex;align-items:center;gap:10px;background:rgba(0,127,63,.12);border:1px solid rgba(67,160,71,.3);border-radius:10px;padding:12px 15px;margin-bottom:16px;font-size:13px;color:#43a047}
+/* Confirm step */
+.confirm-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;cursor:pointer;transition:background .15s}
+.confirm-card:active{background:rgba(255,255,255,.08)}
+.confirm-card-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.confirm-card-icon.red{background:rgba(147,0,10,.2);border:1px solid rgba(255,83,91,.2)}
+.confirm-card-icon.cyan{background:rgba(0,54,61,.2);border:1px solid rgba(0,227,253,.2)}
+.confirm-lbl{font-size:10px;font-weight:700;color:#9f8c8b;letter-spacing:.8px;text-transform:uppercase;margin-bottom:3px}
+.confirm-val{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#e2e2e2}
+.confirm-meta{font-size:11px;color:#9f8c8b;margin-top:2px}
+.dispatch-btn{width:100%;background:rgba(147,0,10,.8);color:#fff;border:1.5px solid rgba(255,83,91,.4);border-radius:16px;padding:20px;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .1s;box-shadow:0 0 30px rgba(255,83,91,.3)}
+.dispatch-btn:active{transform:scale(.97)}
+
+/* ══════════════════════════════════════════════════════
+   LIVE STATUS
+══════════════════════════════════════════════════════ */
+#liveStatus{overflow:hidden}
+.ls-body{flex:1;overflow-y:auto;padding:18px 18px 24px;scrollbar-width:none}
+.ls-body::-webkit-scrollbar{display:none}
+/* T-minus timer */
+.tminus-card{background:linear-gradient(135deg,rgba(147,0,10,.7),rgba(255,83,91,.3));border:1px solid rgba(255,83,91,.35);border-radius:18px;padding:22px;margin-bottom:14px;position:relative;overflow:hidden}
+.tminus-card::before{content:'';position:absolute;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.04);top:-50px;right:-50px}
+.tminus-label{font-size:10px;color:rgba(255,255,255,.6);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px}
+.tminus-value{font-family:'Syne',sans-serif;font-size:56px;font-weight:800;color:#fff;line-height:1;letter-spacing:-2px}
+.tminus-sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:6px}
+/* Mission log stepper */
+.stepper{display:flex;flex-direction:column;margin-bottom:16px}
+.step-row{display:flex;gap:14px;position:relative}
+.step-row:not(:last-child)::after{content:'';position:absolute;left:17px;top:38px;width:2px;height:calc(100% - 14px);background:rgba(255,255,255,.08)}
+.step-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;z-index:1}
+.step-icon.done{background:#00e3fd;color:#001f24}
+.step-icon.active{background:rgba(0,227,253,.2);border:2px solid #00e3fd;color:#00e3fd;animation:step-pulse 1.5s ease-in-out infinite}
+@keyframes step-pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,227,253,.4)}50%{box-shadow:0 0 0 8px rgba(0,227,253,0)}}
+.step-icon.wait{background:rgba(255,255,255,.05);color:#5b403f;border:1px solid rgba(255,255,255,.1)}
+.step-body{padding:4px 0 24px}
+.step-name{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#e2e2e2}
+.step-desc{font-size:13px;color:#9f8c8b;margin-top:3px}
+.step-eta-badge{display:inline-block;margin-top:7px;background:rgba(0,227,253,.1);color:#00e3fd;font-size:11px;font-weight:700;padding:3px 12px;border-radius:20px;border:1px solid rgba(0,227,253,.25)}
+.donor-card{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px;margin-bottom:12px}
+.donor-av{width:44px;height:44px;border-radius:50%;background:rgba(0,227,253,.1);border:2px solid #00e3fd;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#00e3fd;flex-shrink:0}
+.donor-info h4{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;margin-bottom:2px}
+.donor-info p{font-size:12px;color:#9f8c8b}
+.donor-status{margin-left:auto;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;background:rgba(0,127,63,.12);color:#43a047;border:1px solid rgba(67,160,71,.25);flex-shrink:0}
+.ls-actions{display:flex;gap:10px;margin-top:4px}
+.ls-call-fab{position:fixed;bottom:100px;right:20px;width:52px;height:52px;border-radius:50%;background:#00e3fd;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px;color:#001f24;box-shadow:0 4px 20px rgba(0,227,253,.4);z-index:50;transition:transform .1s}
+.ls-call-fab:active{transform:scale(.92)}
+
+/* ══════════════════════════════════════════════════════
+   QR DISPLAY (recipient)
+══════════════════════════════════════════════════════ */
+#qrDisplayScreen{overflow:hidden}
+.qrd-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px 20px;overflow-y:auto;scrollbar-width:none}
+.qrd-instr{background:linear-gradient(135deg,rgba(0,54,61,.5),rgba(0,54,61,.3));border:1px solid rgba(0,227,253,.2);border-radius:14px;padding:14px 16px;width:100%;display:flex;align-items:center;gap:12px}
+.qrd-instr-icon{font-size:24px;flex-shrink:0}
+.qrd-instr-text p{font-size:13px;color:rgba(255,255,255,.8);line-height:1.5}
+.qrd-instr-text strong{display:block;font-size:14px;color:#fff;margin-bottom:2px;font-family:'Space Grotesk',sans-serif}
+.qr-frame-wrap{position:relative}
+.qr-frame-glow{position:absolute;inset:-4px;border-radius:22px;background:linear-gradient(135deg,rgba(255,83,91,.3),rgba(255,83,91,.1));filter:blur(8px)}
+.qr-box{background:#fff;border-radius:18px;padding:16px;position:relative;z-index:1;box-shadow:0 8px 40px rgba(0,0,0,.6)}
+.qr-token-display{font-size:10px;font-family:monospace;color:#9f8c8b;background:rgba(255,255,255,.04);padding:7px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.08);letter-spacing:1px}
+.qrd-success{display:none;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.qrd-success.show{display:flex}
+.succ-ring{width:96px;height:96px;border-radius:50%;background:rgba(0,127,63,.12);border:3px solid #43a047;display:flex;align-items:center;justify-content:center;font-size:48px;animation:pop .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* ══════════════════════════════════════════════════════
+   BLOOD BANK
+══════════════════════════════════════════════════════ */
+#bloodBankScreen{overflow:hidden}
+.bb-loc-bar{display:flex;align-items:center;gap:8px;padding:10px 18px;background:rgba(12,15,15,.6);border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
+.bb-loc-txt{font-size:12px;color:#9f8c8b;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bb-refresh{background:none;border:none;color:#00e3fd;font-size:13px;cursor:pointer;padding:4px 8px;border-radius:8px;font-family:'Manrope',sans-serif;font-weight:600;flex-shrink:0}
+.bb-filters{display:flex;gap:8px;padding:12px 18px;flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.bb-filters::-webkit-scrollbar{display:none}
+.bb-chip{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:6px 16px;font-size:12px;font-weight:600;color:#9f8c8b;cursor:pointer;white-space:nowrap;font-family:'Manrope',sans-serif;transition:all .15s;flex-shrink:0}
+.bb-chip.on{background:rgba(0,227,253,.1);border-color:#00e3fd;color:#00e3fd}
+.bb-body{flex:1;overflow-y:auto;padding:12px 18px 24px;scrollbar-width:none}
+.bb-body::-webkit-scrollbar{display:none}
+.bb-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;gap:12px}
+.bb-spin{width:36px;height:36px;border-radius:50%;border:3px solid rgba(255,255,255,.08);border-top-color:#00e3fd;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.bb-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;margin-bottom:10px;transition:border-color .15s}
+.bb-card:active{border-color:#00e3fd}
+.bb-card-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+.bb-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.bb-icon.govt{background:rgba(0,127,63,.1);border:1px solid rgba(67,160,71,.2)}
+.bb-icon.private{background:rgba(0,54,61,.2);border:1px solid rgba(0,227,253,.2)}
+.bb-name{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:#e2e2e2;line-height:1.3;margin-bottom:3px}
+.bb-addr{font-size:11px;color:#5b403f;line-height:1.4}
+.bb-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.bb-tag{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.3px}
+.bb-tag.open{background:rgba(0,127,63,.12);color:#43a047}
+.bb-tag.closed{background:rgba(255,255,255,.05);color:#5b403f}
+.bb-tag.govt{background:rgba(0,127,63,.1);color:#43a047}
+.bb-tag.private{background:rgba(0,54,61,.15);color:#00e3fd}
+.bb-tag.dist{background:rgba(255,255,255,.04);color:#9f8c8b}
+.bb-avail{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.bb-bt{font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px;background:rgba(147,0,10,.15);color:#ff535b;border:1px solid rgba(255,83,91,.15)}
+.bb-bt.avail{background:rgba(0,127,63,.12);color:#43a047;border-color:rgba(67,160,71,.2)}
+.bb-actions{display:flex;gap:8px}
+.bb-call{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;background:#43a047;color:#fff;border:none;border-radius:12px;padding:12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:transform .1s}
+.bb-call:active{transform:scale(.96)}
+.bb-map-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,255,255,.04);color:#9f8c8b;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;font-family:'Manrope',sans-serif;font-size:12px;cursor:pointer;transition:all .1s}
+.bb-map-btn:active{border-color:#00e3fd;color:#00e3fd}
+.bb-section-lbl{font-size:10px;font-weight:700;color:#9f8c8b;letter-spacing:1.2px;text-transform:uppercase;margin:16px 0 10px}
+.bb-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:220px;gap:10px;color:#5b403f;text-align:center}
+
+/* ══════════════════════════════════════════════════════
+   DONOR HOME
+══════════════════════════════════════════════════════ */
+#donorHome{overflow:hidden}
+.dh-header{padding:28px 20px 60px;flex-shrink:0;position:relative;overflow:hidden;background:linear-gradient(160deg,#001824,#001e2c 55%,#0c0f0f)}
+.dh-header::before{content:'';position:absolute;width:320px;height:320px;border-radius:50%;background:rgba(0,227,253,.05);top:-90px;right:-90px;filter:blur(70px)}
+.dh-header::after{content:'';position:absolute;width:160px;height:160px;border-radius:50%;background:rgba(0,227,253,.04);bottom:-40px;left:-40px;filter:blur(50px)}
+.dh-greet{font-size:13px;color:rgba(255,255,255,.55);margin-bottom:5px;letter-spacing:.2px}
+.dh-name{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#fff;margin-bottom:14px;line-height:1.1}
+.dh-donor-id{display:inline-flex;align-items:center;gap:10px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:7px 16px}
+.dh-blood-badge{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#ffd700}
+.dh-blood-lbl{font-size:12px;color:rgba(255,255,255,.55)}
+.dh-body{flex:1;overflow-y:auto;padding:0 18px 32px;margin-top:-36px;scrollbar-width:none;display:flex;flex-direction:column;gap:12px}
+.dh-body::-webkit-scrollbar{display:none}
+.toggle-card{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:18px 20px;box-shadow:0 2px 16px rgba(0,0,0,.2);transition:border-color .2s}
+.tgl-info h3{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;margin-bottom:3px;color:#e2e2e2}
+.tgl-info p{font-size:13px;color:#9f8c8b}
+.tgl{width:50px;height:28px;border-radius:14px;background:rgba(255,255,255,.15);position:relative;cursor:pointer;transition:background .25s;border:none;flex-shrink:0}
+.tgl.on{background:#43a047;box-shadow:0 0 12px rgba(67,160,71,.3)}
+.tgl::after{content:'';position:absolute;width:22px;height:22px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform .25s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.tgl.on::after{transform:translateX(22px)}
+.listen-card{display:flex;align-items:center;gap:12px;background:rgba(0,127,63,.07);border:1px solid rgba(67,160,71,.18);border-radius:14px;padding:13px 16px}
+.listen-dot{width:9px;height:9px;border-radius:50%;background:#43a047;animation:blink 1s ease-in-out infinite;flex-shrink:0}
+.listen-txt{font-size:13px;color:#43a047;font-weight:500;line-height:1.4}
+/* Impact stats */
+.impact-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:20px}
+.impact-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat-num{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:#00e3fd;line-height:1}
+.stat-lbl{font-size:10px;color:#5b403f;margin-top:4px;font-family:'Space Grotesk',sans-serif;letter-spacing:.8px;text-transform:uppercase}
+/* Progress bar */
+.cooldown-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:20px}
+.pbar{height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin:12px 0 8px}
+.pfill{height:100%;background:linear-gradient(90deg,#ff535b,#00e3fd);border-radius:3px;transition:width .5s}
+.pbar-labels{display:flex;justify-content:space-between;font-size:11px;color:#5b403f;font-family:'Manrope',sans-serif}
+.sim-btn{width:100%;background:rgba(147,0,10,.12);color:#ff535b;border:1px solid rgba(255,83,91,.2);border-radius:14px;padding:15px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .1s,background .15s}
+.sim-btn:active{transform:scale(.97);background:rgba(147,0,10,.2)}
+
+/* ══════════════════════════════════════════════════════
+   EMERGENCY ALERT
+══════════════════════════════════════════════════════ */
+#emergencyAlert{overflow:hidden;align-items:center;justify-content:center;background:#3d0000;position:relative}
+.ea-bg-anim{position:absolute;inset:0;animation:ea-bg 1s ease-in-out infinite}
+@keyframes ea-bg{0%,100%{background:#3d0000}50%{background:#2d0000}}
+.ea-orb1{position:absolute;width:250px;height:250px;border-radius:50%;background:rgba(255,255,255,.04);top:-60px;right:-60px}
+.ea-orb2{position:absolute;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.03);bottom:-50px;left:-50px}
+.ea-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;text-align:center;padding:28px 22px;gap:14px;width:100%}
+.ea-badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:5px 16px;font-size:11px;font-weight:700;color:#fff;letter-spacing:1px;display:inline-flex;align-items:center;gap:6px;font-family:'Space Grotesk',sans-serif}
+.ea-badge-dot{width:7px;height:7px;border-radius:50%;background:#ff8080;animation:blink .7s ease-in-out infinite}
+.ea-ring{width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;animation:ea-pulse .7s ease-in-out infinite}
+@keyframes ea-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.ea-inner{width:82px;height:82px;border-radius:50%;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:38px}
+.ea-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:#fff;letter-spacing:2px;text-transform:uppercase}
+.ea-queue{background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:4px 14px;font-size:12px;color:rgba(255,255,255,.88);font-weight:700;font-family:'Space Grotesk',sans-serif}
+.ea-details{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px 18px;width:100%}
+.ea-detail-row{display:flex;justify-content:space-between;font-size:14px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.ea-detail-row:last-child{border:none}
+.ea-detail-row span:first-child{color:rgba(255,255,255,.55)}
+.ea-detail-row span:last-child{font-weight:700;color:#fff;font-family:'Space Grotesk',sans-serif}
+.ea-blood{color:#ffd700!important;font-size:20px!important}
+.ea-timer-badge{font-size:13px;color:rgba(255,255,255,.8);background:rgba(0,0,0,.22);padding:6px 18px;border-radius:20px;font-family:'Manrope',sans-serif}
+.ea-timer-val{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#fff}
+.ea-btns{display:flex;gap:10px;width:100%}
+.ea-decline{flex:1;background:rgba(0,0,0,.28);color:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:14px 10px;font-size:13px;cursor:pointer;font-family:'Manrope',sans-serif;line-height:1.4}
+.ea-accept{flex:2;background:#fff;color:#680011;border:none;border-radius:14px;padding:16px;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;cursor:pointer;letter-spacing:.5px}
+.ea-decline:active,.ea-accept:active{transform:scale(.97)}
+
+/* ══════════════════════════════════════════════════════
+   PIN SCREEN
+══════════════════════════════════════════════════════ */
+#pinScreen{overflow:hidden}
+.pin-scroll{flex:1;display:flex;flex-direction:column;align-items:center;padding:28px 22px;gap:20px;overflow-y:auto;scrollbar-width:none}
+.pin-scroll::-webkit-scrollbar{display:none}
+.pin-icon-ring{width:80px;height:80px;border-radius:50%;background:rgba(0,54,61,.2);border:2px solid #00e3fd;display:flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 0 20px rgba(0,227,253,.2)}
+.pin-h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;text-align:center;margin-bottom:4px;color:#fff}
+.pin-p{font-size:13px;color:#9f8c8b;text-align:center;line-height:1.55}
+.pin-dots{display:flex;gap:16px}
+.pd{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.18);transition:all .15s}
+.pd.filled{background:#00e3fd;border-color:#00e3fd;transform:scale(1.15);box-shadow:0 0 10px rgba(0,227,253,.5)}
+.pd.err{background:#ff535b;border-color:#ff535b;animation:pin-shake .35s ease}
+@keyframes pin-shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+.pin-context-card{background:rgba(147,0,10,.15);border:1px solid rgba(255,83,91,.2);border-radius:12px;padding:14px 18px;width:100%;text-align:center}
+.pin-ctx-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:#e2e2e2;margin-bottom:3px}
+.pin-ctx-sub{font-size:13px;color:#9f8c8b}
+.pin-maps-note{background:rgba(0,127,63,.08);border:1px solid rgba(67,160,71,.18);border-radius:10px;padding:9px 14px;font-size:12px;color:#43a047;width:100%;text-align:center}
+.pin-err-msg{font-size:13px;color:#ff535b;min-height:18px;text-align:center}
+.pin-demo-note{font-size:11px;color:#5b403f;text-align:center;margin-top:-10px}
+
+/* ══════════════════════════════════════════════════════
+   TRANSIT
+══════════════════════════════════════════════════════ */
+#transitScreen{overflow:hidden}
+.pg-bar{background:linear-gradient(90deg,rgba(147,0,10,.9),rgba(93,0,0,.9));padding:11px 18px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;box-shadow:0 2px 10px rgba(147,0,10,.4)}
+.pg-label{font-size:11px;color:rgba(255,255,255,.7);font-family:'Space Grotesk',sans-serif;letter-spacing:.5px}
+.pg-timer{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:#fff}
+.pg-prog-bar{height:3px;flex-shrink:0;background:rgba(255,255,255,.12)}
+.pg-prog-fill{height:100%;background:rgba(255,255,255,.7);transition:width 1s linear}
+.map-area{flex:1;min-height:0;background:#080f18;position:relative;overflow:hidden}
+.transit-stats{display:flex;background:rgba(12,15,15,.8);border-top:1px solid rgba(255,255,255,.08);flex-shrink:0}
+.ts-col{flex:1;padding:11px 8px;text-align:center;border-right:1px solid rgba(255,255,255,.06)}
+.ts-col:last-child{border:none}
+.ts-val{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:#e2e2e2}
+.ts-lbl{font-size:10px;color:#5b403f;margin-top:2px;font-family:'Space Grotesk',sans-serif;letter-spacing:.5px}
+.transit-footer{padding:12px 18px;display:flex;flex-direction:column;gap:9px;flex-shrink:0;background:#0c0f0f}
+.gmap-btn{width:100%;display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#12192a,#1a2438);border:1px solid #2a3a55;border-radius:14px;padding:14px 16px;cursor:pointer;color:#fff;transition:transform .1s;box-shadow:0 4px 18px rgba(0,0,0,.4)}
+.gmap-btn:active{transform:scale(.97)}
+.transit-2btn{display:flex;gap:9px}
+.checkin-btn{flex:1;background:rgba(255,255,255,.05);color:#e2e2e2;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:13px;font-size:13px;cursor:pointer;font-family:'Manrope',sans-serif;font-weight:500}
+.arrived-btn{flex:1;background:#00e3fd;color:#001f24;border:none;border-radius:12px;padding:14px;font-family:'Syne',sans-serif;font-size:14px;cursor:pointer;font-weight:700}
+.arrived-panel{display:none;flex-direction:column;gap:9px}
+.arrived-panel.show{display:flex}
+.arrived-info{background:rgba(0,127,63,.1);border:1px solid rgba(67,160,71,.25);border-radius:12px;padding:13px;font-size:13px;color:#43a047;font-weight:500}
+.scan-big-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:#43a047;color:#fff;border:none;border-radius:14px;padding:16px;font-family:'Syne',sans-serif;font-size:16px;font-weight:700;cursor:pointer;width:100%}
+.scan-big-sub{font-family:'Manrope',sans-serif;font-size:11px;opacity:.85;font-weight:400}
+
+/* ══════════════════════════════════════════════════════
+   QR SCANNER
+══════════════════════════════════════════════════════ */
+#qrScreen{overflow:hidden}
+.qr-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:28px 22px;overflow-y:auto;scrollbar-width:none}
+.qr-viewport{position:relative;width:240px;height:240px}
+#qrVideo{width:100%;height:100%;object-fit:cover;border-radius:12px;display:block}
+#qrScanCanvas{display:none}
+.qr-overlay{position:absolute;inset:0;border-radius:12px}
+.qr-corner{position:absolute;width:28px;height:28px;border-color:#00e3fd;border-style:solid}
+.qr-corner.tl{top:0;left:0;border-width:3px 0 0 3px}
+.qr-corner.tr{top:0;right:0;border-width:3px 3px 0 0}
+.qr-corner.bl{bottom:0;left:0;border-width:0 0 3px 3px}
+.qr-corner.br{bottom:0;right:0;border-width:0 3px 3px 0}
+.scan-line{position:absolute;width:calc(100% - 6px);left:3px;height:2px;background:linear-gradient(90deg,transparent,#00e3fd,transparent);animation:scan-anim 2s ease-in-out infinite}
+@keyframes scan-anim{0%{top:4px;opacity:1}100%{top:calc(100% - 4px);opacity:.3}}
+.qr-status{font-size:14px;font-weight:500;color:#9f8c8b;text-align:center;font-family:'Manrope',sans-serif}
+.qr-status.ok{color:#43a047}.qr-status.err{color:#ff535b}
+.qr-detected{display:none;align-items:center;gap:6px;background:rgba(0,127,63,.1);border:1px solid rgba(67,160,71,.3);border-radius:20px;padding:6px 16px;font-size:13px;color:#43a047;font-weight:600;font-family:'Space Grotesk',sans-serif}
+.qr-detected.show{display:flex}
+
+/* ══════════════════════════════════════════════════════
+   COMPLETION
+══════════════════════════════════════════════════════ */
+#completionScreen{overflow:hidden}
+.comp-bg{position:absolute;inset:0;pointer-events:none}
+.comp-body{flex:1;display:flex;flex-direction:column;align-items:center;padding:28px 20px;gap:16px;overflow-y:auto;scrollbar-width:none;position:relative;z-index:1}
+.comp-body::-webkit-scrollbar{display:none}
+.comp-check-ring{width:96px;height:96px;border-radius:50%;background:rgba(0,127,63,.14);border:3px solid #43a047;display:flex;align-items:center;justify-content:center;font-size:48px;animation:pop .5s cubic-bezier(.34,1.56,.64,1);box-shadow:0 0 40px rgba(67,160,71,.25)}
+.comp-title{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;text-align:center;color:#fff}
+.comp-sub{font-size:14px;color:#9f8c8b;text-align:center;line-height:1.5}
+.impact-bento{background:linear-gradient(135deg,rgba(0,20,36,.9),rgba(0,30,50,.8));border:1px solid rgba(0,227,253,.2);border-radius:18px;padding:20px;width:100%}
+.impact-head{font-size:10px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:16px;font-family:'Space Grotesk',sans-serif}
+.impact-cols{display:flex}
+.impact-col{flex:1;text-align:center}
+.impact-col:first-child{border-right:1px solid rgba(255,255,255,.12)}
+.impact-num{font-family:'Syne',sans-serif;font-size:44px;font-weight:800;color:#00e3fd}
+.impact-lbl{font-size:12px;color:rgba(255,255,255,.6);margin-top:4px}
+.summary-bento{background:rgba(255,255,255,.04);border-radius:14px;padding:18px;border:1px solid rgba(255,255,255,.08);width:100%}
+.comp-row{display:flex;justify-content:space-between;font-size:14px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.comp-row:last-child{border:none}
+.comp-row span:last-child{color:#43a047;font-weight:600;font-family:'Space Grotesk',sans-serif}
+.cooldown-bento{background:rgba(255,255,255,.04);border-radius:14px;padding:18px;border:1px solid rgba(255,255,255,.08);width:100%}
+.cd-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.cd-badge{font-size:11px;font-weight:700;background:rgba(0,127,63,.12);color:#43a047;padding:3px 10px;border-radius:20px;font-family:'Space Grotesk',sans-serif}
+.radial-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+.rad-lbl{font-size:13px;color:#9f8c8b}
+.rad-val{font-family:'Space Grotesk',sans-serif;font-size:13px;color:#00e3fd;font-weight:600}
+.share-btn-ghost{background:none;border:none;color:#5b403f;font-family:'Manrope',sans-serif;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;margin-top:2px}
+
+/* ══════════════════════════════════════════════════════
+   HISTORY
+══════════════════════════════════════════════════════ */
+#historyScreen{overflow:hidden}
+.hist-body{flex:1;overflow-y:auto;padding:18px 18px 24px;scrollbar-width:none}
+.hist-body::-webkit-scrollbar{display:none}
+.hist-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:240px;gap:12px;color:#5b403f;text-align:center}
+.hist-entry{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px 18px;margin-bottom:10px}
+
+/* ══════════════════════════════════════════════════════
+   PROFILE
+══════════════════════════════════════════════════════ */
+#profileScreen{overflow:hidden}
+.pro-header{background:linear-gradient(180deg,rgba(30,32,32,1),rgba(18,20,20,1));padding:32px 20px 24px;display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.08)}
+.pro-av{width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg,#00363d,#00e3fd);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:34px;font-weight:700;border:3px solid rgba(255,255,255,.15);margin-bottom:6px;box-shadow:0 4px 20px rgba(0,227,253,.2)}
+.pro-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:#fff}
+.pro-email{font-size:13px;color:#9f8c8b}
+.pro-chip{display:inline-block;font-size:12px;font-weight:700;padding:4px 14px;border-radius:20px;margin-top:4px;font-family:'Space Grotesk',sans-serif}
+.pro-chip.donor{background:rgba(0,54,61,.2);color:#00e3fd;border:1px solid rgba(0,227,253,.25)}
+.pro-chip.recipient{background:rgba(147,0,10,.2);color:#ffdad8;border:1px solid rgba(255,83,91,.25)}
+.pro-body{flex:1;overflow-y:auto;padding:20px 18px 28px;scrollbar-width:none;display:flex;flex-direction:column;gap:18px}
+.pro-body::-webkit-scrollbar{display:none}
+.pro-section-head{font-size:10px;font-weight:700;color:#9f8c8b;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:8px}
+.pro-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden}
+.pro-row{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+.pro-row:last-child{border:none}
+.pro-row-lbl{font-size:13px;color:#9f8c8b}
+.pro-row-val{font-size:14px;font-weight:500;color:#e2e2e2}
+.pro-row-edit{font-size:12px;color:#00e3fd;cursor:pointer;font-weight:500}
+.signout-btn{width:100%;background:rgba(147,0,10,.15);color:#ff535b;border:1px solid rgba(255,83,91,.18);border-radius:14px;padding:15px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer}
+
+/* ── SYSTEM ────────────────────────────────────────── */
+#loadOv{position:fixed;inset:0;background:rgba(12,15,15,.92);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:9998;backdrop-filter:blur(8px)}
+#loadOv.show{display:flex}
+.spin{width:46px;height:46px;border-radius:50%;border:3px solid rgba(255,255,255,.08);border-top-color:#00e3fd;animation:spin .8s linear infinite}
+.load-lbl{font-size:14px;color:#9f8c8b;font-weight:500;font-family:'Manrope',sans-serif}
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(14px);background:rgba(30,32,32,.95);border:1px solid rgba(255,255,255,.15);color:#e2e2e2;font-size:13px;font-weight:500;padding:11px 20px;border-radius:24px;white-space:nowrap;opacity:0;transition:all .28s;pointer-events:none;z-index:9999;font-family:'Manrope',sans-serif}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#connBanner{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:9990;font-size:11px;font-weight:700;text-align:center;padding:6px 12px;transition:all .3s;letter-spacing:.3px;display:none;font-family:'Space Grotesk',sans-serif}
+#connBanner.online{background:#1b5e20;color:#a5d6a7;display:block}
+#connBanner.offline{background:#7a0000;color:#ffcdd2;display:block}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="connBanner"></div>
+
+<!-- ════════════════════════════════════════════════════
+     SPLASH
+════════════════════════════════════════════════════ -->
+<div class="screen active" id="splash">
+  <div class="amb-red splash-glow-1"></div>
+  <div class="amb-cyan splash-glow-2"></div>
+  <div class="sp-drop">
+    <div class="sp-drop-glow">
+      <svg width="160" height="200" viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="dg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#ff535b;stop-opacity:1"/>
+            <stop offset="100%" style="stop-color:#680011;stop-opacity:1"/>
+          </linearGradient>
+        </defs>
+        <path d="M50 0 C50 0 10 60 10 90 A40 40 0 1 0 90 90 C90 60 50 0 50 0 Z" fill="url(#dg)"/>
+        <path d="M50 8 C50 8 18 64 18 90 A32 32 0 1 0 82 90 C82 64 50 8 50 8 Z" fill="white" fill-opacity="0.08"/>
+        <path d="M35 85 Q40 75 50 75" fill="none" stroke="white" stroke-linecap="round" stroke-width="2" opacity="0.25"/>
+      </svg>
+    </div>
+    <span class="material-symbols-outlined sp-inner-icon">emergency</span>
+  </div>
+  <div class="sp-title">PULZ</div>
+  <div class="sp-sub">Emergency Blood Network</div>
+  <div class="sp-line"><span class="sp-line-txt">CRITICAL VITALS PROTOCOL</span></div>
+  <button class="sp-cta" onclick="goTo('roleSelect')">GET STARTED</button>
+  <div class="sp-version">v2.4.0 · End-to-End Encrypted</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     ROLE SELECT
+════════════════════════════════════════════════════ -->
+<div class="screen" id="roleSelect">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <span class="material-symbols-outlined brand-icon">emergency</span>
+      <span class="brand-name">PULZ</span>
+    </div>
+    <div class="topbar-right">
+      <div class="icon-btn"><span class="material-symbols-outlined" style="font-size:18px">lock</span></div>
+    </div>
+  </div>
+  <div class="amb-red" style="top:-10%;left:-10%"></div>
+  <div class="amb-cyan" style="bottom:-10%;right:-10%"></div>
+  <div class="rs-body">
+    <div class="rs-hero">
+      <h2 class="rs-h">Welcome</h2>
+      <p class="rs-p">Select your objective to begin the emergency blood protocol. Every second counts.</p>
+    </div>
+    <div class="role-cards">
+      <div class="role-card red" onclick="selectRole('recipient')">
+        <div class="rc-icon-wrap red"><span class="material-symbols-outlined" style="color:#ff535b;font-size:32px;font-variation-settings:'FILL' 1">water_drop</span></div>
+        <div class="rc-title">I Need Blood</div>
+        <div class="rc-sub">Initiate an emergency request. Instant broadcast to compatible donors near you.</div>
+        <div class="rc-badge red">REQUEST NOW</div>
+      </div>
+      <div class="role-card cyan" onclick="selectRole('donor')">
+        <div class="rc-icon-wrap cyan"><span class="material-symbols-outlined" style="color:#00e3fd;font-size:32px;font-variation-settings:'FILL' 1">volunteer_activism</span></div>
+        <div class="rc-title">I Can Donate</div>
+        <div class="rc-sub">Activate your responder status to see nearby alerts and save lives.</div>
+        <div class="rc-badge cyan">OFFER SUPPORT</div>
+      </div>
+    </div>
+    <div class="trust-grid">
+      <div class="trust-item glass" style="border-radius:12px">
+        <span class="material-symbols-outlined trust-icon">encrypted</span>
+        <span class="trust-txt">SHA-256 blood hash · never exposed</span>
+      </div>
+      <div class="trust-item glass" style="border-radius:12px">
+        <span class="material-symbols-outlined trust-icon" style="color:#43a047">verified</span>
+        <span class="trust-txt">DPDP compliant audit trail</span>
+      </div>
+      <div class="trust-item glass" style="border-radius:12px">
+        <span class="material-symbols-outlined trust-icon" style="color:#fb8c00">speed</span>
+        <span class="trust-txt">Response under 30 seconds</span>
+      </div>
+      <div class="trust-item glass" style="border-radius:12px">
+        <span class="material-symbols-outlined trust-icon" style="color:#ff535b">notifications_active</span>
+        <span class="trust-txt">3-layer silent mode bypass</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     AUTH
+════════════════════════════════════════════════════ -->
+<div class="screen" id="authScreen">
+  <div class="topbar">
+    <button class="topbar-back" onclick="goTo('roleSelect')"><span class="material-symbols-outlined" style="font-size:20px">arrow_back</span> Back</button>
+    <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#fff">Sign In</span>
+    <span style="width:60px"></span>
+  </div>
+  <div class="auth-scroll">
+
+    <!-- Role badge -->
+    <div class="auth-role-badge recipient" id="authRoleBadge">
+      <div class="auth-role-icon recipient" id="authRoleIcon">🏥</div>
+      <div>
+        <div class="auth-role-txt" id="authRoleTxt">Recipient — I Need Blood</div>
+        <div class="auth-role-sub">Emergency blood request access</div>
+      </div>
+    </div>
+
+    <div class="auth-h">Welcome to PULZ</div>
+    <div class="auth-p">Sign in or create an account to continue.</div>
+
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <button class="auth-tab on" id="tabLogin" onclick="switchTab('login')">Sign In</button>
+      <button class="auth-tab" id="tabReg" onclick="switchTab('register')">Register</button>
+    </div>
+
+    <!-- Login form -->
+    <div id="loginForm">
+      <div class="field-wrap">
+        <div class="field-group">
+          <span class="material-symbols-outlined field-icon">mail</span>
+          <input class="field-input" id="liEmail" type="email" placeholder="Email address" autocomplete="email">
+        </div>
+        <div class="field-group">
+          <span class="material-symbols-outlined field-icon">lock</span>
+          <input class="field-input" id="liPass" type="password" placeholder="Password" autocomplete="current-password">
+        </div>
+      </div>
+      <div class="auth-err" id="liErr"></div>
+      <button class="btn btn-primary" style="margin-top:10px;margin-bottom:0" onclick="doSignIn()">
+        Sign In <span class="material-symbols-outlined" style="font-size:18px">arrow_forward</span>
+      </button>
+    </div>
+
+    <!-- Register form -->
+    <div id="regForm" style="display:none">
+      <div class="field-wrap">
+        <div class="field-group">
+          <span class="material-symbols-outlined field-icon">badge</span>
+          <input class="field-input" id="rgName" type="text" placeholder="Full name" autocomplete="name">
+        </div>
+        <div class="field-group">
+          <span class="material-symbols-outlined field-icon">mail</span>
+          <input class="field-input" id="rgEmail" type="email" placeholder="Email address" autocomplete="email">
+        </div>
+        <div class="field-group">
+          <span class="material-symbols-outlined field-icon">lock</span>
+          <input class="field-input" id="rgPass" type="password" placeholder="Password (min 6 chars)" autocomplete="new-password">
+        </div>
+      </div>
+      <div class="auth-err" id="rgErr"></div>
+      <button class="btn btn-primary" style="margin-top:10px;margin-bottom:0" onclick="doRegister()">
+        Create Account <span class="material-symbols-outlined" style="font-size:18px">arrow_forward</span>
+      </button>
+    </div>
+
+    <div class="auth-divider">or continue with</div>
+
+    <button class="google-btn" onclick="doGoogleSign()">
+      <svg width="20" height="20" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Continue with Google
+    </button>
+
+    <!-- Demo skip - prominent card -->
+    <div class="auth-skip">
+      <a onclick="doSkip()">⚡ Skip — use demo mode</a>
+      <p>No account needed · Firebase still syncs</p>
+    </div>
+
+    <div class="auth-footer-note">
+      <span class="material-symbols-outlined" style="font-size:14px;color:#00e3fd">verified_user</span>
+      <span>256-Bit AES · DPDP Compliant</span>
+    </div>
+
+    <!-- hidden for JS compat -->
+    <div id="authChip" style="display:none"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     PROFILE SETUP
+════════════════════════════════════════════════════ -->
+<div class="screen" id="profileSetup">
+  <div class="setup-bar">
+    <button class="topbar-back" id="psBackBtn" onclick="goTo('authScreen')" style="opacity:0;pointer-events:none"><span class="material-symbols-outlined" style="font-size:20px">arrow_back</span></button>
+    <div class="setup-steps">
+      <div class="ss-dot active" id="ssDot1">1</div>
+      <div class="ss-line" id="ssLine1"></div>
+      <div class="ss-dot" id="ssDot2">2</div>
+      <div class="ss-line" id="ssLine2"></div>
+      <div class="ss-dot" id="ssDot3">3</div>
+    </div>
+    <span class="setup-step-lbl" id="psStepLabel">1 of 3</span>
+  </div>
+
+  <!-- Step 1: Personal info -->
+  <div class="setup-pane" id="psStep1">
+    <div class="setup-scroll">
+      <div class="setup-icon-wrap red"><span class="material-symbols-outlined" style="font-size:28px;color:#ff535b;font-variation-settings:'FILL' 1">person</span></div>
+      <div class="setup-h">Tell us about yourself</div>
+      <div class="setup-p">This helps us match you to the right donations and alert responders effectively.</div>
+      <div class="setup-field-lbl">Display Name</div>
+      <div style="position:relative;margin-bottom:18px">
+        <span class="material-symbols-outlined" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;color:#5b403f">badge</span>
+        <input class="setup-input" id="psName" type="text" placeholder="Your full name" autocomplete="name" style="margin-bottom:0;padding-left:46px">
+      </div>
+      <div class="setup-field-lbl">Phone Number</div>
+      <div style="position:relative;margin-bottom:18px">
+        <span class="material-symbols-outlined" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;color:#5b403f">call</span>
+        <input class="setup-input" id="psPhone" type="tel" placeholder="+91 9876543210" autocomplete="tel" style="margin-bottom:0;padding-left:46px">
+      </div>
+      <div style="background:rgba(0,227,253,.06);border:1px solid rgba(0,227,253,.15);border-radius:10px;padding:10px 14px;font-size:12px;color:#9f8c8b;display:flex;align-items:center;gap:8px">
+        <span class="material-symbols-outlined" style="font-size:14px;color:#00e3fd;flex-shrink:0">info</span>
+        Phone number is used for emergency contact only
+      </div>
+    </div>
+    <div class="setup-footer"><button class="btn btn-primary" onclick="psNext(1)">Continue →</button></div>
+  </div>
+
+  <!-- Step 2: Blood type -->
+  <div class="setup-pane" id="psStep2" style="display:none">
+    <div class="setup-scroll">
+      <div class="setup-icon-wrap red"><span class="material-symbols-outlined" style="font-size:28px;color:#ff535b;font-variation-settings:'FILL' 1">water_drop</span></div>
+      <div class="setup-h">Your blood type</div>
+      <div class="setup-p">Stored as a SHA-256 hash — never exposed in plain text</div>
+      <div class="setup-field-lbl">Select Blood Type</div>
+      <div class="bt-grid" id="psBloodGrid">
+        <div class="bt-cell sel" onclick="selSetupBT(this,'A+')">A+</div>
+        <div class="bt-cell" onclick="selSetupBT(this,'A−')">A−</div>
+        <div class="bt-cell" onclick="selSetupBT(this,'B+')">B+</div>
+        <div class="bt-cell" onclick="selSetupBT(this,'B−')">B−</div>
+        <div class="bt-cell" onclick="selSetupBT(this,'AB+')">AB+</div>
+        <div class="bt-cell" onclick="selSetupBT(this,'AB−')">AB−</div>
+        <div class="bt-cell" onclick="selSetupBT(this,'O+')">O+</div>
+        <div class="bt-cell" onclick="selSetupBT(this,'O−')">O−</div>
+      </div>
+      <div class="hash-note">
+        <span class="material-symbols-outlined" style="font-size:16px;color:#00e3fd">encrypted</span>
+        <span>Stored as: <span class="hash-val" id="hashPreview">a3f9d8c2...</span></span>
+      </div>
+    </div>
+    <div class="setup-footer"><button class="btn btn-primary" onclick="psNext(2)">Continue →</button></div>
+  </div>
+
+  <!-- Step 3: PIN -->
+  <div class="setup-pane" id="psStep3" style="display:none">
+    <div class="setup-scroll" style="text-align:center">
+      <div class="setup-icon-wrap cyan" style="margin:0 auto 20px"><span class="material-symbols-outlined" style="font-size:28px;color:#00e3fd;font-variation-settings:'FILL' 1">lock</span></div>
+      <div class="setup-h">Set your security PIN</div>
+      <div class="setup-p">Used to confirm emergency donation requests</div>
+      <div class="pin-dots-row">
+        <div class="pin-dot" id="psd0"></div><div class="pin-dot" id="psd1"></div>
+        <div class="pin-dot" id="psd2"></div><div class="pin-dot" id="psd3"></div>
+      </div>
+      <div class="keypad">
+        <button class="key" onclick="setupKey('1')">1<span class="key-sub"></span></button>
+        <button class="key" onclick="setupKey('2')">2<span class="key-sub">ABC</span></button>
+        <button class="key" onclick="setupKey('3')">3<span class="key-sub">DEF</span></button>
+        <button class="key" onclick="setupKey('4')">4<span class="key-sub">GHI</span></button>
+        <button class="key" onclick="setupKey('5')">5<span class="key-sub">JKL</span></button>
+        <button class="key" onclick="setupKey('6')">6<span class="key-sub">MNO</span></button>
+        <button class="key" onclick="setupKey('7')">7<span class="key-sub">PQRS</span></button>
+        <button class="key" onclick="setupKey('8')">8<span class="key-sub">TUV</span></button>
+        <button class="key" onclick="setupKey('9')">9<span class="key-sub">WXYZ</span></button>
+        <button class="key key-emp"></button>
+        <button class="key" onclick="setupKey('0')">0</button>
+        <button class="key key-del" onclick="setupDel()"><span class="material-symbols-outlined" style="font-size:18px">backspace</span></button>
+      </div>
+      <div style="margin-top:16px;font-size:12px;color:#43a047;display:flex;align-items:center;justify-content:center;gap:6px">
+        <span class="material-symbols-outlined" style="font-size:14px">location_on</span>Maps open automatically after PIN verification
+      </div>
+    </div>
+    <div class="setup-footer"><button class="btn btn-primary" id="psFinishBtn" disabled onclick="finishSetup()" style="opacity:.4">Finish Setup →</button></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     RECIPIENT HOME
+════════════════════════════════════════════════════ -->
+<div class="screen" id="recipientHome">
+  <div class="rh-header">
+    <div class="rh-greet">Good day, <span id="rhGreetName">—</span> 👋</div>
+    <div class="rh-name">Need Blood<br>Urgently?</div>
+    <div class="rh-stats">
+      <div class="rh-stat-pill">🩸 Donors: 3,421</div>
+      <div class="rh-stat-pill">♥ Lives: 12,847</div>
+    </div>
+  </div>
+  <div class="rh-body">
+    <div class="active-banner" id="activeReqBanner" style="display:none">
+      <div class="active-blink"></div>
+      <div class="active-txt">Active request · <span id="arb-status">Searching...</span></div>
+    </div>
+    <!-- SOS hold-to-trigger -->
+    <div class="sos-card" id="sosCard"
+      ontouchstart="startHold(event)" ontouchend="endHold(event)" ontouchcancel="endHold(event)"
+      onmousedown="startHold(event)" onmouseup="endHold(event)" onmouseleave="endHold(event)">
+      <div class="sos-ring">
+        <div class="sos-ring-fill" id="sosRingFill"></div>
+        <span style="position:relative;z-index:1">🆘</span>
+      </div>
+      <div class="sos-label">Emergency Request</div>
+      <div class="sos-title">REQUEST BLOOD NOW</div>
+      <div class="sos-sub">Response in under 30 seconds</div>
+      <div class="sos-pill" id="sosPill">HOLD TO ACTIVATE</div>
+    </div>
+    <div class="qa-grid">
+      <div class="qa-card" onclick="openHistory()">
+        <div class="qa-icon">📋</div>
+        <div class="qa-label">My Requests</div>
+        <div class="qa-sub">View history</div>
+      </div>
+      <div class="qa-card" onclick="goTo('qrDisplayScreen')">
+        <div class="qa-icon">📲</div>
+        <div class="qa-label">Show QR</div>
+        <div class="qa-sub">For donor scan</div>
+      </div>
+    </div>
+    <div class="bb-cta" onclick="openBloodBank()">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div class="bb-cta-icon"><span class="material-symbols-outlined" style="color:#00e3fd;font-size:20px">local_hospital</span></div>
+        <div>
+          <div class="bb-cta-title">Blood Banks Nearby</div>
+          <div class="bb-cta-sub">Find banks within 10 km · Tap to call</div>
+        </div>
+      </div>
+      <span class="material-symbols-outlined" style="color:#00e3fd;font-size:24px">chevron_right</span>
+    </div>
+    <div class="info-card">
+      <div class="info-card-head">Status</div>
+      <div class="info-row"><span class="info-lbl">Blood type</span><span class="info-val" id="rhBloodVal">—</span></div>
+      <div class="info-row"><span class="info-lbl">Last request</span><span class="info-val" id="rhLastReq">None</span></div>
+      <div class="info-row"><span class="info-lbl">Active</span><span id="rhActiveEl" style="font-size:13px;font-weight:600;color:#43a047">✓ None</span></div>
+    </div>
+  </div>
+  <div class="bnav">
+    <button class="nt on"><span class="material-symbols-outlined ni">home</span>Home</button>
+    <button class="nt" onclick="openHistory()"><span class="material-symbols-outlined ni">history</span>Requests</button>
+    <button class="nt" onclick="goTo('profileScreen')"><span class="material-symbols-outlined ni">person</span>Profile</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     REQUEST MODAL (3 steps)
+════════════════════════════════════════════════════ -->
+<div class="screen" id="requestModal">
+  <div class="topbar">
+    <button class="topbar-back" onclick="goTo('recipientHome')"><span class="material-symbols-outlined" style="font-size:20px">arrow_back</span> Back</button>
+    <span style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff">Emergency Dispatch</span>
+    <span style="width:60px"></span>
+  </div>
+  <div class="rm-progress-bar"><div class="rm-progress-fill" id="rmFill" style="width:33%"></div></div>
+  <div class="rm-scroll">
+
+    <!-- Step 1: Hospital -->
+    <div id="rmStep1">
+      <div class="rm-step-lbl">Step 01 — Nearby Trauma Centers</div>
+      <div class="rm-title">Select Hospital</div>
+      <div class="rm-sub">Hospital ID validated against HFR registry</div>
+      <div class="rm-search">
+        <span class="material-symbols-outlined rm-search-icon">search</span>
+        <input class="rm-search-input" placeholder="Search by name or specialty..." oninput="filterHosp(this.value)">
+      </div>
+      <div class="hosp-list" id="hospList">
+        <div class="hosp-item sel" onclick="selHosp(this,'Apollo Hospitals, Chennai','13.0067','80.2206')">
+          <span class="hosp-hfr">HFR ✓</span>
+          <div class="hosp-name">Apollo Hospitals, Chennai</div>
+          <div class="hosp-dist"><span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle;color:#00e3fd">near_me</span> 1.2 km · Level 1 Trauma</div>
+        </div>
+        <div class="hosp-item" onclick="selHosp(this,'Fortis Malar Hospital','12.9947','80.2497')">
+          <span class="hosp-hfr">HFR ✓</span>
+          <div class="hosp-name">Fortis Malar Hospital</div>
+          <div class="hosp-dist"><span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle;color:#00e3fd">near_me</span> 2.8 km · Cardiac Specialty</div>
+        </div>
+        <div class="hosp-item" onclick="selHosp(this,'MIOT International','13.0142','80.1784')">
+          <span class="hosp-hfr">HFR ✓</span>
+          <div class="hosp-name">MIOT International</div>
+          <div class="hosp-dist"><span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle;color:#00e3fd">near_me</span> 4.1 km · 24/7 ER</div>
+        </div>
+        <div class="hosp-item" onclick="selHosp(this,'SIMS Hospital','13.0569','80.2425')">
+          <span class="hosp-hfr">HFR ✓</span>
+          <div class="hosp-name">SIMS Hospital</div>
+          <div class="hosp-dist"><span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle;color:#00e3fd">near_me</span> 3.6 km · Trauma Level II</div>
+        </div>
+      </div>
+      <button class="btn btn-cyan" onclick="rmNext()">Next → Blood Type</button>
+    </div>
+
+    <!-- Step 2: Blood type -->
+    <div id="rmStep2" style="display:none">
+      <div class="rm-step-lbl">Step 02 — Vitals</div>
+      <div class="rm-title">Blood Type Needed</div>
+      <div class="rm-sub">Matched using SHA-256 hash — privacy preserved</div>
+      <div class="bt-grid-lg">
+        <div class="bt-cell-lg sel" onclick="selBlood(this)"><div class="bt-cell-lg-val">A+</div><div class="bt-cell-lg-dot"></div></div>
+        <div class="bt-cell-lg" onclick="selBlood(this)"><div class="bt-cell-lg-val">A−</div><div class="bt-cell-lg-dot"></div></div>
+        <div class="bt-cell-lg" onclick="selBlood(this)"><div class="bt-cell-lg-val">B+</div><div class="bt-cell-lg-dot"></div></div>
+        <div class="bt-cell-lg" onclick="selBlood(this)"><div class="bt-cell-lg-val">B−</div><div class="bt-cell-lg-dot"></div></div>
+        <div class="bt-cell-lg" onclick="selBlood(this)"><div class="bt-cell-lg-val">AB+</div><div class="bt-cell-lg-dot"></div></div>
+        <div class="bt-cell-lg" onclick="selBlood(this)"><div class="bt-cell-lg-val">AB−</div><div class="bt-cell-lg-dot"></div></div>
+        <div class="bt-cell-lg" onclick="selBlood(this)"><div class="bt-cell-lg-val">O+</div><div class="bt-cell-lg-dot"></div></div>
+        <div class="bt-cell-lg" onclick="selBlood(this)"><div class="bt-cell-lg-val">O−</div><div class="bt-cell-lg-dot"></div></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button class="btn btn-ghost" style="flex:1;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px" onclick="selBloodUnknown()">Unknown Blood Type</button>
+        <button class="btn btn-cyan" style="flex:2" onclick="rmNext()">Next → Confirm</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Confirm -->
+    <div id="rmStep3" style="display:none">
+      <div class="rm-step-lbl">Final Verification</div>
+      <div class="rm-title">Confirm Emergency</div>
+      <div class="rm-sub">Review details before broadcasting to nearby donors</div>
+      <div class="confirm-card" onclick="rmBack(2)">
+        <div class="confirm-card-icon red"><span class="material-symbols-outlined" style="color:#ff535b;font-size:18px">local_hospital</span></div>
+        <div>
+          <div class="confirm-lbl">Destination Hospital</div>
+          <div class="confirm-val" id="cfHospName">Apollo Hospitals, Chennai</div>
+          <div class="confirm-meta" id="cfHospDist">1.2 km · HFR Verified</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div class="confirm-card" onclick="rmBack(1)" style="flex-direction:column">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="confirm-card-icon cyan"><span class="material-symbols-outlined" style="color:#00e3fd;font-size:18px">water_drop</span></div>
+            <div>
+              <div class="confirm-lbl">Blood Group</div>
+              <div class="confirm-val" id="cfBloodType">A+</div>
+            </div>
+          </div>
+        </div>
+        <div class="confirm-card" style="flex-direction:column">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="confirm-card-icon red"><span class="material-symbols-outlined" style="color:#fb8c00;font-size:18px">warning</span></div>
+            <div>
+              <div class="confirm-lbl">Priority</div>
+              <div class="confirm-val" style="color:#fb8c00">CRITICAL</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="field-wrap" style="margin-bottom:14px">
+        <label class="field-label">Emergency Note</label>
+        <textarea class="field-input" id="rmEmergencyNote" placeholder="Add any urgent context for the donor or hospital..." rows="4" oninput="updateEmergencyNotePreview()" style="resize:vertical;min-height:96px"></textarea>
+        <div class="auth-err" id="rmNoteHint">Mozilla.ai guard will redact phone numbers, emails, room/ward IDs, and names before dispatch.</div>
+      </div>
+      <div class="info-card" style="margin-bottom:16px">
+        <div class="info-card-head">Privacy Guard</div>
+        <div id="cfNotePreview" style="font-size:13px;color:#e2e2e2">Mozilla.ai-style local redaction will scrub any PII before sending.</div>
+      </div>
+      <!-- Upload -->
+      <div class="upload-zone" id="uploadZone" onclick="simUpload()">
+        <span class="material-symbols-outlined" style="font-size:28px;color:#5b403f">upload_file</span>
+        <div style="font-size:14px;color:#9f8c8b">Scan Hospital Form</div>
+        <div style="font-size:12px;color:#5b403f">camera · gallery · file (optional)</div>
+        <div style="background:rgba(0,227,253,.15);color:#00e3fd;font-size:10px;font-weight:700;padding:3px 12px;border-radius:20px;border:1px solid rgba(0,227,253,.3)">REQUIRED</div>
+      </div>
+      <div class="upload-done" id="uploadDone" style="display:none">
+        <span class="material-symbols-outlined" style="color:#43a047">description</span>
+        <span>requisition_form.jpg — ✓ uploaded</span>
+      </div>
+      <button class="dispatch-btn" onclick="triggerEmergency()">
+        <span class="material-symbols-outlined" style="font-size:24px">emergency_share</span>
+        TRIGGER EMERGENCY
+      </button>
+      <p style="text-align:center;font-size:10px;color:rgba(255,83,91,.6);margin-top:12px;font-family:'Space Grotesk',sans-serif;font-weight:700;letter-spacing:.2em;text-transform:uppercase">Dispatch to all nearby donors immediately</p>
+      <button class="btn-ghost" style="display:block;margin:8px auto 0" onclick="rmBack(2)">← Edit Details</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     LIVE STATUS
+════════════════════════════════════════════════════ -->
+<div class="screen" id="liveStatus">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <span class="material-symbols-outlined brand-icon">emergency</span>
+      <span class="brand-name">PULZ</span>
+    </div>
+    <div class="status-pill"><div class="status-dot"></div>LIVE</div>
+  </div>
+  <div class="ls-body">
+    <div class="tminus-card">
+      <div class="tminus-label">Donor Arriving In</div>
+      <div class="tminus-value" id="etaCountdown">—:—</div>
+      <div class="tminus-sub" id="etaSub">Searching for nearest donor...</div>
+    </div>
+    <div class="donor-card" id="donorCard" style="display:none">
+      <div class="donor-av" id="donorAvatar">D1</div>
+      <div class="donor-info">
+        <h4 id="donorName">Donor</h4>
+        <p id="donorMeta">—</p>
+      </div>
+      <div class="donor-status" id="lsDonorBadge">En Route</div>
+    </div>
+    <div style="display:none;align-items:center;gap:10px;background:rgba(251,140,0,.1);border:1px solid rgba(251,140,0,.3);border-radius:12px;padding:12px 14px;margin-bottom:12px" id="fallbackBanner">
+      <span class="material-symbols-outlined" style="color:#fb8c00;font-size:18px">bolt</span>
+      <div>
+        <div style="font-size:13px;color:#fb8c00;font-weight:600" id="fbTitle">Escalating...</div>
+        <div style="font-size:12px;color:#9f8c8b" id="fbSubText"></div>
+      </div>
+    </div>
+    <!-- Mission log stepper -->
+    <div class="stepper">
+      <div class="step-row">
+        <div class="step-icon done"><span class="material-symbols-outlined" style="font-size:16px">check</span></div>
+        <div class="step-body">
+          <div class="step-name">Hospital Validated</div>
+          <div class="step-desc" id="lsHospName">—</div>
+        </div>
+      </div>
+      <div class="step-row">
+        <div class="step-icon active" id="si_s"><span class="material-symbols-outlined" style="font-size:16px">refresh</span></div>
+        <div class="step-body">
+          <div class="step-name" id="sn_s">Searching donors...</div>
+          <div class="step-desc" id="sd_s">Scanning within 5km · Blood hash matched</div>
+        </div>
+      </div>
+      <div class="step-row">
+        <div class="step-icon wait" id="si_t"><span class="material-symbols-outlined" style="font-size:16px">directions_car</span></div>
+        <div class="step-body">
+          <div class="step-name">Donor in Transit</div>
+          <div class="step-desc" id="sd_t">Waiting for commitment</div>
+          <div class="step-eta-badge" id="etaBadge" style="display:none">ETA: 8 min</div>
+        </div>
+      </div>
+      <div class="step-row">
+        <div class="step-icon wait" id="si_a"><span class="material-symbols-outlined" style="font-size:16px">qr_code</span></div>
+        <div class="step-body" style="padding-bottom:0">
+          <div class="step-name">Digital Handshake</div>
+          <div class="step-desc" id="sd_a">Show donor your QR code</div>
+          <div id="qrBtnWrap" style="display:none;margin-top:10px">
+            <button class="btn btn-cyan" onclick="goTo('qrDisplayScreen')" style="font-size:13px;padding:12px">📲 Show My QR Code</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ls-actions">
+      <button style="flex:1;background:rgba(147,0,10,.15);color:#ff535b;border:1px solid rgba(255,83,91,.25);border-radius:14px;padding:12px;font-size:13px;cursor:pointer;font-family:'Manrope',sans-serif;font-weight:500" onclick="cancelRequest()">✕ Cancel Request</button>
+    </div>
+  </div>
+  <button class="ls-call-fab" id="lsCallFab" onclick="showToast('📞 Calling hospital...')" style="display:none">
+    <span class="material-symbols-outlined" style="font-size:22px">call</span>
+  </button>
+  <div class="bnav">
+    <button class="nt" onclick="goTo('recipientHome')"><span class="material-symbols-outlined ni">home</span>Home</button>
+    <button class="nt on"><span class="material-symbols-outlined ni">location_on</span>Live</button>
+    <button class="nt" onclick="goTo('profileScreen')"><span class="material-symbols-outlined ni">person</span>Profile</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     QR DISPLAY (recipient shows to donor)
+════════════════════════════════════════════════════ -->
+<div class="screen" id="qrDisplayScreen">
+  <div class="topbar">
+    <button class="topbar-back" onclick="navBack()"><span class="material-symbols-outlined" style="font-size:20px">arrow_back</span> Back</button>
+    <span style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff">Digital Handshake</span>
+    <span style="width:60px"></span>
+  </div>
+  <div class="qrd-body" id="qrdContent">
+    <div class="qrd-instr">
+      <span class="qrd-instr-icon">📱</span>
+      <div class="qrd-instr-text">
+        <strong>Show to Donor</strong>
+        <p>Donor scans this to verify arrival and complete the donation</p>
+      </div>
+    </div>
+    <div class="qr-frame-wrap">
+      <div class="qr-frame-glow"></div>
+      <div class="qr-box" style="position:relative">
+        <canvas id="qrCanvas2" width="200" height="200"></canvas>
+        <!-- Fallback SVG QR shown until canvas renders -->
+        <div id="qrFallback" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:10px">
+          <svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+            <!-- Top-left finder -->
+            <rect x="10" y="10" width="50" height="50" fill="none" stroke="#000" stroke-width="4"/>
+            <rect x="20" y="20" width="30" height="30" fill="#000"/>
+            <!-- Top-right finder -->
+            <rect x="120" y="10" width="50" height="50" fill="none" stroke="#000" stroke-width="4"/>
+            <rect x="130" y="20" width="30" height="30" fill="#000"/>
+            <!-- Bottom-left finder -->
+            <rect x="10" y="120" width="50" height="50" fill="none" stroke="#000" stroke-width="4"/>
+            <rect x="20" y="130" width="30" height="30" fill="#000"/>
+            <!-- Data modules (stylised pattern) -->
+            <rect x="75" y="10" width="8" height="8" fill="#000"/><rect x="87" y="10" width="8" height="8" fill="#000"/>
+            <rect x="75" y="22" width="8" height="8" fill="#000"/><rect x="99" y="10" width="8" height="8" fill="#000"/>
+            <rect x="87" y="22" width="8" height="8" fill="#000"/><rect x="99" y="22" width="8" height="8" fill="#000"/>
+            <rect x="75" y="34" width="8" height="8" fill="#000"/><rect x="99" y="34" width="8" height="8" fill="#000"/>
+            <rect x="75" y="46" width="8" height="8" fill="#000"/><rect x="87" y="46" width="8" height="8" fill="#000"/>
+            <rect x="10" y="75" width="8" height="8" fill="#000"/><rect x="22" y="75" width="8" height="8" fill="#000"/>
+            <rect x="34" y="75" width="8" height="8" fill="#000"/><rect x="46" y="87" width="8" height="8" fill="#000"/>
+            <rect x="10" y="87" width="8" height="8" fill="#000"/><rect x="34" y="87" width="8" height="8" fill="#000"/>
+            <rect x="10" y="99" width="8" height="8" fill="#000"/><rect x="22" y="99" width="8" height="8" fill="#000"/>
+            <rect x="46" y="99" width="8" height="8" fill="#000"/><rect x="10" y="111" width="8" height="8" fill="#000"/>
+            <rect x="34" y="111" width="8" height="8" fill="#000"/><rect x="46" y="111" width="8" height="8" fill="#000"/>
+            <rect x="75" y="75" width="8" height="8" fill="#000"/><rect x="99" y="75" width="8" height="8" fill="#000"/>
+            <rect x="111" y="75" width="8" height="8" fill="#000"/><rect x="87" y="87" width="8" height="8" fill="#000"/>
+            <rect x="75" y="99" width="8" height="8" fill="#000"/><rect x="111" y="87" width="8" height="8" fill="#000"/>
+            <rect x="99" y="99" width="8" height="8" fill="#000"/><rect x="123" y="75" width="8" height="8" fill="#000"/>
+            <rect x="135" y="75" width="8" height="8" fill="#000"/><rect x="147" y="75" width="8" height="8" fill="#000"/>
+            <rect x="159" y="75" width="8" height="8" fill="#000"/><rect x="123" y="87" width="8" height="8" fill="#000"/>
+            <rect x="147" y="87" width="8" height="8" fill="#000"/><rect x="135" y="99" width="8" height="8" fill="#000"/>
+            <rect x="159" y="99" width="8" height="8" fill="#000"/><rect x="123" y="111" width="8" height="8" fill="#000"/>
+            <rect x="135" y="111" width="8" height="8" fill="#000"/><rect x="159" y="111" width="8" height="8" fill="#000"/>
+            <rect x="75" y="111" width="8" height="8" fill="#000"/><rect x="111" y="111" width="8" height="8" fill="#000"/>
+            <rect x="75" y="123" width="8" height="8" fill="#000"/><rect x="87" y="123" width="8" height="8" fill="#000"/>
+            <rect x="111" y="123" width="8" height="8" fill="#000"/><rect x="135" y="123" width="8" height="8" fill="#000"/>
+            <rect x="75" y="135" width="8" height="8" fill="#000"/><rect x="99" y="135" width="8" height="8" fill="#000"/>
+            <rect x="123" y="135" width="8" height="8" fill="#000"/><rect x="147" y="135" width="8" height="8" fill="#000"/>
+            <rect x="75" y="147" width="8" height="8" fill="#000"/><rect x="87" y="147" width="8" height="8" fill="#000"/>
+            <rect x="111" y="147" width="8" height="8" fill="#000"/><rect x="135" y="147" width="8" height="8" fill="#000"/>
+            <rect x="159" y="147" width="8" height="8" fill="#000"/><rect x="75" y="159" width="8" height="8" fill="#000"/>
+            <rect x="99" y="159" width="8" height="8" fill="#000"/><rect x="147" y="159" width="8" height="8" fill="#000"/>
+            <!-- LS logo in center -->
+            <rect x="82" y="82" width="16" height="16" rx="3" fill="#ff535b"/>
+            <text x="90" y="93" text-anchor="middle" fill="white" font-size="9" font-weight="800" font-family="sans-serif">LS</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center">
+      <div style="font-size:10px;color:#5b403f;letter-spacing:1px;margin-bottom:6px;font-family:'Space Grotesk',sans-serif">EMERGENCY ID</div>
+      <div class="qr-token-display" id="qrTokenDisplay">—</div>
+    </div>
+    <div class="info-card" style="width:100%">
+      <div class="info-row"><span class="info-lbl">Hospital</span><span class="info-val" id="qrHospName">—</span></div>
+      <div class="info-row"><span class="info-lbl">Status</span><span style="color:#43a047;font-weight:600">🟢 Donor En Route</span></div>
+      <div class="info-row"><span class="info-lbl">ETA</span><span class="info-val">~8 minutes</span></div>
+    </div>
+    <button class="btn btn-cyan" style="max-width:300px" onclick="shareQR()">
+      <span class="material-symbols-outlined" style="font-size:18px">share</span> Share Code
+    </button>
+    <button class="btn-ghost" onclick="simDonorScan()">✓ Simulate Donor Scan (demo)</button>
+  </div>
+  <div class="qrd-body qrd-success" id="qrdSuccess">
+    <div class="succ-ring">✅</div>
+    <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff">Handshake Complete!</div>
+    <div style="font-size:14px;color:#9f8c8b;text-align:center">Donation verified and logged to<br>DPDP audit trail</div>
+    <button class="btn btn-primary" onclick="goTo('recipientHome')" style="max-width:280px">← Back to Home</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     BLOOD BANK
+════════════════════════════════════════════════════ -->
+<div class="screen" id="bloodBankScreen">
+  <div class="topbar">
+    <button class="topbar-back" onclick="navBack()"><span class="material-symbols-outlined" style="font-size:20px">arrow_back</span> Back</button>
+    <span style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff">Blood Banks</span>
+    <div class="status-pill" id="bbDistBadge" style="font-size:9px">Within 10 km</div>
+  </div>
+  <div class="bb-loc-bar">
+    <span class="material-symbols-outlined" style="font-size:16px;color:#00e3fd">location_on</span>
+    <span class="bb-loc-txt" id="bbLocTxt">Detecting location...</span>
+    <button class="bb-refresh" onclick="loadBloodBanks()"><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle">refresh</span> Refresh</button>
+  </div>
+  <div class="bb-filters">
+    <button class="bb-chip on" onclick="filterBanks('all',this)">All</button>
+    <button class="bb-chip" onclick="filterBanks('open',this)">Open Now</button>
+    <button class="bb-chip" onclick="filterBanks('govt',this)">Govt</button>
+    <button class="bb-chip" onclick="filterBanks('private',this)">Private</button>
+  </div>
+  <div class="bb-body" id="bbBody">
+    <div class="bb-loading" id="bbLoading">
+      <div class="bb-spin"></div>
+      <div style="font-size:13px;color:#9f8c8b">Finding blood banks near you...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     DONOR HOME
+════════════════════════════════════════════════════ -->
+<div class="screen" id="donorHome">
+  <div class="dh-header">
+    <div class="dh-greet">Welcome back 👋</div>
+    <div class="dh-name" id="dhName">—</div>
+    <div class="dh-donor-id">
+      <span class="dh-blood-badge" id="dhBloodType">O+</span>
+      <span class="dh-blood-lbl">Blood Donor</span>
+    </div>
+  </div>
+  <div class="dh-body">
+    <div class="toggle-card">
+      <div class="tgl-info">
+        <h3>Available to Donate</h3>
+        <p id="toggleStatus">Tap to go available</p>
+      </div>
+      <button class="tgl" id="availToggle" onclick="toggleAvail()"></button>
+    </div>
+    <div class="listen-card" id="listeningCard" style="display:none">
+      <div class="listen-dot"></div>
+      <div class="listen-txt" id="listenTxt">Listening for emergency requests near you...</div>
+    </div>
+    <div class="impact-card">
+      <div style="font-size:10px;font-weight:700;color:#9f8c8b;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:16px;font-family:'Space Grotesk',sans-serif">Your Impact</div>
+      <div class="impact-grid">
+        <div style="text-align:center"><div class="stat-num" id="dTotal">0</div><div class="stat-lbl">DONATIONS</div></div>
+        <div style="text-align:center"><div class="stat-num" id="dLives">0</div><div class="stat-lbl">LIVES SAVED</div></div>
+        <div style="text-align:center"><div class="stat-num" id="dDays">21</div><div class="stat-lbl">DAYS LEFT</div></div>
+      </div>
+    </div>
+    <div class="cooldown-card">
+      <div style="font-size:10px;font-weight:700;color:#9f8c8b;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Space Grotesk',sans-serif">6-Week Cooldown</div>
+      <div class="pbar"><div class="pfill" id="coolBar" style="width:50%"></div></div>
+      <div class="pbar-labels"><span>Last: Jan 28</span><span id="nextEligibleLbl">Next: Mar 11</span></div>
+    </div>
+    <button class="sim-btn" id="simAlertBtn" style="display:none" onclick="triggerDemoAlert()">
+      <span class="material-symbols-outlined" style="font-size:18px">emergency</span>Simulate Emergency Alert (demo)
+    </button>
+  </div>
+  <div class="bnav">
+    <button class="nt on"><span class="material-symbols-outlined ni">home</span>Home</button>
+    <button class="nt" onclick="openHistory()"><span class="material-symbols-outlined ni">favorite</span>Impact</button>
+    <button class="nt" onclick="goTo('profileScreen')"><span class="material-symbols-outlined ni">person</span>Profile</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     EMERGENCY ALERT (donor sees)
+════════════════════════════════════════════════════ -->
+<div class="screen" id="emergencyAlert">
+  <div class="ea-bg-anim"></div>
+  <div class="ea-orb1"></div><div class="ea-orb2"></div>
+  <div class="ea-content">
+    <div class="ea-badge"><div class="ea-badge-dot"></div>EMERGENCY ALERT</div>
+    <div class="ea-ring"><div class="ea-inner">🚨</div></div>
+    <div class="ea-title">BLOOD REQUEST NEARBY</div>
+    <div class="ea-queue" id="eaQueueBadge">D₁ · First to be alerted</div>
+    <div class="ea-details">
+      <div class="ea-detail-row"><span>Blood Type Needed</span><span class="ea-blood" id="eaBlood">O+</span></div>
+      <div class="ea-detail-row"><span>Distance</span><span id="eaDist">2.4 km · ~4 MIN ETA</span></div>
+      <div class="ea-detail-row"><span>Hospital</span><span id="eaHospital">Apollo, Chennai</span></div>
+      <div class="ea-detail-row"><span>Urgency</span><span style="color:#ff8080;font-weight:800">⚡ CRITICAL</span></div>
+    </div>
+    <div style="font-size:13px;color:rgba(255,255,255,.75);text-align:center">Enter your PIN to commit to this life-saving mission</div>
+    <div class="ea-timer-badge">Respond within <strong class="ea-timer-val" id="alertCt">45</strong>s</div>
+    <div class="ea-btns">
+      <button class="ea-decline" onclick="declineAlert()">✕ Not Now<br><span style="font-size:10px;opacity:.7">Alert D₂</span></button>
+      <button class="ea-accept" onclick="acceptAlert()">ENTER PIN →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     PIN SCREEN
+════════════════════════════════════════════════════ -->
+<div class="screen" id="pinScreen">
+  <div class="topbar">
+    <button class="topbar-back" onclick="goTo('emergencyAlert')"><span class="material-symbols-outlined" style="font-size:20px">arrow_back</span> Back</button>
+    <span style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff">PIN Commitment Gate</span>
+    <span style="width:60px"></span>
+  </div>
+  <div class="pin-scroll">
+    <div class="pin-icon-ring"><span class="material-symbols-outlined" style="font-size:32px;color:#00e3fd;font-variation-settings:'FILL' 1">lock</span></div>
+    <div>
+      <div class="pin-h2">Enter PIN to Commit</div>
+      <div class="pin-p">After verification, maps will open automatically to navigate to the hospital</div>
+    </div>
+    <div class="pin-dots">
+      <div class="pd" id="pd0"></div><div class="pd" id="pd1"></div>
+      <div class="pd" id="pd2"></div><div class="pd" id="pd3"></div>
+    </div>
+    <div class="pin-context-card">
+      <div class="pin-ctx-title" id="pinHospInfo">Hospital · Distance</div>
+      <div class="pin-ctx-sub" id="pinBloodInfo">Blood type · Priority</div>
+    </div>
+    <div class="keypad">
+      <button class="key" onclick="pressKey('1')">1</button>
+      <button class="key" onclick="pressKey('2')">2<span class="key-sub">ABC</span></button>
+      <button class="key" onclick="pressKey('3')">3<span class="key-sub">DEF</span></button>
+      <button class="key" onclick="pressKey('4')">4<span class="key-sub">GHI</span></button>
+      <button class="key" onclick="pressKey('5')">5<span class="key-sub">JKL</span></button>
+      <button class="key" onclick="pressKey('6')">6<span class="key-sub">MNO</span></button>
+      <button class="key" onclick="pressKey('7')">7<span class="key-sub">PQRS</span></button>
+      <button class="key" onclick="pressKey('8')">8<span class="key-sub">TUV</span></button>
+      <button class="key" onclick="pressKey('9')">9<span class="key-sub">WXYZ</span></button>
+      <button class="key key-emp"></button>
+      <button class="key" onclick="pressKey('0')">0</button>
+      <button class="key key-del" onclick="delKey()"><span class="material-symbols-outlined" style="font-size:18px">backspace</span></button>
+    </div>
+    <div class="pin-maps-note"><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle">location_on</span> Maps will open automatically after PIN</div>
+    <div class="pin-err-msg" id="pinErr"></div>
+    <div class="pin-demo-note">Demo PIN: <strong id="demoPinHint">1234</strong></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     TRANSIT / MAP
+════════════════════════════════════════════════════ -->
+<div class="screen" id="transitScreen">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <span class="material-symbols-outlined brand-icon" style="color:#00e3fd">water_drop</span>
+      <span class="brand-name" style="color:#00e3fd">En Route</span>
+    </div>
+    <div class="status-pill" style="border-color:rgba(67,160,71,.4);background:rgba(67,160,71,.1);color:#43a047">
+      <div class="status-dot" style="background:#43a047"></div>Active
+    </div>
+  </div>
+  <div class="pg-bar">
+    <span class="pg-label">⏱ PulseGuard · Movement Gate Active</span>
+    <span class="pg-timer" id="pgTimer">09:58</span>
+  </div>
+  <div class="pg-prog-bar"><div class="pg-prog-fill" id="pgProgressFill" style="width:100%"></div></div>
+  <div class="map-area" id="mapArea"></div>
+  <div class="transit-stats">
+    <div class="ts-col"><div class="ts-val">2.4km</div><div class="ts-lbl">Distance</div></div>
+    <div class="ts-col"><div class="ts-val" id="tsTimeLeft">8 min</div><div class="ts-lbl">Time Left</div></div>
+    <div class="ts-col"><div class="ts-val" style="color:#43a047">En Route</div><div class="ts-lbl">Status</div></div>
+  </div>
+  <div class="transit-footer">
+    <button class="gmap-btn" onclick="openGoogleMaps()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#EA4335"/><circle cx="12" cy="9" r="2.5" fill="white"/></svg>
+      <div style="display:flex;flex-direction:column;align-items:flex-start">
+        <span style="font-size:14px;font-weight:700;font-family:'Syne',sans-serif">Open in Google Maps</span>
+        <span style="font-size:11px;opacity:.6;font-weight:400;font-family:'Manrope',sans-serif">Navigate to <span id="gmapHospName">Apollo Hospital</span></span>
+      </div>
+      <span class="material-symbols-outlined" style="margin-left:auto;opacity:.6;font-size:18px">open_in_new</span>
+    </button>
+    <div class="transit-2btn" id="transitActions">
+      <button class="checkin-btn" onclick="checkIn()">📍 Confirm Moving</button>
+      <button class="arrived-btn" onclick="markArrived()">✅ Arrived</button>
+    </div>
+    <div class="arrived-panel" id="arrivedBanner">
+      <div class="arrived-info">🏥 You are at the hospital — ask the recipient to show their QR code</div>
+      <button class="scan-big-btn" onclick="goTo('qrScreen')">
+        📷 SCAN QR TO FINISH
+        <span class="scan-big-sub">Point camera at recipient's screen</span>
+      </button>
+      <button class="btn-ghost" style="text-align:center;font-size:12px" onclick="manualComplete()">Having trouble? Complete manually</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     QR SCANNER (donor scans recipient)
+════════════════════════════════════════════════════ -->
+<div class="screen" id="qrScreen">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <span class="material-symbols-outlined brand-icon" style="color:#00e3fd">water_drop</span>
+      <span class="brand-name" style="color:#00e3fd">Scan QR</span>
+    </div>
+    <div class="status-pill">Handshake</div>
+  </div>
+  <div class="qr-body">
+    <div style="text-align:center">
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:4px;color:#fff">Scan Recipient's QR</div>
+      <div style="font-size:13px;color:#9f8c8b">Point camera at recipient's screen</div>
+    </div>
+    <!-- Scanner viewport with mock QR background -->
+    <div class="qr-viewport">
+      <!-- Mock QR shown inside scanner when no camera -->
+      <div id="mockQrBg" style="position:absolute;inset:0;border-radius:12px;background:#0d1421;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;z-index:0">
+        <div style="background:#fff;border-radius:10px;padding:12px;box-shadow:0 4px 20px rgba(0,0,0,.5)">
+          <svg width="140" height="140" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+            <rect x="10" y="10" width="50" height="50" fill="none" stroke="#000" stroke-width="4"/>
+            <rect x="20" y="20" width="30" height="30" fill="#000"/>
+            <rect x="120" y="10" width="50" height="50" fill="none" stroke="#000" stroke-width="4"/>
+            <rect x="130" y="20" width="30" height="30" fill="#000"/>
+            <rect x="10" y="120" width="50" height="50" fill="none" stroke="#000" stroke-width="4"/>
+            <rect x="20" y="130" width="30" height="30" fill="#000"/>
+            <rect x="75" y="10" width="8" height="8" fill="#000"/><rect x="87" y="10" width="8" height="8" fill="#000"/>
+            <rect x="75" y="22" width="8" height="8" fill="#000"/><rect x="99" y="10" width="8" height="8" fill="#000"/>
+            <rect x="87" y="22" width="8" height="8" fill="#000"/><rect x="99" y="22" width="8" height="8" fill="#000"/>
+            <rect x="75" y="34" width="8" height="8" fill="#000"/><rect x="99" y="34" width="8" height="8" fill="#000"/>
+            <rect x="75" y="46" width="8" height="8" fill="#000"/><rect x="87" y="46" width="8" height="8" fill="#000"/>
+            <rect x="10" y="75" width="8" height="8" fill="#000"/><rect x="22" y="75" width="8" height="8" fill="#000"/>
+            <rect x="34" y="75" width="8" height="8" fill="#000"/><rect x="46" y="87" width="8" height="8" fill="#000"/>
+            <rect x="10" y="87" width="8" height="8" fill="#000"/><rect x="34" y="87" width="8" height="8" fill="#000"/>
+            <rect x="10" y="99" width="8" height="8" fill="#000"/><rect x="22" y="99" width="8" height="8" fill="#000"/>
+            <rect x="46" y="99" width="8" height="8" fill="#000"/><rect x="10" y="111" width="8" height="8" fill="#000"/>
+            <rect x="34" y="111" width="8" height="8" fill="#000"/><rect x="46" y="111" width="8" height="8" fill="#000"/>
+            <rect x="75" y="75" width="8" height="8" fill="#000"/><rect x="99" y="75" width="8" height="8" fill="#000"/>
+            <rect x="111" y="75" width="8" height="8" fill="#000"/><rect x="87" y="87" width="8" height="8" fill="#000"/>
+            <rect x="75" y="99" width="8" height="8" fill="#000"/><rect x="111" y="87" width="8" height="8" fill="#000"/>
+            <rect x="99" y="99" width="8" height="8" fill="#000"/><rect x="123" y="75" width="8" height="8" fill="#000"/>
+            <rect x="135" y="75" width="8" height="8" fill="#000"/><rect x="147" y="75" width="8" height="8" fill="#000"/>
+            <rect x="159" y="75" width="8" height="8" fill="#000"/><rect x="123" y="87" width="8" height="8" fill="#000"/>
+            <rect x="147" y="87" width="8" height="8" fill="#000"/><rect x="135" y="99" width="8" height="8" fill="#000"/>
+            <rect x="159" y="99" width="8" height="8" fill="#000"/><rect x="123" y="111" width="8" height="8" fill="#000"/>
+            <rect x="135" y="111" width="8" height="8" fill="#000"/><rect x="159" y="111" width="8" height="8" fill="#000"/>
+            <rect x="75" y="111" width="8" height="8" fill="#000"/><rect x="111" y="111" width="8" height="8" fill="#000"/>
+            <rect x="75" y="123" width="8" height="8" fill="#000"/><rect x="87" y="123" width="8" height="8" fill="#000"/>
+            <rect x="111" y="123" width="8" height="8" fill="#000"/><rect x="135" y="123" width="8" height="8" fill="#000"/>
+            <rect x="75" y="135" width="8" height="8" fill="#000"/><rect x="99" y="135" width="8" height="8" fill="#000"/>
+            <rect x="123" y="135" width="8" height="8" fill="#000"/><rect x="147" y="135" width="8" height="8" fill="#000"/>
+            <rect x="75" y="147" width="8" height="8" fill="#000"/><rect x="87" y="147" width="8" height="8" fill="#000"/>
+            <rect x="111" y="147" width="8" height="8" fill="#000"/><rect x="135" y="147" width="8" height="8" fill="#000"/>
+            <rect x="159" y="147" width="8" height="8" fill="#000"/><rect x="75" y="159" width="8" height="8" fill="#000"/>
+            <rect x="99" y="159" width="8" height="8" fill="#000"/><rect x="147" y="159" width="8" height="8" fill="#000"/>
+            <rect x="82" y="82" width="16" height="16" rx="3" fill="#ff535b"/>
+            <text x="90" y="93" text-anchor="middle" fill="white" font-size="9" font-weight="800" font-family="sans-serif">LS</text>
+          </svg>
+        </div>
+        <div style="font-size:11px;color:rgba(255,255,255,.4);font-family:Manrope,sans-serif;letter-spacing:.5px">Recipient&apos;s QR code</div>
+      </div>
+      <video id="qrVideo" autoplay playsinline muted style="position:relative;z-index:1"></video>
+      <canvas id="qrScanCanvas"></canvas>
+      <div class="qr-overlay">
+        <div class="qr-corner tl"></div><div class="qr-corner tr"></div>
+        <div class="qr-corner bl"></div><div class="qr-corner br"></div>
+        <div class="scan-line"></div>
+      </div>
+    </div>
+    <div class="qr-detected" id="qrDetectedBadge">
+      <span class="material-symbols-outlined" style="font-size:16px">verified</span> QR Detected — Verifying...
+    </div>
+    <div class="qr-status" id="qrStatus">Align the QR code within the frame</div>
+    <!-- Big simulate button for demo -->
+    <button onclick="simulateScan()" style="width:100%;max-width:300px;background:linear-gradient(135deg,rgba(0,54,61,.7),rgba(0,30,40,.7));border:1.5px solid rgba(0,227,253,.35);border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:transform .1s;box-shadow:0 4px 20px rgba(0,227,253,.15)" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(.97)'" ontouchend="this.style.transform=''">
+      <div style="width:44px;height:44px;border-radius:12px;background:rgba(0,227,253,.15);border:1px solid rgba(0,227,253,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <span class="material-symbols-outlined" style="color:#00e3fd;font-size:22px;font-variation-settings:'FILL' 1">qr_code_scanner</span>
+      </div>
+      <div style="text-align:left">
+        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;margin-bottom:2px">Tap to Complete Scan</div>
+        <div style="font-size:11px;color:#9f8c8b">Simulates successful QR verification</div>
+      </div>
+    </button>
+    <button class="btn-ghost" onclick="stopCamGoTo('transitScreen')" style="margin-top:-4px">← Back to Transit</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     COMPLETION / MISSION COMPLETE
+════════════════════════════════════════════════════ -->
+<div class="screen" id="completionScreen">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <span class="material-symbols-outlined brand-icon" style="color:#43a047">favorite</span>
+      <span class="brand-name" style="color:#43a047">Mission Complete!</span>
+    </div>
+  </div>
+  <!-- ambient bg -->
+  <div class="comp-bg">
+    <div style="position:absolute;top:-10%;left:-10%;width:50%;height:50%;border-radius:50%;background:rgba(255,83,91,.1);filter:blur(80px)"></div>
+    <div style="position:absolute;bottom:-10%;right:-10%;width:50%;height:50%;border-radius:50%;background:rgba(0,227,253,.08);filter:blur(80px)"></div>
+  </div>
+  <div class="comp-body">
+    <div style="text-align:center;margin-bottom:4px">
+      <div style="display:inline-flex;align-items:center;justify-content:center;width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);margin-bottom:12px">
+        <span class="material-symbols-outlined" style="font-size:36px;color:#43a047;font-variation-settings:'FILL' 1">verified</span>
+      </div>
+    </div>
+    <div class="comp-check-ring">✓</div>
+    <div class="comp-title">You Saved a Life!</div>
+    <div class="comp-sub">Mission completed. Your rapid response secured a critical outcome. 🦸</div>
+    <div class="impact-bento">
+      <div class="impact-head">YOUR IMPACT</div>
+      <div class="impact-cols">
+        <div class="impact-col"><div class="impact-num" id="impactDonations">1</div><div class="impact-lbl">Donations</div></div>
+        <div class="impact-col"><div class="impact-num" id="impactLives">1</div><div class="impact-lbl">Lives Saved</div></div>
+      </div>
+    </div>
+    <div class="summary-bento">
+      <div class="info-card-head">Donation Summary</div>
+      <div class="comp-row"><span>Hospital</span><span id="cHosp">—</span></div>
+      <div class="comp-row"><span>Blood Type</span><span id="cBlood">—</span></div>
+      <div class="comp-row"><span>Verified at</span><span id="cTime">—</span></div>
+      <div class="comp-row"><span>Audit ID</span><span style="font-size:11px;font-family:monospace" id="cAudit">—</span></div>
+    </div>
+    <div class="cooldown-bento">
+      <div class="cd-head">
+        <span style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff">Mission Cooldown</span>
+        <span class="cd-badge" id="cooldownBadge">1 day passed</span>
+      </div>
+      <div class="radial-wrap">
+        <svg width="130" height="130" viewBox="0 0 130 130">
+          <circle cx="65" cy="65" r="55" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="8"/>
+          <circle cx="65" cy="65" r="55" fill="none" stroke="#ff535b" stroke-width="8" stroke-dasharray="345" stroke-dashoffset="345" stroke-linecap="round" transform="rotate(-90 65 65)" id="coolArc"/>
+          <text x="65" y="60" text-anchor="middle" fill="#e2e2e2" font-size="22" font-weight="700" font-family="Syne">42</text>
+          <text x="65" y="78" text-anchor="middle" fill="#9f8c8b" font-size="12">days</text>
+        </svg>
+        <div class="rad-lbl">Next eligible: <span class="rad-val" id="nextEligDate">—</span></div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="goTo('donorHome')" style="max-width:300px">Back to Home</button>
+    <button class="share-btn-ghost" onclick="shareAchievement()">
+      <span class="material-symbols-outlined" style="font-size:16px">share</span> Share your achievement
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     HISTORY
+════════════════════════════════════════════════════ -->
+<div class="screen" id="historyScreen">
+  <div class="topbar">
+    <button class="topbar-back" onclick="navBack()"><span class="material-symbols-outlined" style="font-size:20px">arrow_back</span> Back</button>
+    <span style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff" id="histTitle">History</span>
+    <div class="status-pill" id="histCount" style="display:none">0</div>
+  </div>
+  <div class="hist-body" id="histBody">
+    <div class="hist-empty">
+      <div style="font-size:44px">📭</div>
+      <div style="font-size:15px;font-weight:600;color:#e2e2e2">Nothing here yet</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     PROFILE
+════════════════════════════════════════════════════ -->
+<div class="screen" id="profileScreen">
+  <div class="pro-header">
+    <div class="pro-av" id="proAv">👤</div>
+    <div class="pro-name" id="proName">—</div>
+    <div class="pro-email" id="proEmail">—</div>
+    <div class="pro-chip" id="proChip">—</div>
+  </div>
+  <div class="pro-body">
+    <div>
+      <div class="pro-section-head">Personal Info</div>
+      <div class="pro-card">
+        <div class="pro-row"><span class="pro-row-lbl">Blood Type</span><span class="pro-row-val" id="proBT">Not set</span><span class="pro-row-edit" onclick="editField('blood')">Edit</span></div>
+        <div class="pro-row"><span class="pro-row-lbl">Phone</span><span class="pro-row-val" id="proPhone">Not set</span><span class="pro-row-edit" onclick="editField('phone')">Edit</span></div>
+        <div class="pro-row"><span class="pro-row-lbl">Location</span><span class="pro-row-val">Chennai, TN</span></div>
+      </div>
+    </div>
+    <div id="donorStatsWrap" style="display:none">
+      <div class="pro-section-head">Donor Stats</div>
+      <div class="pro-card">
+        <div class="pro-row"><span class="pro-row-lbl">Total donations</span><span class="pro-row-val" id="proTotalD">0</span></div>
+        <div class="pro-row"><span class="pro-row-lbl">Lives impacted</span><span class="pro-row-val" id="proLivesD">0</span></div>
+        <div class="pro-row"><span class="pro-row-lbl">Next eligible</span><span class="pro-row-val" id="proNextEl">—</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="pro-section-head">Security & Privacy</div>
+      <div class="pro-card">
+        <div class="pro-row"><span class="pro-row-lbl">PIN</span><span class="pro-row-val">••••</span><span class="pro-row-edit" onclick="editField('pin')">Change</span></div>
+        <div class="pro-row"><span class="pro-row-lbl">Blood hash (SHA-256)</span><span class="pro-row-val" style="font-size:10px;font-family:monospace;color:#5b403f" id="proHash">—</span></div>
+        <div class="pro-row"><span class="pro-row-lbl">DPDP audit</span><span class="pro-row-val" style="color:#43a047">Active</span></div>
+      </div>
+    </div>
+    <button class="signout-btn" onclick="doSignOut()">Sign Out</button>
+  </div>
+  <div class="bnav">
+    <button class="nt" onclick="navBack()"><span class="material-symbols-outlined ni">home</span>Home</button>
+    <button class="nt" onclick="openHistory()"><span class="material-symbols-outlined ni">history</span>History</button>
+    <button class="nt on"><span class="material-symbols-outlined ni">person</span>Profile</button>
+  </div>
+</div>
+
+<!-- SYSTEM -->
+<div id="loadOv"><div class="spin"></div><div class="load-lbl" id="loadMsg">Loading...</div></div>
+<div id="toast"></div>
+
+</div><!-- #app -->
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════
+//  FIREBASE LOADER
+// ═══════════════════════════════════════════════════════════
+function loadScript(src){return new Promise((res,rej)=>{if(document.querySelector(`script[src="${src}"]`)){res();return;}const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('Load failed: '+src));document.head.appendChild(s);});}
+function loadWithRetry(urls){const list=Array.isArray(urls)?urls:[urls];const tryNext=i=>i>=list.length?Promise.reject(new Error('All CDNs failed')):loadScript(list[i]).catch(()=>tryNext(i+1));return tryNext(0);}
+function waitForFirebase(maxTries=50,interval=100){return new Promise((res,rej)=>{let t=0;const check=()=>{if(typeof firebase!=='undefined'&&firebase.initializeApp)res();else if(t++>=maxTries)rej(new Error('Firebase not found'));else setTimeout(check,interval);};check();});}
+
+const FB_SCRIPTS=[
+  ['https://cdn.jsdelivr.net/npm/firebase@10.7.1/firebase-app-compat.min.js','https://unpkg.com/firebase@10.7.1/firebase-app-compat.js'],
+  ['https://cdn.jsdelivr.net/npm/firebase@10.7.1/firebase-auth-compat.min.js','https://unpkg.com/firebase@10.7.1/firebase-auth-compat.js'],
+  ['https://cdn.jsdelivr.net/npm/firebase@10.7.1/firebase-database-compat.min.js','https://unpkg.com/firebase@10.7.1/firebase-database-compat.js']
+];
+const FB_CFG={apiKey:"AIzaSyC5pkUQmkVTzfIDTfCYVIvaYHECw4AoROY",authDomain:"lifestream-9f371.firebaseapp.com",projectId:"lifestream-9f371",storageBucket:"lifestream-9f371.firebasestorage.app",messagingSenderId:"811242018414",appId:"1:811242018414:web:c5ca8e62ba62b527f1b87f",databaseURL:"https://lifestream-9f371-default-rtdb.asia-southeast1.firebasedatabase.app"};
+
+// ═══════════════════════════════════════════════════════════
+//  GLOBAL STATE
+// ═══════════════════════════════════════════════════════════
+let DB=null,AUTH=null;
+let currentScreen='splash';
+let navStack=[];
+let appRole=null;
+let currentUser=null;
+let userProfile={};
+let demoMode=false;
+
+let selHospName='Apollo Hospitals, Chennai';
+let selHospLat='13.0067',selHospLng='80.2206';
+let selBT='A+';
+let setupBT='A+';
+let reqStep=1;
+let reqId=null;
+let qrToken=null;
+let donorQueueIdx=0;
+let alertTmr=null,pgTmr=null,lsTmr=null;
+let pgSecs=598;
+let pinValue='';
+let setupPin='';
+let isAvail=false;
+let autoAlertTimer=null;
+let emergencyListenerRef=null;
+let recipientWatchRef=null;
+let donorHist=[],recipHist=[];
+// SOS hold state
+let sosHoldTimer=null,sosFillInterval=null,sosHoldProgress=0;
+
+// ═══════════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',()=>{
+  setTimeout(()=>goTo('roleSelect'),2800);
+  loadWithRetry(FB_SCRIPTS[0])
+    .then(()=>loadWithRetry(FB_SCRIPTS[1]))
+    .then(()=>loadWithRetry(FB_SCRIPTS[2]))
+    .then(()=>waitForFirebase())
+    .then(()=>initFirebase())
+    .catch(err=>{console.warn('Firebase failed:',err.message);setConnBanner('offline','📵 Offline — demo mode only');demoMode=true;DB=null;AUTH=null;setDisplay('simAlertBtn','flex');});
+});
+
+function initFirebase(){
+  try{
+    if(!firebase.apps.length)firebase.initializeApp(FB_CFG);
+    DB=firebase.database();AUTH=firebase.auth();demoMode=false;
+    setConnBanner('online','✅ Connected to PULZ network');
+    setTimeout(()=>hideConnBanner(),3000);
+    DB.ref('.info/connected').on('value',snap=>{
+      if(snap.val()){setConnBanner('online','✅ Back online');setTimeout(hideConnBanner,2000);}
+      else setConnBanner('offline','⚠️ Connection lost — retrying...');
+    });
+    AUTH.onAuthStateChanged(u=>{
+      if(u&&(currentScreen==='roleSelect'||currentScreen==='authScreen'||currentScreen==='splash')){
+        currentUser=u;loadLocalProfile();
+        const savedRole=localStorage.getItem('ls_last_role');
+        if(savedRole&&userProfile.blood){appRole=savedRole;goHome();}
+      }
+    });
+  }catch(e){console.warn('Firebase init error:',e);demoMode=true;DB=null;AUTH=null;setConnBanner('offline','⚠️ Init error — demo mode');setDisplay('simAlertBtn','flex');}
+}
+
+// ── DOM helpers ────────────────────────────────────────────
+function setText(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+function setDisplay(id,v){const e=document.getElementById(id);if(e)e.style.display=v;}
+function setConnBanner(type,msg){const b=document.getElementById('connBanner');b.textContent=msg;b.className=type;}
+function hideConnBanner(){document.getElementById('connBanner').className='';}
+
+// ── Navigation ─────────────────────────────────────────────
+function goTo(id){if(id===currentScreen)return;navStack.push(currentScreen);_switch(id);}
+function navBack(){const prev=navStack.pop()||(appRole==='donor'?'donorHome':'recipientHome');_switch(prev);}
+function _switch(id){
+  document.getElementById(currentScreen).classList.remove('active');
+  document.getElementById(id).classList.add('active');
+  currentScreen=id;_onEnter(id);
+}
+function _onEnter(id){
+  if(id==='liveStatus')startLiveStatus();
+  if(id==='emergencyAlert')startAlertTmr();
+  if(id==='transitScreen')startPulseGuard();
+  if(id==='completionScreen')onCompletion();
+  if(id==='qrDisplayScreen')genQR();
+  if(id==='qrScreen')startCam();
+  if(id==='historyScreen')renderHistory();
+  if(id==='profileScreen')renderProfile();
+  if(id==='donorHome')onDonorHomeEnter();
+  if(id==='profileSetup')resetSetupUI();
+  if(id!=='transitScreen'&&pgTmr){clearInterval(pgTmr);pgTmr=null;}
+  if(id!=='liveStatus'&&lsTmr){clearInterval(lsTmr);lsTmr=null;}
+  if(id!=='qrScreen')stopCam();
+  // Show/hide call FAB
+  setDisplay('lsCallFab',id==='liveStatus'&&selHospName?'flex':'none');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ROLE SELECT
+// ═══════════════════════════════════════════════════════════
+function selectRole(r){
+  appRole=r;
+  // Update role badge on auth screen
+  const badge=document.getElementById('authRoleBadge');
+  const icon=document.getElementById('authRoleIcon');
+  const txt=document.getElementById('authRoleTxt');
+  if(badge){badge.className='auth-role-badge '+r;}
+  if(icon){icon.className='auth-role-icon '+r;icon.textContent=r==='recipient'?'🏥':'💉';}
+  if(txt){txt.textContent=r==='recipient'?'Recipient — I Need Blood':'Donor — I Can Donate';}
+  // legacy compat
+  const chip=document.getElementById('authChip');
+  if(chip){chip.textContent=r==='recipient'?'🏥 Recipient':'💉 Donor';chip.className='auth-chip '+r;}
+  goTo('authScreen');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════════════════
+function switchTab(t){
+  document.getElementById('loginForm').style.display=t==='login'?'block':'none';
+  document.getElementById('regForm').style.display=t==='register'?'block':'none';
+  document.getElementById('tabLogin').className='auth-tab'+(t==='login'?' on':'');
+  document.getElementById('tabReg').className='auth-tab'+(t==='register'?' on':'');
+}
+function doSignIn(){
+  const e=document.getElementById('liEmail').value.trim();
+  const p=document.getElementById('liPass').value;
+  const errEl=document.getElementById('liErr');
+  if(!e||!p){errEl.textContent='Please enter email and password';return;}
+  if(!AUTH){doSkip();return;}
+  showLoad('Signing in...');
+  AUTH.signInWithEmailAndPassword(e,p)
+    .then(r=>{currentUser=r.user;hideLoad();onAuthSuccess();})
+    .catch(err=>{hideLoad();errEl.textContent=fbErrMsg(err.code);});
+}
+function doRegister(){
+  const n=document.getElementById('rgName').value.trim();
+  const e=document.getElementById('rgEmail').value.trim();
+  const p=document.getElementById('rgPass').value;
+  const errEl=document.getElementById('rgErr');
+  if(!n||!e||!p){errEl.textContent='All fields required';return;}
+  if(p.length<6){errEl.textContent='Password must be 6+ characters';return;}
+  if(!AUTH){doSkip();return;}
+  showLoad('Creating account...');
+  AUTH.createUserWithEmailAndPassword(e,p)
+    .then(r=>{currentUser=r.user;return r.user.updateProfile({displayName:n});})
+    .then(()=>{hideLoad();onAuthSuccess(true);})
+    .catch(err=>{hideLoad();errEl.textContent=fbErrMsg(err.code);});
+}
+function doGoogleSign(){
+  if(!AUTH){doSkip();return;}
+  showLoad('Opening Google sign-in...');
+  const prov=new firebase.auth.GoogleAuthProvider();
+  AUTH.signInWithPopup(prov)
+    .then(r=>{currentUser=r.user;hideLoad();onAuthSuccess();})
+    .catch(err=>{hideLoad();showToast('Google sign-in failed: '+err.message);});
+}
+function doSkip(){
+  // Real Firebase sign-in (anonymous) so auth != null and DB rules pass.
+  // Falls back to fully local demo mode only if Firebase itself is unreachable.
+  if(AUTH){
+    showLoad('Setting up session...');
+    AUTH.signInAnonymously()
+      .then(r=>{ currentUser=r.user; demoMode=false; hideLoad(); _finishSkip(); })
+      .catch(err=>{ console.warn('Anon sign-in failed:',err.message); hideLoad(); demoMode=true; currentUser=_fakeDemoUser(); _finishSkip(); });
+    return;
+  }
+  demoMode = true;
+  currentUser = _fakeDemoUser();
+  _finishSkip();
+}
+function _fakeDemoUser(){
+  const isD = appRole==='donor';
+  return {
+    displayName: isD ? 'Demo Donor' : 'Demo Recipient',
+    email: 'demo@pulz.app',
+    uid: isD ? 'demo_donor_1' : 'demo_recip_1',
+    photoURL: null
+  };
+}
+function _finishSkip(){
+  const isD = appRole==='donor';
+  const uid = currentUser.uid;
+  // Inject a complete demo profile — skip setup entirely
+  userProfile = {
+    name:  isD ? 'Demo Donor' : 'Demo Recipient',
+    email: currentUser.email || 'demo@pulz.app',
+    uid,
+    blood: isD ? 'O+' : 'A+',
+    phone: '+91 9000000000',
+    pin:   '1234'
+  };
+  donorHist = JSON.parse(localStorage.getItem('ls_dh_'+uid)||'[]');
+  recipHist = JSON.parse(localStorage.getItem('ls_rh_'+uid)||'[]');
+  localStorage.setItem('ls_last_role', appRole);
+  localStorage.setItem('ls_prof_'+uid, JSON.stringify(userProfile));
+  if(demoMode) setDisplay('simAlertBtn','flex');
+  showToast('⚡ Demo mode — PIN is 1234');
+  goHome(); // skip profile setup, go straight home
+}
+function fbErrMsg(code){
+  return({'auth/user-not-found':'No account found. Please register.','auth/wrong-password':'Incorrect password.','auth/email-already-in-use':'Email already registered.','auth/invalid-email':'Invalid email.','auth/weak-password':'Password too weak.','auth/network-request-failed':'Network error.','auth/too-many-requests':'Too many attempts.'})[code]||'Authentication failed.';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  POST-AUTH
+// ═══════════════════════════════════════════════════════════
+function onAuthSuccess(isNew=false){
+  loadLocalProfile();
+  localStorage.setItem('ls_last_role',appRole);
+  if(!userProfile.blood||isNew){
+    document.getElementById('psName').value=userProfile.name||currentUser.displayName||'';
+    goTo('profileSetup');
+  } else {goHome();}
+}
+function loadLocalProfile(){
+  const s=localStorage.getItem('ls_prof_'+(currentUser?.uid||'demo'));
+  if(s)userProfile=JSON.parse(s);
+  else userProfile={name:currentUser?.displayName||'User',email:currentUser?.email||'',uid:currentUser?.uid||'demo'};
+  donorHist=JSON.parse(localStorage.getItem('ls_dh_'+(currentUser?.uid||'demo'))||'[]');
+  recipHist=JSON.parse(localStorage.getItem('ls_rh_'+(currentUser?.uid||'demo'))||'[]');
+}
+function saveProfile(){
+  localStorage.setItem('ls_prof_'+userProfile.uid,JSON.stringify(userProfile));
+  localStorage.setItem('ls_dh_'+userProfile.uid,JSON.stringify(donorHist));
+  localStorage.setItem('ls_rh_'+userProfile.uid,JSON.stringify(recipHist));
+}
+function goHome(){
+  const fn=(userProfile.name||'User').split(' ')[0];
+  if(appRole==='recipient'){
+    setText('rhGreetName',fn);
+    setText('rhBloodVal',userProfile.blood||'—');
+    goTo('recipientHome');
+  } else {
+    setText('dhName',fn);
+    setText('dhBloodType',userProfile.blood||'O+');
+    refreshDonorStats();
+    goTo('donorHome');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DONOR HOME
+// ═══════════════════════════════════════════════════════════
+function onDonorHomeEnter(){
+  refreshDonorStats();
+  // Clear any pending auto-alert timer
+  if(autoAlertTimer){clearTimeout(autoAlertTimer);autoAlertTimer=null;}
+  // Always reset to OFF state when entering donor home
+  isAvail=false;
+  document.getElementById('availToggle').classList.remove('on');
+  setText('toggleStatus','Tap to go available');
+  setDisplay('listeningCard','none');
+  if(demoMode||!DB){
+    setDisplay('simAlertBtn','none'); // hide manual button; auto-trigger handles it
+    return;
+  }
+  setDisplay('simAlertBtn','none');
+  stopListeningForEmergencies();
+}
+
+// NOTE: DB rules only grant read/write at emergencies/$reqId — never at the
+// "emergencies" collection root — so listening on DB.ref('emergencies') is
+// always denied, for every user, regardless of auth state. Instead, both
+// sides use one fixed, known key ("broadcast_channel"). That key still
+// matches the $reqId wildcard, so it's covered by the exact same rule as
+// any other request id — nothing extra is being opened up.
+const BROADCAST_KEY='broadcast_channel';
+
+function startListeningForEmergencies(){
+  if(!DB||!currentUser||appRole!=='donor')return;
+  stopListeningForEmergencies();
+  emergencyListenerRef=DB.ref('emergencies/'+BROADCAST_KEY);
+
+  emergencyListenerRef.on('value',snap=>{
+    const r=snap.val();if(!r)return;
+    if(r.status!=='searching')return;
+    if(r.recipientUid===currentUser.uid)return; // don't alert yourself
+    // Ignore emergencies older than 60 seconds (stale from previous sessions)
+    if(Date.now()-r.ts>60000)return;
+    if(currentScreen==='transitScreen'||currentScreen==='pinScreen'||currentScreen==='emergencyAlert')return;
+    if(r.reqId===reqId)return; // already handling this one
+    _populateAlertData(r);
+    playSiren();
+    if(currentScreen==='donorHome')goTo('emergencyAlert');
+  });
+}
+
+function _populateAlertData(r){
+  selHospName=r.hospital;selHospLat=r.hospLat||'13.0067';selHospLng=r.hospLng||'80.2206';
+  selBT=r.blood;reqId=r.reqId;qrToken=r.token;donorQueueIdx=r.donorQueueIdx||0;
+  setText('eaBlood',r.blood);
+  setText('eaHospital',r.hospital.split(',')[0]);
+  setText('eaDist','~2.4 km · ~4 MIN ETA');
+  setText('eaQueueBadge','D₁ · First to be alerted');
+  setText('pinHospInfo',r.hospital.split(',')[0]+' · ~2.4 km');
+  setText('pinBloodInfo',r.blood+' blood required · Critical patient');
+  setText('gmapHospName',r.hospital.split(',')[0]);
+  setText('demoPinHint',userProfile.pin||'1234');
+}
+function stopListeningForEmergencies(){
+  if(emergencyListenerRef){emergencyListenerRef.off('value');emergencyListenerRef=null;}
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PROFILE SETUP
+// ═══════════════════════════════════════════════════════════
+function resetSetupUI(){
+  ['ssDot1','ssDot2','ssDot3'].forEach((id,i)=>{const el=document.getElementById(id);if(!el)return;el.classList.remove('done','active');el.textContent=String(i+1);});
+  ['ssLine1','ssLine2'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('done');});
+  document.getElementById('ssDot1')?.classList.add('active');
+  setText('psStepLabel','1 of 3');
+  const b=document.getElementById('psBackBtn');
+  if(b){b.style.opacity='0';b.style.pointerEvents='none';b.onclick=()=>goTo('authScreen');}
+  setupPin='';updateSetupDots();
+  const fb=document.getElementById('psFinishBtn');if(fb){fb.disabled=true;fb.style.opacity='.4';}
+  document.getElementById('psStep1').style.display='flex';
+  document.getElementById('psStep2').style.display='none';
+  document.getElementById('psStep3').style.display='none';
+}
+function psNext(step){
+  if(step===1){
+    const name=document.getElementById('psName').value.trim();
+    if(!name){showToast('Please enter your name');return;}
+    userProfile.name=name;userProfile.phone=document.getElementById('psPhone').value.trim();
+    document.getElementById('psStep1').style.display='none';
+    document.getElementById('psStep2').style.display='flex';
+    const d1=document.getElementById('ssDot1');d1.classList.remove('active');d1.classList.add('done');d1.textContent='✓';
+    document.getElementById('ssLine1').classList.add('done');
+    document.getElementById('ssDot2').classList.add('active');
+    setText('psStepLabel','2 of 3');
+    const b=document.getElementById('psBackBtn');
+    if(b){b.style.opacity='1';b.style.pointerEvents='auto';b.onclick=()=>{
+      document.getElementById('psStep2').style.display='none';document.getElementById('psStep1').style.display='flex';
+      document.getElementById('ssDot1').classList.add('active');document.getElementById('ssDot1').classList.remove('done');document.getElementById('ssDot1').textContent='1';
+      document.getElementById('ssLine1').classList.remove('done');document.getElementById('ssDot2').classList.remove('active');
+      setText('psStepLabel','1 of 3');b.style.opacity='0';b.style.pointerEvents='none';
+    };}
+  } else if(step===2){
+    userProfile.blood=setupBT;
+    document.getElementById('psStep2').style.display='none';
+    document.getElementById('psStep3').style.display='flex';
+    const d2=document.getElementById('ssDot2');d2.classList.remove('active');d2.classList.add('done');d2.textContent='✓';
+    document.getElementById('ssLine2').classList.add('done');
+    document.getElementById('ssDot3').classList.add('active');
+    setText('psStepLabel','3 of 3');
+    const b=document.getElementById('psBackBtn');
+    if(b){b.onclick=()=>{
+      document.getElementById('psStep3').style.display='none';document.getElementById('psStep2').style.display='flex';
+      document.getElementById('ssDot2').classList.add('active');document.getElementById('ssDot2').classList.remove('done');document.getElementById('ssDot2').textContent='2';
+      document.getElementById('ssLine2').classList.remove('done');document.getElementById('ssDot3').classList.remove('active');
+      setText('psStepLabel','2 of 3');
+    };}
+  }
+}
+function selSetupBT(el,bt){
+  setupBT=bt;
+  document.querySelectorAll('#psBloodGrid .bt-cell').forEach(x=>x.classList.remove('sel'));
+  el.classList.add('sel');
+  setText('hashPreview',pseudoHash(bt).slice(0,12)+'...');
+}
+function setupKey(k){
+  if(setupPin.length>=4)return;
+  setupPin+=k;updateSetupDots();
+  if(setupPin.length===4){const fb=document.getElementById('psFinishBtn');if(fb){fb.disabled=false;fb.style.opacity='1';}}
+}
+function setupDel(){
+  if(setupPin.length>0){setupPin=setupPin.slice(0,-1);updateSetupDots();}
+  const fb=document.getElementById('psFinishBtn');if(fb){fb.disabled=true;fb.style.opacity='.4';}
+}
+function updateSetupDots(){for(let i=0;i<4;i++){const d=document.getElementById('psd'+i);if(d)d.classList.toggle('filled',i<setupPin.length);}}
+function finishSetup(){
+  userProfile.pin=setupPin;userProfile.blood=setupBT;
+  userProfile.uid=currentUser?.uid||'demo';userProfile.email=currentUser?.email||'demo@pulz.app';
+  if(DB&&!demoMode){
+    DB.ref('users/'+userProfile.uid).set({
+      name:userProfile.name,phone:userProfile.phone||'',blood:userProfile.blood,role:appRole,
+      bloodHash:pseudoHash(userProfile.blood),available:appRole==='donor',donationCount:0,uid:userProfile.uid,ts:Date.now()
+    });
+  }
+  saveProfile();showToast('Profile saved! 🎉');goHome();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SOS HOLD-TO-ACTIVATE
+// ═══════════════════════════════════════════════════════════
+function startHold(e){
+  e.preventDefault();
+  sosHoldProgress=0;
+  const pill=document.getElementById('sosPill');
+  const fill=document.getElementById('sosRingFill');
+  const card=document.getElementById('sosCard');
+  card.classList.add('held');
+  pill.textContent='HOLD TO ACTIVATE...';
+  sosFillInterval=setInterval(()=>{
+    sosHoldProgress+=2;
+    fill.style.background=`conic-gradient(rgba(255,83,91,.8) ${sosHoldProgress*3.6}deg, transparent ${sosHoldProgress*3.6}deg)`;
+    if(sosHoldProgress>=100){
+      endHold(e,true);
+    }
+  },20);
+  sosHoldTimer=setTimeout(()=>{/* handled by interval */},2000);
+}
+function endHold(e,triggered=false){
+  if(e)e.preventDefault();
+  if(sosFillInterval){clearInterval(sosFillInterval);sosFillInterval=null;}
+  if(sosHoldTimer){clearTimeout(sosHoldTimer);sosHoldTimer=null;}
+  const pill=document.getElementById('sosPill');
+  const fill=document.getElementById('sosRingFill');
+  const card=document.getElementById('sosCard');
+  card.classList.remove('held');
+  if(triggered){
+    pill.textContent='ACTIVATED!';
+    fill.style.background='conic-gradient(rgba(255,83,91,.9) 360deg, transparent 360deg)';
+    setTimeout(()=>{
+      goTo('requestModal');
+      resetSOS();
+    },300);
+  } else {
+    resetSOS();
+  }
+}
+function resetSOS(){
+  sosHoldProgress=0;
+  const pill=document.getElementById('sosPill');
+  const fill=document.getElementById('sosRingFill');
+  if(pill)pill.textContent='HOLD TO ACTIVATE';
+  if(fill)fill.style.background='conic-gradient(rgba(255,83,91,.6) 0deg, transparent 0deg)';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  REQUEST FLOW
+// ═══════════════════════════════════════════════════════════
+function selHosp(el,name,lat,lng){
+  document.querySelectorAll('.hosp-item').forEach(x=>x.classList.remove('sel'));
+  el.classList.add('sel');selHospName=name;selHospLat=lat;selHospLng=lng;
+}
+function filterHosp(v){
+  document.querySelectorAll('.hosp-item').forEach(el=>{
+    el.style.display=el.querySelector('.hosp-name').textContent.toLowerCase().includes(v.toLowerCase())?'':'none';
+  });
+}
+function selBlood(el){
+  document.querySelectorAll('.bt-cell-lg').forEach(x=>x.classList.remove('sel'));
+  el.classList.add('sel');selBT=el.querySelector('.bt-cell-lg-val').textContent;
+}
+function selBloodUnknown(){selBT='Unknown';showToast('Blood type set to Unknown');rmNext();}
+function simUpload(){setDisplay('uploadZone','none');setDisplay('uploadDone','flex');}
+
+function sanitizeEmergencyNote(text){
+  let safe=text||'';
+  const piiItems=[];
+  const addPii=(type,value)=>{piiItems.push({type,value});return true};
+  const replacements=[
+    {type:'phone',re:/\+?\d[\d\s-]{7,}\d/g,replace:'[REDACTED PHONE]'},
+    {type:'email',re:/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g,replace:'[REDACTED EMAIL]'},
+    {type:'id',re:/\b(?:Aadhaar|PAN|passport|passport no|license|DL|id|id no)\b[: ]*\w+/gi,replace:'[REDACTED ID]'},
+    {type:'location',re:/\b(Room|Ward|Bed)\s*\d+\b/gi,replace:'[REDACTED LOCATION]'}
+  ];
+  replacements.forEach(r=>{
+    safe=safe.replace(r.re,m=>{addPii(r.type,m);return r.replace;});
+  });
+  safe=safe.replace(/\b(Patient is|Patient's name is|Contact|contact|call|reach|wife|husband|mother|father|son|daughter)\s+([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)/g,
+    (full, prefix, name)=>{addPii('name',name);return `${prefix} [REDACTED]`;});
+  if(!safe.trim()) safe='No additional details provided.';
+  return {raw:text,safeText:safe.trim(),piiItems};
+}
+
+function updateEmergencyNotePreview(){
+  const raw=document.getElementById('rmEmergencyNote')?.value||'';
+  const noteData=sanitizeEmergencyNote(raw);
+  setText('cfNotePreview',noteData.safeText||'No additional details provided.');
+}
+
+function rmNext(){
+  if(reqStep===1){
+    // Update confirm step
+    setText('cfHospName',selHospName);
+    setText('cfHospDist','HFR Verified');
+    setDisplay('rmStep1','none');setDisplay('rmStep2','block');
+    document.getElementById('rmFill').style.width='66%';reqStep=2;
+  } else if(reqStep===2){
+    setText('cfBloodType',selBT);
+    setDisplay('rmStep2','none');setDisplay('rmStep3','block');
+    document.getElementById('rmFill').style.width='100%';reqStep=3;
+  }
+}
+function rmBack(toStep){
+  if(toStep===2){
+    setDisplay('rmStep3','none');setDisplay('rmStep2','block');
+    document.getElementById('rmFill').style.width='66%';reqStep=2;
+  } else if(toStep===1){
+    setDisplay('rmStep2','none');setDisplay('rmStep1','block');
+    document.getElementById('rmFill').style.width='33%';reqStep=1;
+  }
+}
+function _resetModal(){
+  reqStep=1;
+  setDisplay('rmStep1','block');setDisplay('rmStep2','none');setDisplay('rmStep3','none');
+  document.getElementById('rmFill').style.width='33%';
+  setDisplay('uploadZone','flex');setDisplay('uploadDone','none');
+  const noteTextarea=document.getElementById('rmEmergencyNote');
+  if(noteTextarea){noteTextarea.value='';}
+  setText('cfNotePreview','Mozilla.ai-style local redaction will scrub any PII before sending.');
+}
+
+function triggerEmergency(){
+  const rawNote=document.getElementById('rmEmergencyNote')?.value||'';
+  const noteData=sanitizeEmergencyNote(rawNote);
+  _resetModal();
+  reqId='req_'+Date.now();qrToken=genToken();donorQueueIdx=0;
+  setText('lsHospName',selHospName+' — HFR Verified');
+  setText('qrHospName',selHospName);
+  setText('eaHospital',selHospName.split(',')[0]);
+  setText('eaBlood',selBT);
+
+  setText('cfNotePreview',noteData.safeText||'No additional details provided.');
+  const entry={id:reqId,hospital:selHospName,blood:selBT,note:noteData.safeText,piiRedacted:noteData.piiItems.length>0,date:new Date().toISOString(),status:'pending',token:qrToken};
+  recipHist.unshift(entry);saveProfile();
+  setText('rhLastReq','Just now — Pending');
+  setText('rhActiveEl','⚡ Active');
+  document.getElementById('rhActiveEl').style.color='#fb8c00';
+  setDisplay('activeReqBanner','flex');
+  setText('arb-status','Searching...');
+
+  if(DB&&!demoMode){
+    const payload={
+      reqId,recipientUid:currentUser?.uid||'demo',hospital:selHospName,hospLat:selHospLat,hospLng:selHospLng,
+      blood:selBT,status:'searching',token:qrToken,donorQueueIdx:0,ts:Date.now(),
+      note:noteData.safeText,piiRedacted:noteData.piiItems.length>0,piiItems:noteData.piiItems
+    };
+    DB.ref('emergencies/'+reqId).set(payload)
+      .then(()=>DB.ref('emergencies/'+BROADCAST_KEY).set(payload))
+      .then(()=>showToast('🚨 Emergency broadcast sent!'))
+      .catch(err=>showToast('⚠️ Broadcast failed: '+err.message));
+
+    // Detach any old watcher first
+    if(recipientWatchRef)recipientWatchRef.off('value');
+    recipientWatchRef=DB.ref('emergencies/'+reqId);
+    recipientWatchRef.on('value',snap=>{
+      const r=snap.val();if(!r)return;
+      if(r.status==='committed'&&currentScreen==='liveStatus'){
+        _recipientDonorCommitted(r);
+      }
+      if(r.status==='in_transit'&&currentScreen==='liveStatus'){
+        // Donor confirmed moving — update stepper
+        document.getElementById('si_t').className='step-icon active';
+        document.getElementById('si_t').innerHTML='<span class="material-symbols-outlined" style="font-size:16px">directions_car</span>';
+        setDisplay('etaBadge','inline-block');
+        setText('sd_t','Donor is en route to hospital');
+        setDisplay('donorCard','flex');
+      }
+      if(r.status==='arrived'&&currentScreen==='liveStatus'){
+        // Donor arrived — prompt recipient to show QR
+        document.getElementById('si_a').className='step-icon active';
+        document.getElementById('si_a').innerHTML='<span class="material-symbols-outlined" style="font-size:16px">qr_code</span>';
+        setText('sd_a','Donor at hospital — show your QR code now!');
+        setDisplay('qrBtnWrap','block');
+        setText('lsDonorBadge','Arrived');
+        showToast('🏥 Donor has arrived! Show your QR code');
+      }
+      if(r.status==='completed'){
+        // Donation verified — trigger success on recipient too
+        if(currentScreen==='liveStatus'||currentScreen==='qrDisplayScreen'){
+          simDonorScan();
+        }
+      }
+    });
+  }
+
+  setDisplay('lsCallFab','flex');
+  goTo('liveStatus');
+}
+
+function _recipientDonorCommitted(r){
+  if(lsTmr){clearInterval(lsTmr);lsTmr=null;}
+  document.getElementById('si_s').className='step-icon done';
+  document.getElementById('si_s').innerHTML='<span class="material-symbols-outlined" style="font-size:16px">check</span>';
+  setText('sn_s','Donor committed');
+  setText('sd_s',(r.donorName||'Donor')+' · '+selBT+' · PulseGuard active');
+  setText('etaSub','Donor is on the way!');
+  setDisplay('donorCard','flex');
+  setText('donorAvatar',(r.donorName||'D').charAt(0).toUpperCase());
+  setText('donorName',r.donorName||'Donor');
+  setText('donorMeta',selBT+' · En Route');
+  setText('lsDonorBadge','En Route');
+  setTimeout(()=>{
+    document.getElementById('si_t').className='step-icon active';
+    document.getElementById('si_t').innerHTML='<span class="material-symbols-outlined" style="font-size:16px">directions_car</span>';
+    setDisplay('etaBadge','inline-block');
+  },2000);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LIVE STATUS
+// ═══════════════════════════════════════════════════════════
+let etaSeconds=504;
+function startLiveStatus(){
+  etaSeconds=504;
+  document.getElementById('si_s').className='step-icon active';
+  document.getElementById('si_s').innerHTML='<span class="material-symbols-outlined" style="font-size:16px">refresh</span>';
+  setText('sn_s','Searching donors...');
+  setText('sd_s','Scanning within 5km · Blood type matched by hash');
+  document.getElementById('si_t').className='step-icon wait';
+  document.getElementById('si_t').innerHTML='<span class="material-symbols-outlined" style="font-size:16px">directions_car</span>';
+  document.getElementById('si_a').className='step-icon wait';
+  document.getElementById('si_a').innerHTML='<span class="material-symbols-outlined" style="font-size:16px">qr_code</span>';
+  setDisplay('etaBadge','none');setDisplay('qrBtnWrap','none');
+  setDisplay('fallbackBanner','none');setDisplay('donorCard','none');
+  setText('etaCountdown','8:24');setText('etaSub','Searching for nearest donor...');
+  if(lsTmr)clearInterval(lsTmr);
+  lsTmr=setInterval(()=>{if(etaSeconds>0){etaSeconds--;const m=Math.floor(etaSeconds/60),s=etaSeconds%60;setText('etaCountdown',m+':'+s.toString().padStart(2,'0'));}},2500);
+  if(demoMode||!DB){setTimeout(()=>{if(currentScreen!=='liveStatus')return;clearInterval(lsTmr);lsTmr=null;_showDemoCommit('Demo Donor');},5000);}
+}
+function _showDemoCommit(name){
+  document.getElementById('si_s').className='step-icon done';
+  document.getElementById('si_s').innerHTML='<span class="material-symbols-outlined" style="font-size:16px">check</span>';
+  setText('sn_s',name+' committed');
+  setText('sd_s',name+' · '+selBT+' · PulseGuard active');
+  setText('etaSub',name+' is on the way!');
+  setDisplay('donorCard','flex');
+  setText('donorAvatar',name.charAt(0));setText('donorName',name);
+  setText('donorMeta',selBT+' · En Route');setText('lsDonorBadge','En Route');
+  setTimeout(()=>{
+    document.getElementById('si_t').className='step-icon active';
+    document.getElementById('si_t').innerHTML='<span class="material-symbols-outlined" style="font-size:16px">directions_car</span>';
+    setDisplay('etaBadge','inline-block');
+  },2000);
+  setTimeout(()=>{
+    document.getElementById('si_a').className='step-icon active';
+    document.getElementById('si_a').innerHTML='<span class="material-symbols-outlined" style="font-size:16px">qr_code</span>';
+    setText('sd_a','Donor arrived — tap to show QR');
+    setDisplay('qrBtnWrap','block');
+  },12000);
+}
+
+function cancelRequest(){
+  if(!confirm('Cancel this emergency request?'))return;
+  if(DB&&reqId&&!demoMode){
+    DB.ref('emergencies/'+reqId).update({status:'cancelled'});
+    DB.ref('emergencies/'+BROADCAST_KEY).once('value').then(snap=>{
+      const b=snap.val();
+      if(b&&b.reqId===reqId)DB.ref('emergencies/'+BROADCAST_KEY).update({status:'cancelled'});
+    });
+  }
+  recipHist=recipHist.map(r=>r.id===reqId?{...r,status:'cancelled'}:r);saveProfile();
+  setDisplay('activeReqBanner','none');
+  setText('rhActiveEl','✓ None');document.getElementById('rhActiveEl').style.color='#43a047';
+  setDisplay('lsCallFab','none');
+  if(lsTmr){clearInterval(lsTmr);lsTmr=null;}
+  reqId=null;qrToken=null;
+  goTo('recipientHome');showToast('Request cancelled');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  QR GENERATE
+// ═══════════════════════════════════════════════════════════
+function genQR(){
+  if(!qrToken){qrToken=genToken();reqId=reqId||'req_'+Date.now();}
+  const payload=JSON.stringify({t:qrToken,r:reqId,h:selHospName,b:selBT});
+  const shortId=(reqId||'').slice(-8).toUpperCase();
+  setText('qrTokenDisplay','LS-'+shortId);
+  setDisplay('qrdContent','flex');
+  document.getElementById('qrdSuccess').classList.remove('show');
+  const c=document.getElementById('qrCanvas2');
+  if(typeof QRCode!=='undefined'){
+    QRCode.toCanvas(c,payload,{width:200,margin:1,color:{dark:'#000',light:'#fff'}},()=>{
+      // Hide fallback SVG once real QR renders
+      const fb=document.getElementById('qrFallback');
+      if(fb)fb.style.display='none';
+    });
+  }
+}
+function shareQR(){
+  if(navigator.share)navigator.share({title:'PULZ QR',text:'Scan to complete blood donation handshake'});
+  else showToast('ID: '+(reqId||'').slice(-8).toUpperCase());
+}
+function simDonorScan(){
+  setDisplay('qrdContent','none');
+  document.getElementById('qrdSuccess').classList.add('show');
+  if(DB&&reqId&&!demoMode)DB.ref('emergencies/'+reqId).update({status:'completed'});
+  recipHist=recipHist.map(r=>r.id===reqId?{...r,status:'completed'}:r);saveProfile();
+  setText('rhActiveEl','✓ None');document.getElementById('rhActiveEl').style.color='#43a047';
+  setDisplay('activeReqBanner','none');
+  setDisplay('lsCallFab','none');
+  // Detach watcher — we are done
+  if(recipientWatchRef){recipientWatchRef.off('value');recipientWatchRef=null;}
+}
+
+// ═══════════════════════════════════════════════════════════
+//  EMERGENCY ALERT
+// ═══════════════════════════════════════════════════════════
+function triggerDemoAlert(){
+  selHospName='Apollo Hospitals, Chennai';selHospLat='13.0067';selHospLng='80.2206';
+  selBT=userProfile.blood||'O+';
+  // Give unique reqId so it doesn't clash with real ones
+  reqId='demo_req_'+Date.now();
+  qrToken=genToken();
+  setText('eaBlood',selBT);
+  setText('eaHospital','Apollo, Chennai');
+  setText('eaQueueBadge','D₁ · First to be alerted');
+  setText('eaDist','2.4 km · ~4 MIN ETA');
+  setText('pinHospInfo','Apollo Hospitals · 2.4 km');
+  setText('pinBloodInfo',selBT+' blood required · Critical patient');
+  setText('gmapHospName','Apollo Hospital');
+  setText('demoPinHint',userProfile.pin||'1234');
+  playSiren();
+  goTo('emergencyAlert');
+}
+function acceptAlert(){
+  if(alertTmr){clearInterval(alertTmr);alertTmr=null;}
+  if(DB&&reqId&&!demoMode){
+    const commitData={
+      status:'committed',
+      donorUid:currentUser?.uid||'demo',
+      donorName:userProfile.name||'Donor',
+      donorBlood:userProfile.blood||selBT,
+      acceptedAt:Date.now()
+    };
+    DB.ref('emergencies/'+reqId).update(commitData);
+    // Stop alerting other donors on the shared channel for this request
+    DB.ref('emergencies/'+BROADCAST_KEY).once('value').then(snap=>{
+      const b=snap.val();
+      if(b&&b.reqId===reqId)DB.ref('emergencies/'+BROADCAST_KEY).update({status:'committed'});
+    });
+  }
+  goTo('pinScreen');
+}
+function declineAlert(){
+  if(alertTmr){clearInterval(alertTmr);alertTmr=null;}
+  donorQueueIdx++;
+  if(DB&&reqId&&!demoMode)DB.ref('emergencies/'+reqId).update({donorQueueIdx,status:'searching'});
+  showToast('⚡ Alerting next donor automatically');
+  goTo('donorHome');
+}
+function startAlertTmr(){
+  let t=45;setText('alertCt',t);
+  if(alertTmr)clearInterval(alertTmr);
+  alertTmr=setInterval(()=>{t--;setText('alertCt',t);if(t<=0){clearInterval(alertTmr);declineAlert();}},1000);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PIN
+// ═══════════════════════════════════════════════════════════
+function pressKey(k){
+  if(pinValue.length>=4)return;
+  pinValue+=k;updatePDots();
+  if(pinValue.length===4)verifyPIN();
+}
+function delKey(){if(pinValue.length>0){pinValue=pinValue.slice(0,-1);updatePDots();}}
+function updatePDots(){for(let i=0;i<4;i++){const d=document.getElementById('pd'+i);if(d){d.classList.toggle('filled',i<pinValue.length);d.classList.remove('err');}}}
+function verifyPIN(){
+  const correct=userProfile.pin||'1234';
+  if(pinValue===correct){
+    pinValue='';updatePDots();
+    if(DB&&reqId&&!demoMode){
+      // Fetch the token from Firebase so donor has the exact same token as recipient
+      DB.ref('emergencies/'+reqId).once('value').then(snap=>{
+        const r=snap.val();
+        if(r&&r.token) qrToken=r.token; // sync token
+        DB.ref('emergencies/'+reqId).update({
+          status:'in_transit',
+          donorAccepted:true,
+          donorName:userProfile.name||'Donor',
+          donorUid:currentUser?.uid||'demo'
+        });
+      });
+    }
+    try{openGoogleMaps();}catch(e){}
+    goTo('transitScreen');
+  } else {
+    for(let i=0;i<4;i++){const d=document.getElementById('pd'+i);if(d)d.classList.add('err');}
+    setText('pinErr','Incorrect PIN. Try: '+(userProfile.pin||'1234'));
+    setTimeout(()=>{pinValue='';updatePDots();setText('pinErr','');},1400);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TRANSIT / PULSEGUARD
+// ═══════════════════════════════════════════════════════════
+function openGoogleMaps(){
+  const hospName=encodeURIComponent(selHospName||'Apollo Hospitals Chennai');
+  const lat=selHospLat||'13.0067',lng=selHospLng||'80.2206';
+  const googleMapsUrl=`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+  const isAndroid=/android/i.test(navigator.userAgent),isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(isIOS){window.location=`comgooglemaps://?daddr=${lat},${lng}&directionsmode=driving`;setTimeout(()=>window.open(googleMapsUrl,'_blank'),500);}
+  else if(isAndroid){window.location=`geo:${lat},${lng}?q=${lat},${lng}(${hospName})`;setTimeout(()=>window.open(googleMapsUrl,'_blank'),500);}
+  else window.open(googleMapsUrl,'_blank');
+  showToast('Opening Google Maps navigation…');
+}
+
+function _injectMap(){
+  const area=document.getElementById('mapArea');
+  if(!area||area.querySelector('svg'))return;
+  area.innerHTML=`<svg width="100%" height="100%" viewBox="0 0 430 280" xmlns="http://www.w3.org/2000/svg" style="display:block">
+    <rect width="430" height="280" fill="#0d1421"/>
+    <rect x="10" y="10" width="38" height="22" rx="2" fill="#141d2e"/><rect x="54" y="10" width="24" height="22" rx="2" fill="#141d2e"/><rect x="84" y="10" width="40" height="22" rx="2" fill="#141d2e"/><rect x="132" y="10" width="28" height="22" rx="2" fill="#141d2e"/><rect x="168" y="10" width="50" height="22" rx="2" fill="#141d2e"/>
+    <rect x="10" y="48" width="26" height="34" rx="2" fill="#141d2e"/><rect x="44" y="48" width="42" height="34" rx="2" fill="#141d2e"/><rect x="94" y="48" width="30" height="34" rx="2" fill="#141d2e"/><rect x="132" y="48" width="44" height="34" rx="2" fill="#141d2e"/>
+    <rect x="10" y="100" width="48" height="28" rx="2" fill="#141d2e"/><rect x="66" y="100" width="30" height="28" rx="2" fill="#141d2e"/><rect x="104" y="100" width="58" height="28" rx="2" fill="#141d2e"/>
+    <rect x="10" y="148" width="34" height="26" rx="2" fill="#141d2e"/><rect x="52" y="148" width="46" height="26" rx="2" fill="#141d2e"/>
+    <rect x="0" y="38" width="430" height="7" fill="#1c2a3a"/><rect x="0" y="88" width="430" height="9" fill="#1e2e40"/><rect x="0" y="136" width="430" height="9" fill="#1e2e40"/>
+    <rect x="0" y="0" width="7" height="280" fill="#1c2a3a"/><rect x="80" y="0" width="9" height="280" fill="#1e2e40"/><rect x="180" y="0" width="9" height="280" fill="#1e2e40"/>
+    <polyline points="95,230 95,184 130,184 130,136 180,136 180,88 234,88 234,60 280,60" fill="none" stroke="#00e3fd" stroke-width="4" stroke-dasharray="10,5" stroke-linecap="round" stroke-linejoin="round" opacity="0.85">
+      <animate attributeName="stroke-dashoffset" from="0" to="-60" dur="1.5s" repeatCount="indefinite"/>
+    </polyline>
+    <path d="M280,28 C268,28 259,37 259,48 C259,62 280,78 280,78 C280,78 301,62 301,48 C301,37 292,28 280,28 Z" fill="#ff535b"/>
+    <circle cx="280" cy="48" r="9" fill="white"/>
+    <rect x="218" y="15" width="90" height="16" rx="8" fill="#1a0505" opacity="0.9"/>
+    <text x="263" y="26" fill="#ffdad8" font-size="8" font-weight="bold" font-family="sans-serif" text-anchor="middle" id="mapHospLblSvg">APOLLO HOSPITAL</text>
+    <g id="donorMarker">
+      <circle cx="95" cy="230" r="14" fill="none" stroke="#00e3fd" stroke-width="2" opacity="0.4"><animate attributeName="r" values="12;22;12" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.5;0;0.5" dur="2s" repeatCount="indefinite"/></circle>
+      <circle cx="95" cy="230" r="12" fill="#0d1421" stroke="#00e3fd" stroke-width="2"/>
+      <circle cx="95" cy="230" r="7" fill="#00e3fd"/>
+    </g>
+    <rect x="79" y="245" width="32" height="13" rx="6" fill="#00e3fd"/>
+    <text x="95" y="254" fill="#001f24" font-size="7" font-weight="bold" font-family="sans-serif" text-anchor="middle">YOU</text>
+  </svg>`;
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:absolute;top:8px;left:8px;right:8px;background:rgba(13,20,33,.92);border:1px solid #1e2e40;border-radius:10px;padding:9px 12px;display:flex;align-items:center;gap:9px;backdrop-filter:blur(4px);z-index:10';
+  overlay.innerHTML=`<div style="width:32px;height:32px;border-radius:8px;background:#00e3fd;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;color:#001f24">↱</div><div style="flex:1;min-width:0"><div id="turnInstruction" style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Turn right onto Greams Rd</div><div style="font-size:10px;color:#9f8c8b;margin-top:1px">In <span id="turnDist">350m</span></div></div><div style="text-align:right;flex-shrink:0"><div id="mapDistVal" style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff">2.4</div><div style="font-size:9px;color:#9f8c8b">km left</div></div>`;
+  area.style.position='relative';area.appendChild(overlay);
+}
+
+function startPulseGuard(){
+  _injectMap();
+  pgSecs=598;updatePGTimer();
+  if(pgTmr)clearInterval(pgTmr);
+  setText('gmapHospName',selHospName.split(',')[0]);
+  const waypoints=[{x:95,y:230},{x:95,y:184},{x:130,y:184},{x:130,y:136},{x:180,y:136},{x:180,y:88},{x:234,y:88},{x:234,y:60},{x:280,y:60}];
+  const turns=[{text:'Turn right onto Greams Rd',dist:'350m'},{text:'Continue on Greams Rd',dist:'280m'},{text:'Turn left onto Poonamallee Rd',dist:'500m'},{text:'Stay on Poonamallee Rd',dist:'200m'},{text:'Turn right onto Mount Rd',dist:'400m'},{text:'Arriving: '+selHospName.split(',')[0],dist:'50m'}];
+  let wpIdx=0,mapDist=2.4;
+  const mapTmr=setInterval(()=>{if(wpIdx>=waypoints.length-1){clearInterval(mapTmr);return;}wpIdx++;const wp=waypoints[wpIdx];const mk=document.getElementById('donorMarker');if(mk)mk.setAttribute('transform',`translate(${wp.x-95},${wp.y-230})`);const ti=turns[wpIdx]||turns[turns.length-1];setText('turnInstruction',ti.text);setText('turnDist',ti.dist);mapDist=Math.max(0,mapDist-0.3);setText('mapDistVal',mapDist.toFixed(1));},8000);
+  pgTmr=setInterval(()=>{
+    pgSecs--;updatePGTimer();
+    const pct=(pgSecs/598)*100;
+    const pf=document.getElementById('pgProgressFill');if(pf)pf.style.width=pct+'%';
+    if(pgSecs<120&&pf)pf.style.background='rgba(255,200,0,.8)';
+    if(pgSecs<=0){clearInterval(pgTmr);clearInterval(mapTmr);if(DB&&reqId&&!demoMode)DB.ref('emergencies/'+reqId).update({status:'searching',donorQueueIdx:donorQueueIdx+1});showToast('⚡ PulseGuard expired — escalating');goTo('donorHome');}
+  },1000);
+  if(DB&&reqId&&!demoMode)DB.ref('emergencies/'+reqId).update({status:'in_transit',donorName:userProfile.name||'Donor'});
+}
+function updatePGTimer(){
+  const m=Math.floor(pgSecs/60).toString().padStart(2,'0'),s=(pgSecs%60).toString().padStart(2,'0');
+  const el=document.getElementById('pgTimer');if(el){el.textContent=m+':'+s;el.style.color=pgSecs<120?'#ffd700':'#fff';}
+  const tl=document.getElementById('tsTimeLeft');if(tl)tl.textContent=Math.ceil(pgSecs/60)+'min';
+}
+function checkIn(){
+  pgSecs=598;if(pgTmr)clearInterval(pgTmr);startPulseGuard();
+  const btn=document.querySelector('.checkin-btn');
+  if(btn){btn.textContent='✓ Movement Confirmed';btn.style.color='#43a047';setTimeout(()=>{btn.textContent='📍 Confirm Moving';btn.style.color='';},2000);}
+}
+function markArrived(){
+  setDisplay('transitActions','none');
+  document.getElementById('arrivedBanner').classList.add('show');
+  if(DB&&reqId&&!demoMode)DB.ref('emergencies/'+reqId).update({status:'arrived'});
+}
+function manualComplete(){
+  if(confirm('Confirm manual completion? This will record the donation without QR scan.'))completeDonation({h:selHospName,b:selBT,t:qrToken||genToken()});
+}
+
+// ═══════════════════════════════════════════════════════════
+//  QR CAMERA
+// ═══════════════════════════════════════════════════════════
+let videoStream=null,scanInterval=null;
+async function startCam(){
+  stopCam();
+  const vid=document.getElementById('qrVideo');
+  setText('qrStatus','Requesting camera...');
+  document.getElementById('qrStatus').className='qr-status';
+  document.getElementById('qrDetectedBadge').classList.remove('show');
+  try{
+    videoStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    vid.srcObject=videoStream;vid.play();
+    // Hide mock QR background when real camera is active
+    const mockBg=document.getElementById('mockQrBg');
+    if(mockBg)mockBg.style.display='none';
+    setText('qrStatus','Camera active — scanning...');
+    _doScan();
+  }catch(e){setText('qrStatus','Camera unavailable — use Simulate button');document.getElementById('qrStatus').className='qr-status err';}
+}
+function _doScan(){
+  const vid=document.getElementById('qrVideo'),c=document.getElementById('qrScanCanvas'),ctx=c.getContext('2d');
+  if(scanInterval)clearInterval(scanInterval);
+  scanInterval=setInterval(()=>{
+    if(vid.readyState===vid.HAVE_ENOUGH_DATA){
+      c.width=vid.videoWidth;c.height=vid.videoHeight;ctx.drawImage(vid,0,0);
+      if(typeof jsQR!=='undefined'){const img=ctx.getImageData(0,0,c.width,c.height);const code=jsQR(img.data,img.width,img.height);if(code){clearInterval(scanInterval);document.getElementById('qrDetectedBadge').classList.add('show');setText('qrStatus','✓ QR Detected — Verifying...');document.getElementById('qrStatus').className='qr-status ok';try{const data=JSON.parse(code.data);_verifyAndComplete(data);}catch(e2){setText('qrStatus','Invalid QR — try again');document.getElementById('qrStatus').className='qr-status err';setTimeout(_doScan,1500);}}}
+    }
+  },300);
+}
+function _verifyAndComplete(data){
+  if(DB&&data.r&&!demoMode){
+    DB.ref('emergencies/'+data.r).once('value').then(snap=>{const r=snap.val();if(r&&r.token===data.t){stopCam();completeDonation(data);}else{setText('qrStatus','⚠️ Token mismatch — wrong QR code');document.getElementById('qrStatus').className='qr-status err';setTimeout(_doScan,1500);}});
+  } else {if(data.t){stopCam();setTimeout(()=>completeDonation(data),800);}else{setText('qrStatus','Invalid QR');setTimeout(_doScan,1500);}}
+}
+function stopCam(){
+  if(videoStream){videoStream.getTracks().forEach(t=>t.stop());videoStream=null;}
+  if(scanInterval){clearInterval(scanInterval);scanInterval=null;}
+  // Restore mock QR bg
+  const mockBg=document.getElementById('mockQrBg');
+  if(mockBg)mockBg.style.display='flex';
+}
+function stopCamGoTo(s){stopCam();goTo(s);}
+function simulateScan(){
+  stopCam();
+  document.getElementById('qrDetectedBadge').classList.add('show');
+  setText('qrStatus','✓ QR Detected — Verifying...');
+  document.getElementById('qrStatus').className='qr-status ok';
+  if(DB&&reqId&&!demoMode){
+    // Fetch real token from Firebase to simulate proper verification
+    DB.ref('emergencies/'+reqId).once('value').then(snap=>{
+      const r=snap.val();
+      const token=r&&r.token?r.token:qrToken||genToken();
+      setTimeout(()=>completeDonation({t:token,r:reqId,h:selHospName,b:selBT}),800);
+    }).catch(()=>{
+      setTimeout(()=>completeDonation({t:qrToken||genToken(),r:reqId||'demo',h:selHospName,b:selBT}),800);
+    });
+  } else {
+    setTimeout(()=>completeDonation({t:qrToken||genToken(),r:reqId||'demo',h:selHospName,b:selBT}),800);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  COMPLETION
+// ═══════════════════════════════════════════════════════════
+function completeDonation(data){
+  const now=new Date();
+  const next=new Date(now.getTime()+42*24*60*60*1000);
+  const audit='#LS-'+Math.random().toString(36).slice(2,7).toUpperCase();
+  setText('cHosp',data.h||selHospName);setText('cBlood',data.b||selBT);
+  setText('cTime',now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+  setText('cAudit',audit);
+  setText('nextEligDate',next.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}));
+  const entry={id:'don_'+Date.now(),hospital:data.h||selHospName,blood:data.b||selBT,date:now.toISOString(),status:'completed',auditId:audit};
+  donorHist.unshift(entry);saveProfile();refreshDonorStats();
+  if(DB&&reqId&&!demoMode){
+    // Donor writes completed — triggers recipient watcher
+    DB.ref('emergencies/'+reqId).update({status:'completed',completedAt:Date.now(),auditId:audit});
+    DB.ref('emergencies/'+BROADCAST_KEY).once('value').then(snap=>{
+      const b=snap.val();
+      if(b&&b.reqId===reqId)DB.ref('emergencies/'+BROADCAST_KEY).update({status:'completed'});
+    });
+    if(currentUser?.uid)DB.ref('users/'+currentUser.uid+'/donations').push({hospital:data.h,blood:data.b,audit,ts:Date.now()});
+  }
+  stopListeningForEmergencies();
+  // Clean up recipient watcher too
+  if(recipientWatchRef){recipientWatchRef.off('value');recipientWatchRef=null;}
+  goTo('completionScreen');
+}
+function onCompletion(){
+  const total=donorHist.filter(h=>h.status==='completed').length;
+  setText('impactDonations',total);setText('impactLives',total);
+  const arc=document.getElementById('coolArc');if(!arc)return;
+  let p=0;const iv=setInterval(()=>{p+=2;arc.style.strokeDashoffset=345-(345*Math.min(p,100)/100);if(p>=100)clearInterval(iv);},20);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  HISTORY
+// ═══════════════════════════════════════════════════════════
+function openHistory(){navStack.push(currentScreen);_switch('historyScreen');}
+function renderHistory(){
+  const isD=appRole==='donor';
+  setText('histTitle',isD?'Donation History':'Request History');
+  const hist=isD?donorHist:recipHist;
+  const countEl=document.getElementById('histCount');
+  if(countEl){countEl.textContent=hist.length||'';countEl.style.display=hist.length?'flex':'none';}
+  const body=document.getElementById('histBody');
+  if(!hist.length){body.innerHTML=`<div class="hist-empty"><div style="font-size:44px">${isD?'🩸':'📭'}</div><div style="font-size:16px;font-weight:700;color:#e2e2e2;margin-top:8px">No ${isD?'donations':'requests'} yet</div></div>`;return;}
+  body.innerHTML=hist.map(h=>{
+    const d=new Date(h.date);
+    const statusColor=h.status==='completed'?'#43a047':h.status==='pending'?'#fb8c00':'#ff535b';
+    const statusBg=h.status==='completed'?'rgba(0,127,63,.12)':h.status==='pending'?'rgba(251,140,0,.1)':'rgba(147,0,10,.12)';
+    return `<div class="hist-entry">
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px;align-items:flex-start">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#e2e2e2">${h.hospital.split(',')[0]}</div>
+        <div style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:${statusBg};color:${statusColor};font-family:'Space Grotesk',sans-serif">${h.status}</div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#9f8c8b">
+        <span>🩸 ${h.blood||'—'}</span>
+        <span>📅 ${d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</span>
+        <span>⏰ ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
+      </div>
+      ${h.auditId?`<div style="font-family:monospace;font-size:10px;color:#5b403f;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06)">${h.auditId}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PROFILE
+// ═══════════════════════════════════════════════════════════
+function renderProfile(){
+  const isD=appRole==='donor';
+  const name=userProfile.name||currentUser?.displayName||'User';
+  setText('proAv',name.charAt(0).toUpperCase());setText('proName',name);
+  setText('proEmail',userProfile.email||'—');setText('proBT',userProfile.blood||'Not set');
+  setText('proPhone',userProfile.phone||'Not set');
+  setText('proHash',pseudoHash(userProfile.blood||'').slice(0,20)+'...');
+  const chip=document.getElementById('proChip');
+  if(chip){chip.textContent=isD?'💉 Blood Donor':'🏥 Recipient';chip.className='pro-chip '+(isD?'donor':'recipient');}
+  if(isD){
+    setDisplay('donorStatsWrap','block');
+    const total=donorHist.filter(h=>h.status==='completed').length;
+    setText('proTotalD',total);setText('proLivesD',total);
+    setText('proNextEl',new Date(Date.now()+21*24*60*60*1000).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}));
+  } else setDisplay('donorStatsWrap','none');
+}
+function editField(field){
+  const lbls={blood:'Blood type (e.g. O+, A-, AB+):',phone:'Phone number:',pin:'New 4-digit PIN:'};
+  const val=prompt(lbls[field]||'Enter:',userProfile[field]||'');
+  if(val===null)return;
+  if(field==='pin'&&(val.length!==4||isNaN(val))){showToast('PIN must be exactly 4 digits');return;}
+  userProfile[field]=val.trim();saveProfile();renderProfile();
+  if(field==='blood'){setText('rhBloodVal',val);setText('dhBloodType',val);}
+  showToast(field.charAt(0).toUpperCase()+field.slice(1)+' updated ✓');
+}
+function doSignOut(){
+  stopListeningForEmergencies();
+  if(recipientWatchRef){recipientWatchRef.off('value');recipientWatchRef=null;}
+  if(autoAlertTimer){clearTimeout(autoAlertTimer);autoAlertTimer=null;}
+  if(AUTH)AUTH.signOut().catch(()=>{});
+  currentUser=null;appRole=null;userProfile={};navStack=[];reqId=null;qrToken=null;
+  if(lsTmr){clearInterval(lsTmr);lsTmr=null;}
+  if(pgTmr){clearInterval(pgTmr);pgTmr=null;}
+  if(alertTmr){clearInterval(alertTmr);alertTmr=null;}
+  stopCam();localStorage.removeItem('ls_last_role');
+  goTo('roleSelect');showToast('Signed out');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DONOR UTILS
+// ═══════════════════════════════════════════════════════════
+function toggleAvail(){
+  // Clear any pending auto-alert if toggling off
+  if(autoAlertTimer){clearTimeout(autoAlertTimer);autoAlertTimer=null;}
+  isAvail=!isAvail;
+  document.getElementById('availToggle').classList.toggle('on',isAvail);
+  if(isAvail){
+    setText('toggleStatus','Currently available');
+    setDisplay('listeningCard','flex');
+    if(DB&&currentUser&&!demoMode)DB.ref('users/'+currentUser.uid).update({available:true});
+    if(DB&&!demoMode) startListeningForEmergencies();
+    // Auto-trigger demo emergency after 10 seconds
+    let countdown=10;
+    setText('listenTxt','🔴 Emergency alert incoming in '+countdown+'s...');
+    const countInterval=setInterval(()=>{
+      countdown--;
+      if(countdown>0){
+        setText('listenTxt','🔴 Emergency alert incoming in '+countdown+'s...');
+      } else {
+        clearInterval(countInterval);
+        setText('listenTxt','🚨 Emergency detected nearby!');
+      }
+    },1000);
+    autoAlertTimer=setTimeout(()=>{
+      clearInterval(countInterval);
+      autoAlertTimer=null;
+      if(currentScreen==='donorHome'&&isAvail){
+        // Always use local demo alert so it works with or without Firebase
+        triggerDemoAlert();
+      }
+    },10000);
+  } else {
+    setText('toggleStatus','Tap to go available');
+    setDisplay('listeningCard','none');
+    if(DB&&currentUser&&!demoMode)DB.ref('users/'+currentUser.uid).update({available:false});
+    stopListeningForEmergencies();
+  }
+}
+function refreshDonorStats(){
+  const total=donorHist.filter(h=>h.status==='completed').length;
+  const el1=document.getElementById('dTotal'),el2=document.getElementById('dLives');
+  if(el1)el1.textContent=total;if(el2)el2.textContent=total;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  BLOOD BANK
+// ═══════════════════════════════════════════════════════════
+const BLOOD_BANKS_DB=[
+  {id:'bb1',name:'Govt. General Hospital Blood Bank',type:'govt',addr:'Park Town, Chennai – 600003',lat:13.0839,lng:80.2785,phone:'044-25305000',phone2:'044-25304000',hours:'24 hours',open24:true,available:['A+','A−','B+','O+','O−','AB+'],units:{}},
+  {id:'bb2',name:'Apollo Hospitals Blood Bank',type:'private',addr:'21, Greams Lane, Chennai – 600006',lat:13.0628,lng:80.2529,phone:'044-28296000',phone2:'044-28294429',hours:'24 hours',open24:true,available:['A+','B+','B−','AB+','AB−','O+','O−'],units:{}},
+  {id:'bb3',name:'Rotary TTK Blood Bank',type:'private',addr:'No.2, TTK Road, Alwarpet, Chennai – 600018',lat:13.0351,lng:80.2512,phone:'044-24321137',phone2:'044-24321138',hours:'8 AM – 8 PM',open24:false,available:['A+','A−','B+','O+','AB+'],units:{}},
+  {id:'bb4',name:'SRMC Blood Bank (Sri Ramachandra)',type:'private',addr:'No.1, Ramachandra Nagar, Porur, Chennai – 600116',lat:13.0388,lng:80.1600,phone:'044-45928888',phone2:'044-45928900',hours:'24 hours',open24:true,available:['A+','A−','B+','B−','O+','O−','AB+','AB−'],units:{}},
+  {id:'bb5',name:'Voluntary Health Services Blood Bank',type:'govt',addr:'Adyar, Chennai – 600113',lat:13.0039,lng:80.2565,phone:'044-22540531',phone2:'044-22540532',hours:'9 AM – 5 PM',open24:false,available:['A+','B+','O+','O−'],units:{}},
+  {id:'bb6',name:'MIOT International Blood Bank',type:'private',addr:'4/112, Mt. Poonamallee Rd, Manapakkam – 600089',lat:13.0142,lng:80.1784,phone:'044-22492288',phone2:'044-22492200',hours:'24 hours',open24:true,available:['A+','A−','B+','O+','O−','AB+'],units:{}},
+  {id:'bb7',name:'Kumaran Blood Bank',type:'private',addr:'No.5, Kumaran Colony, Vadapalani, Chennai – 600026',lat:13.0509,lng:80.2115,phone:'044-23655555',phone2:'044-23655556',hours:'8 AM – 10 PM',open24:false,available:['A+','B+','B−','O+','O−'],units:{}},
+  {id:'bb8',name:'Fortis Malar Blood Bank',type:'private',addr:'52, 1st Main Rd, Gandhi Nagar, Adyar – 600020',lat:12.9947,lng:80.2497,phone:'044-42892222',phone2:'044-42892200',hours:'24 hours',open24:true,available:['A+','A−','B+','O+','AB+','AB−'],units:{}},
+  {id:'bb9',name:'Rajiv Gandhi Govt. General Hospital',type:'govt',addr:'Park Town, Chennai – 600003',lat:13.0807,lng:80.2740,phone:'044-25305400',phone2:'1800-425-2222',hours:'24 hours',open24:true,available:['A+','B+','O+','O−','AB+'],units:{}},
+  {id:'bb10',name:'Indian Red Cross Blood Bank',type:'govt',addr:'Red Cross Road, Egmore, Chennai – 600008',lat:13.0769,lng:80.2625,phone:'044-28194200',phone2:'044-28194201',hours:'9 AM – 6 PM',open24:false,available:['A+','A−','B+','B−','O+','O−','AB+','AB−'],units:{}}
+];
+let bbAllBanks=[],bbFilteredBanks=[],bbActiveFilter='all';
+let userLat=13.0627,userLng=80.2366;
+
+function openBloodBank(){navStack.push(currentScreen);_switch('bloodBankScreen');loadBloodBanks();}
+function loadBloodBanks(){
+  setText('bbLocTxt','Detecting location...');
+  document.getElementById('bbBody').innerHTML='<div class="bb-loading" id="bbLoading"><div class="bb-spin"></div><div style="font-size:13px;color:#9f8c8b;margin-top:12px">Finding blood banks near you...</div></div>';
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(
+      pos=>{userLat=pos.coords.latitude;userLng=pos.coords.longitude;_processBanks();},
+      ()=>{showToast('Using default Chennai location');_processBanks();},
+      {timeout:6000,maximumAge:60000}
+    );
+  } else _processBanks();
+}
+function _processBanks(){
+  bbAllBanks=BLOOD_BANKS_DB.map(b=>({...b,dist:_haversine(userLat,userLng,b.lat,b.lng)})).filter(b=>b.dist<=10).sort((a,b)=>a.dist-b.dist);
+  _setLocLabel(userLat,userLng);_applyFilter(bbActiveFilter);
+}
+function _setLocLabel(lat,lng){
+  const areas=[{name:'T.Nagar',lat:13.0418,lng:80.2341,r:.03},{name:'Adyar',lat:13.0063,lng:80.2574,r:.03},{name:'Egmore',lat:13.0785,lng:80.2622,r:.025},{name:'Anna Nagar',lat:13.0849,lng:80.2101,r:.03},{name:'Velachery',lat:12.9816,lng:80.2209,r:.03},{name:'Porur',lat:13.0338,lng:80.1567,r:.03},{name:'Vadapalani',lat:13.0527,lng:80.2105,r:.025},{name:'Mylapore',lat:13.0339,lng:80.2695,r:.025}];
+  const match=areas.find(a=>Math.abs(a.lat-lat)<a.r&&Math.abs(a.lng-lng)<a.r);
+  setText('bbLocTxt','📍 '+(match?match.name+', Chennai':'Chennai, Tamil Nadu'));
+}
+function _haversine(lat1,lng1,lat2,lng2){const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+function filterBanks(f,el){
+  bbActiveFilter=f;
+  document.querySelectorAll('.bb-chip').forEach(c=>c.classList.remove('on'));
+  if(el)el.classList.add('on');_applyFilter(f);
+}
+function _applyFilter(f){
+  const now=new Date().getHours(),isBusinessHours=now>=8&&now<22;
+  bbFilteredBanks=bbAllBanks.filter(b=>{
+    if(f==='open')return b.open24||isBusinessHours;
+    if(f==='govt')return b.type==='govt';
+    if(f==='private')return b.type==='private';
+    return true;
+  });
+  _renderBanks();
+}
+function _renderBanks(){
+  const body=document.getElementById('bbBody');
+  if(!bbFilteredBanks.length){body.innerHTML=`<div class="bb-empty"><div style="font-size:42px">🏦</div><div style="font-size:15px;font-weight:600;margin-top:8px;color:#e2e2e2">No banks found</div><div style="font-size:13px;margin-top:4px">Try a different filter</div></div>`;return;}
+  const now=new Date().getHours();
+  const isOpen=b=>b.open24||(now>=8&&now<22);
+  const open=bbFilteredBanks.filter(b=>isOpen(b)),closed=bbFilteredBanks.filter(b=>!isOpen(b));
+  let html='';
+  if(open.length){html+=`<div class="bb-section-lbl">🟢 Open Now (${open.length})</div>`;html+=open.map(b=>_bankCard(b,true)).join('');}
+  if(closed.length){html+=`<div class="bb-section-lbl">🔴 Closed Now (${closed.length})</div>`;html+=closed.map(b=>_bankCard(b,false)).join('');}
+  body.innerHTML=html;
+}
+function _bankCard(b,open){
+  const distStr=b.dist<1?(b.dist*1000).toFixed(0)+'m':b.dist.toFixed(1)+' km';
+  const allBTs=['A+','A−','B+','B−','O+','O−','AB+','AB−'];
+  const btTags=allBTs.map(t=>{const has=b.available.includes(t);return`<span class="bb-bt${has?' avail':''}">${t}</span>`;}).join('');
+  const typeClass=b.type==='govt'?'govt':'private';
+  const typeIcon=b.type==='govt'?'🏥':'🏦';
+  return`<div class="bb-card">
+    <div class="bb-card-head">
+      <div class="bb-icon ${typeClass}">${typeIcon}</div>
+      <div style="flex:1;min-width:0">
+        <div class="bb-name">${b.name}</div>
+        <div class="bb-addr">${b.addr}</div>
+      </div>
+    </div>
+    <div class="bb-tags">
+      <span class="bb-tag ${open?'open':'closed'}">${open?(b.open24?'24 hrs':'Open Now'):'Closed'}</span>
+      <span class="bb-tag ${typeClass}">${b.type==='govt'?'Govt':'Private'}</span>
+      <span class="bb-tag dist">📍 ${distStr}</span>
+    </div>
+    <div style="font-size:10px;color:#5b403f;letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px;font-family:'Space Grotesk',sans-serif">Blood Stock</div>
+    <div class="bb-avail" style="margin-bottom:14px">${btTags}</div>
+    <div class="bb-actions">
+      <button class="bb-call" onclick="callBank('${b.phone}','${b.name}')">
+        <span class="material-symbols-outlined" style="font-size:16px">call</span> Call Now
+      </button>
+      ${b.phone2?`<button class="bb-map-btn" onclick="callBank('${b.phone2}','${b.name} (Alt)')"><span class="material-symbols-outlined" style="font-size:14px">phone_in_talk</span> Alt</button>`:''}
+      <button class="bb-map-btn" onclick="mapBank(${b.lat},${b.lng},'${b.name.replace(/'/g,"\\'")}')">
+        <span class="material-symbols-outlined" style="font-size:14px">map</span> Map
+      </button>
+    </div>
+  </div>`;
+}
+function callBank(phone,name){const clean=phone.replace(/[^0-9+]/g,'');showToast('📞 Calling '+name+'...');setTimeout(()=>{window.location.href='tel:'+clean;},400);}
+function mapBank(lat,lng,name){const url=`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;window.open(url,'_blank');}
+
+// ═══════════════════════════════════════════════════════════
+//  SIREN
+// ═══════════════════════════════════════════════════════════
+function playSiren(){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    [880,660,880,660,880].forEach((f,i)=>{
+      const osc=ctx.createOscillator(),g=ctx.createGain();
+      osc.connect(g);g.connect(ctx.destination);osc.frequency.value=f;
+      g.gain.setValueAtTime(0,ctx.currentTime+i*.45);
+      g.gain.linearRampToValueAtTime(.35,ctx.currentTime+i*.45+.05);
+      g.gain.linearRampToValueAtTime(0,ctx.currentTime+i*.45+.38);
+      osc.start(ctx.currentTime+i*.45);osc.stop(ctx.currentTime+i*.45+.4);
+    });
+  }catch(e){}
+}
+function shareAchievement(){
+  const total=donorHist.filter(h=>h.status==='completed').length;
+  const text=`I just donated blood through PULZ! 🩸 ${total} donation${total>1?'s':''} — one life at a time. #PULZ`;
+  if(navigator.share)navigator.share({title:'PULZ',text}).catch(()=>{});
+  else navigator.clipboard?.writeText(text).then(()=>showToast('Copied!')).catch(()=>showToast(text));
+}
+
+// ═══════════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════════
+function genToken(){return Array.from(crypto.getRandomValues(new Uint8Array(24))).map(b=>b.toString(16).padStart(2,'0')).join('');}
+function pseudoHash(str){let h=0x5a2b3c4d;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),0x9e3779b9);h^=h>>>16;}return(h>>>0).toString(16).padStart(8,'0').repeat(8);}
+function showToast(msg,dur=2800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
+function showLoad(msg){setText('loadMsg',msg||'');document.getElementById('loadOv').classList.add('show');}
+function hideLoad(){document.getElementById('loadOv').classList.remove('show');}
+</script>
+</body>
+</html>

@@ -1,0 +1,374 @@
+<!DOCTYPE html><html class="dark" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>PULZ - Profile Setup</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&amp;family=Space+Grotesk:wght@500;600;700&amp;family=Manrope:wght@400;500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-fixed-dim": "#e2bebc",
+                        "surface-bright": "#3c3838",
+                        "on-primary-fixed": "#2a1616",
+                        "on-secondary-container": "#8bc1cb",
+                        "surface-variant": "#373434",
+                        "tertiary-container": "#d3e7dd",
+                        "outline": "#9c8d8c",
+                        "outline-variant": "#4f4443",
+                        "on-error": "#690005",
+                        "on-surface": "#e8e1e0",
+                        "secondary-fixed": "#b5ecf6",
+                        "error-container": "#93000a",
+                        "on-primary": "#412b2a",
+                        "tertiary-fixed": "#d3e7dd",
+                        "primary-container": "#ffdad8",
+                        "inverse-on-surface": "#33302f",
+                        "inverse-primary": "#735856",
+                        "surface-container-highest": "#373434",
+                        "secondary-fixed-dim": "#99cfda",
+                        "on-surface-variant": "#d3c3c2",
+                        "primary-fixed": "#ffdad8",
+                        "primary": "#ffffff",
+                        "on-secondary-fixed": "#001f24",
+                        "on-tertiary-container": "#566860",
+                        "on-tertiary-fixed-variant": "#394a43",
+                        "surface-container": "#221f1f",
+                        "surface-dim": "#151313",
+                        "on-primary-container": "#795e5c",
+                        "on-secondary-fixed-variant": "#114e57",
+                        "on-tertiary": "#23342d",
+                        "tertiary": "#ffffff",
+                        "surface-container-lowest": "#100e0d",
+                        "on-background": "#e8e1e0",
+                        "on-error-container": "#ffdad6",
+                        "surface": "#151313",
+                        "secondary-container": "#145059",
+                        "on-primary-fixed-variant": "#5a403f",
+                        "surface-container-low": "#1e1b1b",
+                        "error": "#ffb4ab",
+                        "on-tertiary-fixed": "#0e1f19",
+                        "secondary": "#99cfda",
+                        "inverse-surface": "#e8e1e0",
+                        "surface-container-high": "#2c2929",
+                        "on-secondary": "#00363d",
+                        "tertiary-fixed-dim": "#b7cbc1",
+                        "background": "#151313",
+                        "surface-tint": "#e2bebc"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "stack-sm": "8px",
+                        "stack-lg": "32px",
+                        "stack-md": "16px",
+                        "container-margin": "20px",
+                        "gutter": "16px",
+                        "unit": "4px"
+                    },
+                    fontFamily: {
+                        "headline-lg": ["Syne"],
+                        "headline-lg-mobile": ["Syne"],
+                        "label-sm": ["Space Grotesk"],
+                        "body-md": ["Manrope"],
+                        "display-lg": ["Syne"],
+                        "title-md": ["Space Grotesk"]
+                    },
+                    fontSize: {
+                        "headline-lg": ["32px", { lineHeight: "40px", fontWeight: "700" }],
+                        "headline-lg-mobile": ["28px", { lineHeight: "34px", fontWeight: "700" }],
+                        "label-sm": ["12px", { lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "500" }],
+                        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+                        "display-lg": ["48px", { lineHeight: "52px", letterSpacing: "-0.02em", fontWeight: "800" }],
+                        "title-md": ["18px", { lineHeight: "24px", fontWeight: "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0c0f0f;
+            color: #e8e1e0;
+            overflow-x: hidden;
+        }
+        .step-container {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 300ms ease-out, transform 300ms ease-out;
+        }
+        .step-container.active {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Atmospheric Blurs */
+        .ambient-blur {
+            position: fixed;
+            width: 800px;
+            height: 800px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 83, 91, 0.15) 0%, rgba(255, 83, 91, 0) 70%);
+            filter: blur(80px);
+            z-index: -1;
+            pointer-events: none;
+        }
+        .blur-top-right {
+            top: -400px;
+            right: -400px;
+        }
+        .blur-bottom-left {
+            bottom: -400px;
+            left: -400px;
+        }
+
+        .glow-button {
+            box-shadow: 0px 0px 12px rgba(255, 218, 216, 0.3);
+        }
+        
+        .glow-dot-active {
+            box-shadow: 0px 0px 8px rgba(255, 218, 216, 0.6);
+        }
+        
+        .scanner-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 2px solid #ffdad8;
+            opacity: 0;
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { width: 0; height: 0; opacity: 1; }
+            100% { width: 100px; height: 100px; opacity: 0; }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen flex flex-col font-body-md antialiased relative">
+<!-- Atmospheric Background -->
+<div class="ambient-blur blur-top-right"></div>
+<div class="ambient-blur blur-bottom-left"></div>
+<!-- Header -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl flex flex-col items-center justify-center h-20 px-container-margin transition-all">
+<div class="w-full max-w-md flex items-center justify-center relative">
+<button class="absolute left-0 text-primary opacity-0 pointer-events-none transition-opacity flex items-center p-2 rounded-full hover:bg-surface-container-high" id="back-btn" onclick="prevStep()">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="font-headline-lg-mobile text-primary tracking-tighter">PULZ</h1>
+</div>
+<div class="flex gap-2 mt-2"><div class="w-2 h-2 rounded-full bg-primary-container glow-dot-active" id="dot-1"></div><div class="w-2 h-2 rounded-full bg-surface-container-highest" id="dot-2"></div><div class="w-2 h-2 rounded-full bg-surface-container-highest" id="dot-3"></div><div class="w-2 h-2 rounded-full bg-surface-container-highest" id="dot-4"></div></div>
+</header>
+<main class="flex-1 w-full max-w-md mx-auto pt-28 px-container-margin pb-24 flex flex-col">
+<!-- STEP 1: Personal Info -->
+<div class="step-container flex-col gap-stack-lg active" id="step-1" style="display: flex;">
+<div>
+<h2 class="font-headline-lg-mobile text-primary mb-stack-sm">What's your name?</h2>
+<p class="text-on-surface-variant font-body-md">Enter your details to create your secure identity token.</p>
+</div>
+<div class="flex flex-col gap-stack-md">
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-4 text-outline">person</span>
+<input class="w-full bg-surface-container-high border-none rounded-xl h-[56px] pl-12 pr-4 text-on-surface focus:ring-1 focus:ring-primary-container outline-none transition-all placeholder:text-outline font-title-md" placeholder="Full Name" type="text">
+</div>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-4 text-outline">call</span>
+<input class="w-full bg-surface-container-high border-none rounded-xl h-[56px] pl-12 pr-4 text-on-surface focus:ring-1 focus:ring-primary-container outline-none transition-all placeholder:text-outline font-label-sm tracking-widest text-[16px]" placeholder="Mobile Number" type="tel">
+</div>
+</div>
+<button class="mt-auto h-[56px] w-full bg-primary-container text-on-primary-container rounded-[20px] font-title-md flex items-center justify-center gap-2 glow-button active:scale-95 transition-all" onclick="nextStep(2)">
+                Next
+                <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+<!-- STEP 2: Blood Group -->
+<div class="step-container flex-col gap-stack-lg h-full" id="step-2">
+<div>
+<h2 class="font-headline-lg-mobile text-primary mb-stack-sm">Select your blood group</h2>
+<p class="text-on-surface-variant font-body-md">Crucial for matching algorithms.</p>
+</div>
+<div class="grid grid-cols-2 gap-stack-md">
+<!-- Group Chips -->
+<button class="blood-chip h-[64px] bg-surface-container-high rounded-xl font-label-sm text-lg font-bold text-on-surface border border-transparent transition-all active:scale-95" onclick="selectBloodGroup(this)">A+</button>
+<button class="blood-chip h-[64px] bg-surface-container-high rounded-xl font-label-sm text-lg font-bold text-on-surface border border-transparent transition-all active:scale-95" onclick="selectBloodGroup(this)">A-</button>
+<button class="blood-chip h-[64px] bg-surface-container-high rounded-xl font-label-sm text-lg font-bold text-on-surface border border-transparent transition-all active:scale-95" onclick="selectBloodGroup(this)">B+</button>
+<button class="blood-chip h-[64px] bg-surface-container-high rounded-xl font-label-sm text-lg font-bold text-on-surface border border-transparent transition-all active:scale-95" onclick="selectBloodGroup(this)">B-</button>
+<button class="blood-chip h-[64px] bg-surface-container-high rounded-xl font-label-sm text-lg font-bold text-on-surface border border-transparent transition-all active:scale-95" onclick="selectBloodGroup(this)">AB+</button>
+<button class="blood-chip h-[64px] bg-surface-container-high rounded-xl font-label-sm text-lg font-bold text-on-surface border border-transparent transition-all active:scale-95" onclick="selectBloodGroup(this)">AB-</button>
+<button class="blood-chip h-[64px] bg-surface-container-high rounded-xl font-label-sm text-lg font-bold text-on-surface border border-transparent transition-all active:scale-95" onclick="selectBloodGroup(this)">O+</button>
+<button class="blood-chip h-[64px] bg-surface-container-high rounded-xl font-label-sm text-lg font-bold text-on-surface border border-transparent transition-all active:scale-95" onclick="selectBloodGroup(this)">O-</button>
+</div>
+<button class="mt-auto h-[56px] w-full bg-surface-container-highest text-outline rounded-[20px] font-title-md flex items-center justify-center gap-2 transition-all opacity-50 cursor-not-allowed" disabled="" id="btn-step-2" onclick="nextStep(3)">
+                Next
+                <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+<!-- STEP 3: Upload & Verify -->
+<div class="step-container flex-col gap-stack-lg h-full" id="step-3">
+<div>
+<h2 class="font-headline-lg-mobile text-primary mb-stack-sm">Upload blood test</h2>
+<p class="text-on-surface-variant font-body-md">System verification required for donor matching.</p>
+</div>
+<!-- Upload Area -->
+<div class="border-2 border-dashed border-outline-variant rounded-[20px] bg-surface-container-high p-8 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all hover:bg-surface-variant" id="upload-zone" onclick="simulateUpload()">
+<div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center" id="upload-icon-container">
+<span class="material-symbols-outlined text-3xl text-outline" id="upload-icon">upload_file</span>
+</div>
+<div class="text-center">
+<p class="font-title-md text-on-surface" id="upload-text">Tap to upload report</p>
+<p class="font-label-sm text-outline mt-1">PDF, JPG, PNG up to 10MB</p>
+</div>
+</div>
+<!-- Verification State (Hidden initially) -->
+<div class="hidden flex-col items-center justify-center py-12" id="verifying-state">
+<div class="relative w-24 h-24 mb-6">
+<div class="scanner-ring" style="animation-delay: 0s;"></div>
+<div class="scanner-ring" style="animation-delay: 0.6s;"></div>
+<div class="scanner-ring" style="animation-delay: 1.2s;"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-container text-4xl">vital_signs</span>
+</div>
+</div>
+<p class="font-label-sm text-primary-container tracking-widest uppercase">Analyzing Data Core</p>
+</div>
+<button class="mt-auto h-[56px] w-full bg-surface-container-highest text-outline rounded-[20px] font-title-md flex items-center justify-center gap-2 transition-all opacity-50 cursor-not-allowed" disabled="" id="btn-verify" onclick="startVerification()">
+                Verify Eligibility
+            </button>
+</div>
+<!-- STEP 4: Result -->
+<div class="step-container flex-col items-center justify-center text-center gap-stack-lg h-full pt-12" id="step-4" style="display: none;"><div class="w-24 h-24 rounded-full bg-secondary-container flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(20,80,89,0.5)] border border-secondary"><span class="material-symbols-outlined text-5xl text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span></div><div class=""><h2 class="font-headline-lg-mobile text-primary mb-stack-sm">You're eligible to donate blood</h2><p class="text-on-surface-variant font-body-md px-4">Your report meets our donor health guidelines. Thank you for being ready to help save a life.</p></div><div class="w-full mt-12 flex flex-col gap-4"><button class="h-[56px] w-full bg-primary-container text-on-primary-container rounded-[20px] font-title-md flex items-center justify-center gap-2 glow-button active:scale-95 transition-all">Finish setup</button></div></div>
+</main>
+<script>
+        let currentStep = 1;
+        let bloodGroupSelected = false;
+        let fileUploaded = false;
+
+        function updateDots(step) {
+            for(let i=1; i<=4; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                if(i === step) {
+                    dot.className = "w-2 h-2 rounded-full bg-primary-container glow-dot-active transition-all";
+                } else if (i < step) {
+                     dot.className = "w-2 h-2 rounded-full bg-primary-container opacity-50 transition-all";
+                } else {
+                    dot.className = "w-2 h-2 rounded-full bg-surface-container-highest transition-all";
+                }
+            }
+        }
+
+        function showStep(step) {
+            // Hide all
+            document.querySelectorAll('.step-container').forEach(el => {
+                el.classList.remove('active');
+                setTimeout(() => { if(!el.classList.contains('active')) el.style.display = 'none'; }, 300);
+            });
+
+            // Show target
+            const target = document.getElementById(`step-${step}`);
+            target.style.display = 'flex';
+            // slight delay to allow display block to apply before opacity transition
+            setTimeout(() => {
+                target.classList.add('active');
+            }, 10);
+
+            // Back button logic
+            const backBtn = document.getElementById('back-btn');
+            if(step > 1) {
+                backBtn.classList.remove('opacity-0', 'pointer-events-none');
+            } else {
+                backBtn.classList.add('opacity-0', 'pointer-events-none');
+            }
+
+            updateDots(step);
+            currentStep = step;
+        }
+
+        function nextStep(step) {
+            showStep(step);
+        }
+
+        function prevStep() {
+            if(currentStep > 1) {
+                showStep(currentStep - 1);
+            }
+        }
+
+        // Step 2 Logic
+        function selectBloodGroup(btn) {
+            document.querySelectorAll('.blood-chip').forEach(el => {
+                el.className = "blood-chip h-[64px] bg-surface-container-high rounded-xl font-label-sm text-lg font-bold text-on-surface border border-transparent transition-all active:scale-95";
+            });
+            btn.className = "blood-chip h-[64px] bg-primary-container rounded-xl font-label-sm text-lg font-bold text-on-primary-container border border-primary-container scale-[1.03] shadow-[0_0_15px_rgba(255,218,216,0.2)] transition-all active:scale-95";
+            
+            const nextBtn = document.getElementById('btn-step-2');
+            nextBtn.disabled = false;
+            nextBtn.className = "mt-auto h-[56px] w-full bg-primary-container text-on-primary-container rounded-[20px] font-title-md flex items-center justify-center gap-2 glow-button active:scale-95 transition-all";
+            bloodGroupSelected = true;
+        }
+
+        // Step 3 Logic
+        function simulateUpload() {
+            if(fileUploaded) return;
+            const zone = document.getElementById('upload-zone');
+            const icon = document.getElementById('upload-icon');
+            const text = document.getElementById('upload-text');
+            const iconContainer = document.getElementById('upload-icon-container');
+
+            zone.classList.remove('border-outline-variant', 'border-dashed');
+            zone.classList.add('border-primary-fixed-dim', 'bg-surface-variant');
+            
+            icon.innerText = "check_circle";
+            icon.classList.remove('text-outline');
+            icon.classList.add('text-primary-container');
+            icon.style.fontVariationSettings = "'FILL' 1";
+            
+            iconContainer.classList.remove('bg-surface-container');
+            iconContainer.classList.add('bg-surface-container-lowest');
+
+            text.innerText = "report_scan_v2.pdf";
+            text.classList.add('text-primary-fixed-dim');
+
+            const verifyBtn = document.getElementById('btn-verify');
+            verifyBtn.disabled = false;
+            verifyBtn.className = "mt-auto h-[56px] w-full bg-primary-container text-on-primary-container rounded-[20px] font-title-md flex items-center justify-center gap-2 glow-button active:scale-95 transition-all";
+            
+            fileUploaded = true;
+        }
+
+        function startVerification() {
+            document.getElementById('upload-zone').style.display = 'none';
+            document.getElementById('btn-verify').style.display = 'none';
+            
+            const verifyingState = document.getElementById('verifying-state');
+            verifyingState.style.display = 'flex';
+            verifyingState.classList.remove('hidden');
+
+            // Simulate analysis time
+            setTimeout(() => {
+                nextStep(4);
+            }, 3000);
+        }
+
+    </script>
+
+
+
+
+</body></html>

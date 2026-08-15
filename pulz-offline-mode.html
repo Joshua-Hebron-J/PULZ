@@ -1,0 +1,1829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PULZ Offline Mode — Emergency Blood Matching Demo</title>
+  <meta name="description" content="Simulated interactive explainer showing how PULZ coordinates emergency blood donations via SMS and IVR without internet or app installation." />
+  <style>
+    /* ==========================================================================
+       RESET & THEME VARIABLES
+       ========================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-canvas: #0a0a0f;
+      --bg-surface: #12121c;
+      --bg-surface-elevated: #1a1a29;
+      --bg-surface-glass: rgba(26, 26, 41, 0.85);
+      
+      --accent-purple-light: #c4b5fd;
+      --accent-purple: #a78bfa;
+      --accent-purple-deep: #7c3aed;
+      --accent-purple-glow: rgba(167, 139, 250, 0.25);
+      --accent-purple-glow-strong: rgba(124, 58, 237, 0.45);
+      
+      --color-emergency: #ef4444;
+      --color-emergency-glow: rgba(239, 68, 68, 0.2);
+      --color-warning: #f59e0b;
+      --color-success: #10b981;
+      
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      
+      --bubble-outgoing: #7c3aed;
+      --bubble-incoming: #1e1e2d;
+      --bubble-system: #151522;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(167, 139, 250, 0.3);
+      
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      font-family: var(--font-family);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      position: relative;
+      padding: 1rem;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Ambient Background Glow */
+    .ambient-glow {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, var(--accent-purple-glow) 0%, rgba(10, 10, 15, 0) 70%);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.8;
+      transition: opacity 0.5s ease;
+    }
+
+    /* ==========================================================================
+       PERSISTENT HEADER & BRANDING
+       ========================================================================== */
+    .top-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .brand {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .brand-logo {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      background: linear-gradient(135deg, #ffffff 0%, var(--accent-purple) 60%, #c4b5fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+      padding: 0.2rem 0.55rem;
+      border-radius: 9999px;
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: #ef4444;
+      box-shadow: 0 0 8px #ef4444;
+      animation: pulse-beacon 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse-beacon {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .nav-actions {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .sound-toggle-btn, .speed-toggle-btn {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 9999px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.2s ease;
+    }
+
+    .sound-toggle-btn:hover, .speed-toggle-btn:hover {
+      color: var(--text-primary);
+      border-color: var(--border-accent);
+      background: rgba(167, 139, 250, 0.15);
+    }
+
+    /* ==========================================================================
+       CONTAINER & SCREEN MANAGEMENT
+       ========================================================================== */
+    .app-viewport {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 440px;
+      margin: 3.5rem auto 1.5rem auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .screen-container {
+      width: 100%;
+      position: relative;
+    }
+
+    .screen {
+      display: none;
+      opacity: 0;
+      transform: translateY(10px) scale(0.98);
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      width: 100%;
+    }
+
+    .screen.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    /* ==========================================================================
+       SCREEN 1: ENTRY CARD
+       ========================================================================== */
+    .entry-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-accent);
+      border-radius: 24px;
+      padding: 2.25rem 1.75rem;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.8), 0 0 35px -5px var(--accent-purple-glow);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .entry-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--accent-purple), transparent);
+    }
+
+    .icon-glow-circle {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(167, 139, 250, 0.1));
+      border: 1px solid var(--border-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 30px var(--accent-purple-glow-strong);
+      margin-bottom: 0.25rem;
+    }
+
+    .icon-glow-circle svg {
+      width: 34px;
+      height: 34px;
+      color: var(--accent-purple);
+    }
+
+    .entry-title-small {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-purple);
+      background: rgba(167, 139, 250, 0.1);
+      border: 1px solid rgba(167, 139, 250, 0.2);
+      padding: 0.3rem 0.85rem;
+      border-radius: 9999px;
+    }
+
+    .entry-heading {
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+
+    .entry-subtext {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.55;
+      max-width: 340px;
+    }
+
+    .entry-features-preview {
+      display: flex;
+      gap: 0.6rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 0.25rem 0;
+    }
+
+    .feature-chip-mini {
+      font-size: 0.72rem;
+      color: #cbd5e1;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-purple-deep) 0%, #9333ea 100%);
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 0.9rem 2rem;
+      border-radius: 9999px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.5), 0 0 15px rgba(167, 139, 250, 0.3);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 30px -5px rgba(124, 58, 237, 0.7), 0 0 25px rgba(167, 139, 250, 0.5);
+      background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .footer-nav-link {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.84rem;
+      cursor: pointer;
+      transition: color 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.4rem;
+    }
+
+    .footer-nav-link:hover {
+      color: var(--accent-purple);
+    }
+
+    /* ==========================================================================
+       SCREEN 2: PHONE FRAME & SCRIPTED SMS SIMULATION
+       ========================================================================== */
+    .phone-mockup {
+      width: 100%;
+      max-width: 385px;
+      background: #000000;
+      border: 3px solid #2d2d3f;
+      border-radius: 42px;
+      box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.9), 0 0 45px -10px var(--accent-purple-glow-strong);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      height: 670px;
+    }
+
+    /* Outer bezel gloss highlight */
+    .phone-mockup::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 39px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      pointer-events: none;
+    }
+
+    /* Mock Phone Top Notch / Dynamic Island */
+    .phone-notch-bar {
+      height: 28px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000000;
+      padding: 0 1.25rem;
+      position: relative;
+      z-index: 30;
+    }
+
+    .phone-island {
+      width: 80px;
+      height: 18px;
+      background: #111118;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* Realistic Phone Status Bar */
+    .phone-status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.2rem 1.4rem 0.35rem 1.4rem;
+      font-size: 0.72rem;
+      color: #94a3b8;
+      background: #000000;
+      z-index: 25;
+    }
+
+    .status-left {
+      font-weight: 600;
+      color: #e2e8f0;
+      letter-spacing: -0.01em;
+    }
+
+    .status-right {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .no-data-tag {
+      font-size: 0.62rem;
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      padding: 0.05rem 0.35rem;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    /* Persistent Blackout/Offline Alert Banner */
+    .offline-banner {
+      background: linear-gradient(90deg, #450a0a 0%, #7f1d1d 50%, #450a0a 100%);
+      color: #fecaca;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.35rem 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      border-bottom: 1px solid rgba(239, 68, 68, 0.4);
+      z-index: 20;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .offline-banner-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #ef4444;
+      animation: pulse-beacon 1.2s infinite ease-in-out;
+    }
+
+    /* Simulation Control Bar */
+    .sim-control-bar {
+      background: #11111c;
+      padding: 0.4rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-subtle);
+      z-index: 15;
+    }
+
+    .sim-progress-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .progress-dots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .p-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+      transition: all 0.3s ease;
+    }
+
+    .p-dot.active {
+      background: var(--accent-purple);
+      box-shadow: 0 0 6px var(--accent-purple);
+      transform: scale(1.2);
+    }
+
+    .p-dot.done {
+      background: #8b5cf6;
+    }
+
+    .sim-actions {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .sim-btn {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: all 0.2s ease;
+    }
+
+    .sim-btn:hover {
+      background: rgba(167, 139, 250, 0.2);
+      border-color: var(--border-accent);
+    }
+
+    /* Message Thread Scroll Area */
+    .chat-body {
+      flex: 1;
+      padding: 1rem 0.9rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      background: radial-gradient(circle at top, #141424 0%, #0c0c14 100%);
+      scroll-behavior: smooth;
+      position: relative;
+    }
+
+    /* Message Item Animation & Styles */
+    .msg-group {
+      display: none;
+      flex-direction: column;
+      gap: 0.25rem;
+      opacity: 0;
+      transform: translateY(10px) scale(0.98);
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+
+    .msg-group.revealed {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .msg-group.outgoing {
+      align-items: flex-end;
+    }
+
+    .msg-group.incoming {
+      align-items: flex-start;
+    }
+
+    .msg-sender-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 0 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .system-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: #c4b5fd;
+      background: rgba(124, 58, 237, 0.25);
+      border: 1px solid rgba(167, 139, 250, 0.35);
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .bubble {
+      max-width: 88%;
+      padding: 0.65rem 0.85rem;
+      border-radius: 16px;
+      font-size: 0.84rem;
+      line-height: 1.45;
+      word-break: break-word;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .bubble.outgoing {
+      background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+      color: #ffffff;
+      border-bottom-right-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .bubble.incoming {
+      background: #1e1e2f;
+      color: #f1f5f9;
+      border-bottom-left-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .bubble.system-decode {
+      background: #11111d;
+      border: 1px solid rgba(167, 139, 250, 0.3);
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      color: #cbd5e1;
+      width: 95%;
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bubble.system-decode::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #7c3aed, #c4b5fd);
+    }
+
+    .decode-line {
+      display: flex;
+      gap: 0.4rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .decode-line:last-child {
+      margin-bottom: 0;
+    }
+
+    .decode-key {
+      color: var(--accent-purple);
+      font-weight: 600;
+    }
+
+    .decode-val {
+      color: #f8fafc;
+    }
+
+    .urgency-high {
+      color: #f87171;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+    }
+
+    .msg-time {
+      font-size: 0.6rem;
+      color: rgba(255, 255, 255, 0.45);
+      margin-top: 0.25rem;
+      text-align: right;
+    }
+
+    /* Typing Indicator */
+    .typing-container {
+      display: none;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 0.8rem;
+      background: #1b1b2a;
+      border-radius: 16px;
+      border-bottom-left-radius: 4px;
+      width: fit-content;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .typing-container.visible {
+      display: inline-flex;
+      animation: fadeIn 0.2s ease-in;
+    }
+
+    .typing-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--accent-purple);
+      border-radius: 50%;
+      animation: typingBounce 1.2s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typingBounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30% { transform: translateY(-4px); opacity: 1; }
+    }
+
+    /* STEP 6: IVR Call Simulation Overlay */
+    .ivr-overlay-card {
+      background: linear-gradient(180deg, #181428 0%, #0f0f1c 100%);
+      border: 1px solid rgba(167, 139, 250, 0.4);
+      border-radius: 18px;
+      padding: 1.1rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 25px var(--accent-purple-glow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      margin-top: 0.35rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ivr-call-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .ivr-call-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #6ee7b7;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .ivr-call-duration {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .ivr-pulse-ring {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 0.6rem 0.75rem;
+      border-radius: 12px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .phone-icon-pulsing {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10b981, #059669);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+    }
+
+    .phone-icon-pulsing::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 2px solid rgba(16, 185, 129, 0.6);
+      animation: ringPulse 1.5s infinite;
+    }
+
+    @keyframes ringPulse {
+      0% { transform: scale(0.9); opacity: 1; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+
+    .phone-icon-pulsing svg {
+      width: 18px;
+      height: 18px;
+      color: #ffffff;
+    }
+
+    .ivr-caller-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ivr-caller-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .ivr-caller-sub {
+      font-size: 0.68rem;
+      color: var(--accent-purple-light);
+    }
+
+    /* Waveform Animation */
+    .waveform-bars {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 24px;
+      padding: 0 0.5rem;
+    }
+
+    .w-bar {
+      width: 3px;
+      background: var(--accent-purple);
+      border-radius: 2px;
+      animation: waveGrow 1.2s infinite ease-in-out alternate;
+    }
+
+    .w-bar:nth-child(1) { height: 6px; animation-delay: 0.1s; }
+    .w-bar:nth-child(2) { height: 16px; animation-delay: 0.3s; }
+    .w-bar:nth-child(3) { height: 22px; animation-delay: 0.15s; }
+    .w-bar:nth-child(4) { height: 12px; animation-delay: 0.4s; }
+    .w-bar:nth-child(5) { height: 18px; animation-delay: 0.25s; }
+    .w-bar:nth-child(6) { height: 8px; animation-delay: 0.5s; }
+    .w-bar:nth-child(7) { height: 14px; animation-delay: 0.2s; }
+
+    @keyframes waveGrow {
+      0% { transform: scaleY(0.4); opacity: 0.4; }
+      100% { transform: scaleY(1); opacity: 1; }
+    }
+
+    .ivr-transcript {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 0.65rem 0.8rem;
+      font-size: 0.76rem;
+      line-height: 1.45;
+      color: #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .transcript-line {
+      display: flex;
+      gap: 0.3rem;
+    }
+
+    .dtmf-action {
+      background: rgba(167, 139, 250, 0.15);
+      border: 1px dashed var(--accent-purple);
+      color: var(--accent-purple-light);
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+    }
+
+    /* Mock Phone Input Bar (SMS Composer placeholder) */
+    .phone-composer {
+      background: #12121c;
+      padding: 0.6rem 0.9rem;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      z-index: 10;
+    }
+
+    .composer-input-fake {
+      flex: 1;
+      background: #1c1c2b;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 0.4rem 0.85rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .composer-send-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent-purple-deep);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      opacity: 0.7;
+    }
+
+    .composer-send-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Bottom Home Indicator */
+    .phone-home-bar {
+      height: 18px;
+      background: #000000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 30;
+    }
+
+    .phone-home-indicator {
+      width: 110px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 2px;
+    }
+
+    /* Screen 2 Floating Bottom CTA when finished */
+    .sim-finish-cta {
+      margin-top: 1rem;
+      width: 100%;
+      max-width: 385px;
+      display: none;
+      animation: fadeInUp 0.4s ease forwards;
+    }
+
+    .sim-finish-cta.visible {
+      display: block;
+    }
+
+    /* ==========================================================================
+       SCREEN 3: EXPLAINER END SCREEN
+       ========================================================================== */
+    .explainer-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-accent);
+      border-radius: 24px;
+      padding: 2rem 1.6rem;
+      box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.85), 0 0 35px var(--accent-purple-glow);
+      display: flex;
+      flex-direction: column;
+      gap: 1.4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .explainer-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #10b981, var(--accent-purple), #7c3aed);
+    }
+
+    .explainer-header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .explainer-badge {
+      align-self: flex-start;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #6ee7b7;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .explainer-heading {
+      font-size: 1.45rem;
+      font-weight: 800;
+      line-height: 1.25;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .explainer-subtext {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    /* Tag Chips Grid */
+    .features-chip-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.6rem;
+    }
+
+    .feature-chip-pill {
+      background: rgba(167, 139, 250, 0.06);
+      border: 1px solid rgba(167, 139, 250, 0.25);
+      color: #e2e8f0;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.55rem 0.75rem;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      transition: all 0.2s ease;
+    }
+
+    .feature-chip-pill:hover {
+      background: rgba(167, 139, 250, 0.15);
+      border-color: var(--accent-purple);
+      transform: translateY(-1px);
+    }
+
+    .callout-box {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-left: 3px solid var(--accent-purple);
+      border-radius: 8px;
+      padding: 0.75rem 0.9rem;
+      font-size: 0.78rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    .callout-box strong {
+      color: #cbd5e1;
+    }
+
+    .explainer-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .btn-secondary {
+      background: var(--bg-surface-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border-accent);
+      font-size: 0.92rem;
+      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      border-radius: 9999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(167, 139, 250, 0.15);
+      border-color: var(--accent-purple);
+    }
+
+    /* ==========================================================================
+       SCREEN 4: STUB RETURNING TO ROLE SELECT
+       ========================================================================== */
+    .stub-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-accent);
+      border-radius: 24px;
+      padding: 3rem 2rem;
+      box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.85);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .spinner-ring {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(167, 139, 250, 0.2);
+      border-top-color: var(--accent-purple);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .stub-heading {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .stub-subtext {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      max-width: 280px;
+    }
+
+    /* ==========================================================================
+       HELPER ANIMATIONS & MEDIA QUERIES
+       ========================================================================== */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 420px) {
+      body {
+        padding: 0.5rem;
+      }
+      .app-viewport {
+        margin-top: 3.2rem;
+      }
+      .phone-mockup {
+        height: 620px;
+        border-radius: 32px;
+      }
+      .entry-heading {
+        font-size: 1.35rem;
+      }
+      .explainer-heading {
+        font-size: 1.25rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Violet Glow Backdrop -->
+  <div class="ambient-glow" id="ambientGlow"></div>
+
+  <!-- Persistent Header: PULZ Logo & Demo Utility Controls -->
+  <header class="top-nav">
+    <a href="#" class="brand" onclick="showScreen('screen-entry'); return false;" title="Return to Overview">
+      <span class="brand-logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:#a78bfa;">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+        PULZ
+      </span>
+      <span class="brand-badge">
+        <span class="pulse-dot"></span>
+        Offline Mode
+      </span>
+    </a>
+
+    <div class="nav-actions">
+      <button class="speed-toggle-btn" id="speedToggleBtn" onclick="togglePlaybackSpeed()" title="Change simulation speed">
+        <span id="speedLabel">1.0x Speed</span>
+      </button>
+      <button class="sound-toggle-btn" id="soundToggleBtn" onclick="toggleAudio()" title="Toggle simulated audio FX">
+        <span id="soundIcon">🔊 Sound On</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Viewport Container -->
+  <main class="app-viewport">
+    <div class="screen-container">
+
+      <!-- SCREEN 1: ENTRY POINT -->
+      <section id="screen-entry" class="screen active" aria-labelledby="entry-heading">
+        <div class="entry-card">
+          <div class="entry-title-small">How PULZ Works Without Internet</div>
+
+          <div class="icon-glow-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+              <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+              <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+              <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+              <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+              <line x1="12" y1="20" x2="12.01" y2="20"></line>
+            </svg>
+          </div>
+
+          <h1 class="entry-heading" id="entry-heading">No App. No Internet. Still Life-Saving.</h1>
+
+          <p class="entry-subtext">
+            See how PULZ reaches donors and hospitals using plain SMS and automated voice calls — even in a total network blackout.
+          </p>
+
+          <div class="entry-features-preview">
+            <span class="feature-chip-mini">📡 Plain 2G SMS</span>
+            <span class="feature-chip-mini">☎️ Automated IVR</span>
+            <span class="feature-chip-mini">⚡ Sub-60s Match</span>
+          </div>
+
+          <button id="btn-start-demo" class="btn-primary" onclick="startDemo()">
+            ▶ Watch it happen
+          </button>
+
+          <button class="footer-nav-link" onclick="goToRoleSelect()">
+            ← Back to role select
+          </button>
+        </div>
+      </section>
+
+      <!-- SCREEN 2: SCRIPTED ANIMATED SMS THREAD INSIDE PHONE MOCKUP -->
+      <section id="screen-sim" class="screen" aria-label="SMS Simulation Phone">
+        <div class="phone-mockup">
+          
+          <div class="phone-notch-bar">
+            <div class="phone-island"></div>
+          </div>
+
+          <div class="phone-status-bar">
+            <span class="status-left">9:41</span>
+            <div class="status-right">
+              <span class="no-data-tag">NO DATA</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M2 20h.01M7 20v-4M12 20v-8M17 20V4"/>
+              </svg>
+              <svg width="15" height="10" viewBox="0 0 22 14" fill="currentColor">
+                <rect x="1" y="1" width="17" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                <rect x="3" y="3" width="9" height="8" rx="1"/>
+                <path d="M20 5v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="offline-banner">
+            <span class="offline-banner-dot"></span>
+            <span>SMS/USSD Only · No Data Connection</span>
+          </div>
+
+          <div class="sim-control-bar">
+            <div class="sim-progress-indicator">
+              <span id="stepCounterText">Step 1/6</span>
+              <div class="progress-dots">
+                <span class="p-dot active" id="dot-1"></span>
+                <span class="p-dot" id="dot-2"></span>
+                <span class="p-dot" id="dot-3"></span>
+                <span class="p-dot" id="dot-4"></span>
+                <span class="p-dot" id="dot-5"></span>
+                <span class="p-dot" id="dot-6"></span>
+              </div>
+            </div>
+
+            <div class="sim-actions">
+              <button class="sim-btn" id="pausePlayBtn" onclick="togglePauseSimulation()" title="Pause or Resume simulation">
+                <span id="pausePlayText">⏸ Pause</span>
+              </button>
+              <button class="sim-btn" onclick="skipToEnd()" title="Jump to end of demo">
+                Skip ▶
+              </button>
+            </div>
+          </div>
+
+          <div class="chat-body" id="chatThread">
+
+            <!-- STEP 1: Outgoing emergency request -->
+            <div class="msg-group outgoing" id="msg-step-1">
+              <div class="msg-sender-label">
+                <span>Hospital Attendant (+91 98XXX XX210)</span>
+              </div>
+              <div class="bubble outgoing">
+                NEED B+ APOLLO CHENNAI
+                <div class="msg-time">09:41 · via SMS</div>
+              </div>
+            </div>
+
+            <!-- STEP 2: PULZ System Parsing -->
+            <div class="msg-group incoming" id="msg-step-2">
+              <div class="msg-sender-label">
+                <span class="system-badge">⚡ PULZ SYSTEM</span>
+                <span>Automated Parser</span>
+              </div>
+              <div class="bubble system-decode">
+                <div class="decode-line">
+                  <span class="decode-key">Status:</span>
+                  <span class="decode-val" id="decode-status">Parsing request...</span>
+                </div>
+                <div class="decode-line">
+                  <span class="decode-key">Blood group:</span>
+                  <span class="decode-val" style="color:#f43f5e; font-weight:700;">B+</span>
+                </div>
+                <div class="decode-line">
+                  <span class="decode-key">Hospital:</span>
+                  <span class="decode-val">Apollo Hospitals, Chennai</span>
+                </div>
+                <div class="decode-line">
+                  <span class="decode-key">Urgency:</span>
+                  <span class="decode-val urgency-high">● HIGH (Immediate)</span>
+                </div>
+                <div class="decode-line" style="margin-top:4px; padding-top:4px; border-top:1px dashed rgba(255,255,255,0.1);">
+                  <span class="decode-key">Routing:</span>
+                  <span class="decode-val" style="color:#a78bfa;">Matching nearby registered donors...</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- STEP 3: Outgoing Alert to Matched Donor -->
+            <div class="msg-group incoming" id="msg-step-3">
+              <div class="msg-sender-label">
+                <span class="system-badge">⚡ PULZ SYSTEM</span>
+                <span>To Donor: Priya K. · 2.3 km away</span>
+              </div>
+              <div class="bubble incoming" style="border-left: 3px solid #a78bfa;">
+                PULZ ALERT: Urgent B+ blood needed at Apollo Hospitals, Chennai. Can you donate today? Reply YES + your 4-digit PIN to confirm, or NO to skip.
+                <div class="msg-time">09:41 · Priority Dispatch</div>
+              </div>
+            </div>
+
+            <!-- STEP 4: Donor Confirmation Reply -->
+            <div class="msg-group outgoing" id="msg-step-4">
+              <div class="msg-sender-label">
+                <span>Donor Response (Priya K.)</span>
+              </div>
+              <div class="bubble outgoing" style="background: linear-gradient(135deg, #10b981, #059669); border-color: rgba(255,255,255,0.2);">
+                YES 4821
+                <div class="msg-time">09:42 · Authenticated with PIN</div>
+              </div>
+            </div>
+
+            <!-- STEP 5: Final Match & Hospital Confirmation -->
+            <div class="msg-group incoming" id="msg-step-5">
+              <div class="msg-sender-label">
+                <span class="system-badge">⚡ PULZ SYSTEM</span>
+                <span>Broadcast Confirmation</span>
+              </div>
+              <div class="bubble incoming" style="background:#131d18; border:1px solid rgba(16,185,129,0.35); color:#ecfdf5;">
+                <p>✅ <strong>Confirmed!</strong> Priya K. is on the way to Apollo Hospitals, Chennai.</p>
+                <p style="margin-top:0.35rem; color:#a7f3d0; font-size:0.8rem;">Hospital notified. Reference ID: <strong>PLZ-88231</strong>.</p>
+                <p style="margin-top:0.35rem; color:#94a3b8; font-size:0.75rem;">An automated call will confirm your arrival slot shortly.</p>
+                <div class="msg-time" style="color:#6ee7b7;">09:42 · Dispatched to Hospital Dashboard</div>
+              </div>
+            </div>
+
+            <!-- STEP 6: Interactive IVR Call Simulation Card -->
+            <div class="msg-group incoming" id="msg-step-6">
+              <div class="ivr-overlay-card">
+                <div class="ivr-call-header">
+                  <span class="ivr-call-badge">
+                    <span style="width:6px;height:6px;background:#10b981;border-radius:50%;"></span>
+                    Active Voice Call
+                  </span>
+                  <span class="ivr-call-duration" id="callTimer">00:14</span>
+                </div>
+
+                <div class="ivr-pulse-ring">
+                  <div class="phone-icon-pulsing">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                    </svg>
+                  </div>
+                  <div class="ivr-caller-info">
+                    <span class="ivr-caller-name">PULZ Automated IVR</span>
+                    <span class="ivr-caller-sub">Verified Emergency Dispatch System</span>
+                  </div>
+                  <div class="waveform-bars">
+                    <div class="w-bar"></div>
+                    <div class="w-bar"></div>
+                    <div class="w-bar"></div>
+                    <div class="w-bar"></div>
+                    <div class="w-bar"></div>
+                    <div class="w-bar"></div>
+                    <div class="w-bar"></div>
+                  </div>
+                </div>
+
+                <div class="ivr-transcript">
+                  <div style="font-size:0.68rem; color:#a78bfa; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">
+                    [IVR Call Transcript]
+                  </div>
+                  <div class="transcript-line">
+                    <span>"This is an automated call from PULZ. Press 1 to confirm your donation appointment at Apollo Hospitals, Chennai at 4:30 PM today. Press 2 to reschedule."</span>
+                  </div>
+                  <div class="dtmf-action">
+                    <span>📱 Donor presses [1] on keypad</span>
+                  </div>
+                  <div class="transcript-line" style="color:#6ee7b7; font-weight:500;">
+                    <span>"Thank you. Your appointment is confirmed. Reference ID PLZ-88231. Please carry a valid ID."</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dynamic Typing indicator -->
+            <div class="typing-container" id="typingIndicator">
+              <span style="font-size:0.68rem; color:#a78bfa; font-weight:600; margin-right:4px;">PULZ Gateway</span>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+            </div>
+
+          </div>
+
+          <div class="phone-composer">
+            <div class="composer-input-fake">SMS ready (Cellular carrier direct)</div>
+            <button class="composer-send-btn" title="Send SMS">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </div>
+
+          <div class="phone-home-bar">
+            <div class="phone-home-indicator"></div>
+          </div>
+        </div>
+
+        <div class="sim-finish-cta" id="simFinishCta">
+          <button class="btn-primary" onclick="showScreen('screen-explainer')">
+            Continue to Summary →
+          </button>
+        </div>
+      </section>
+
+      <!-- SCREEN 3: EXPLAINER END SCREEN -->
+      <section id="screen-explainer" class="screen" aria-labelledby="explainer-heading">
+        <div class="explainer-card">
+          <div class="explainer-header">
+            <span class="explainer-badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Zero Dependency Architecture
+            </span>
+            <h2 class="explainer-heading" id="explainer-heading">
+              This works with zero app installs and zero internet.
+            </h2>
+            <p class="explainer-subtext">
+              Every step above ran on plain SMS and automated voice — the same infrastructure used for emergency alerts like China's earthquake early-warning broadcasts, repurposed to save lives through blood donation.
+            </p>
+          </div>
+
+          <div class="features-chip-grid">
+            <div class="feature-chip-pill">
+              <span>📡</span>
+              <span>Works on 2G networks</span>
+            </div>
+            <div class="feature-chip-pill">
+              <span>🔐</span>
+              <span>PIN-based verification</span>
+            </div>
+            <div class="feature-chip-pill">
+              <span>☎️</span>
+              <span>IVR call confirmation</span>
+            </div>
+            <div class="feature-chip-pill">
+              <span>🏥</span>
+              <span>Direct hospital alert</span>
+            </div>
+            <div class="feature-chip-pill">
+              <span>🌐</span>
+              <span>Zero app install required</span>
+            </div>
+            <div class="feature-chip-pill">
+              <span>⚡</span>
+              <span>Sub-60-second response</span>
+            </div>
+          </div>
+
+          <div class="callout-box">
+            <strong>Roadmap Capability:</strong> This is our roadmap capability — demonstrated here as a scripted simulation for evaluation purposes.
+          </div>
+
+          <div class="explainer-actions">
+            <button class="btn-primary" onclick="replaySimulation()">
+              Restart Demo ↻
+            </button>
+            <button class="btn-secondary" onclick="goToRoleSelect()">
+              ← Back to role select
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 4: STUB RETURNING TO ROLE SELECT -->
+      <section id="screen-stub" class="screen" aria-label="Returning to role select">
+        <div class="stub-card">
+          <div class="spinner-ring"></div>
+          <h3 class="stub-heading">↩ Returning to Role Select...</h3>
+          <p class="stub-subtext">
+            Connecting back to the main PULZ hospital & donor role selection portal.
+          </p>
+          <button class="btn-secondary" style="font-size:0.8rem; padding:0.45rem 1.1rem;" onclick="showScreen('screen-entry')">
+            Stay in Offline Demo
+          </button>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    let currentStep = 0;
+    const totalSteps = 6;
+    let stepTimer = null;
+    let isPaused = false;
+    let playbackSpeed = 1.0;
+    let audioEnabled = true;
+    let audioCtx = null;
+    let ivrCallInterval = null;
+
+    function initAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playTone(freq, type, duration, delay = 0) {
+      if (!audioEnabled) return;
+      try {
+        initAudioContext();
+        if (!audioCtx) return;
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+        
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + duration);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(audioCtx.currentTime + delay);
+        osc.stop(audioCtx.currentTime + delay + duration);
+      } catch (e) {}
+    }
+
+    function playSmsSentSound() {
+      playTone(587.33, 'sine', 0.12, 0);
+      playTone(880, 'sine', 0.18, 0.08);
+    }
+
+    function playSmsReceivedSound() {
+      playTone(523.25, 'sine', 0.1, 0);
+      playTone(659.25, 'sine', 0.1, 0.09);
+      playTone(783.99, 'sine', 0.2, 0.18);
+    }
+
+    function playDtmfTone() {
+      playTone(697, 'sine', 0.22, 0);
+      playTone(1209, 'sine', 0.22, 0);
+    }
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(scr => {
+        scr.classList.remove('active');
+      });
+
+      const target = document.getElementById(screenId);
+      if (target) {
+        target.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function goToRoleSelect() {
+      clearTimeout(stepTimer);
+      clearInterval(ivrCallInterval);
+      showScreen('screen-stub');
+      // TODO: replace with actual navigation to role-select screen in main app
+      console.log("[PULZ Router] Redirecting to main role-select route...");
+    }
+
+    function startDemo() {
+      initAudioContext();
+      showScreen('screen-sim');
+      resetSimulation();
+      playNextStep();
+    }
+
+    function replaySimulation() {
+      initAudioContext();
+      showScreen('screen-sim');
+      resetSimulation();
+      playNextStep();
+    }
+
+    function resetSimulation() {
+      clearTimeout(stepTimer);
+      clearInterval(ivrCallInterval);
+      currentStep = 0;
+      isPaused = false;
+      
+      const pauseBtnText = document.getElementById('pausePlayText');
+      if (pauseBtnText) pauseBtnText.textContent = "⏸ Pause";
+
+      const cta = document.getElementById('simFinishCta');
+      if (cta) cta.classList.remove('visible');
+
+      hideTyping();
+
+      for (let i = 1; i <= totalSteps; i++) {
+        const el = document.getElementById(`msg-step-${i}`);
+        if (el) el.classList.remove('revealed');
+        const dot = document.getElementById(`dot-${i}`);
+        if (dot) dot.className = 'p-dot';
+      }
+
+      updateProgressUI(0);
+      const chat = document.getElementById('chatThread');
+      if (chat) chat.scrollTop = 0;
+    }
+
+    function updateProgressUI(step) {
+      const label = document.getElementById('stepCounterText');
+      if (label) {
+        label.textContent = `Step ${Math.min(Math.max(step, 1), totalSteps)}/${totalSteps}`;
+      }
+
+      for (let i = 1; i <= totalSteps; i++) {
+        const dot = document.getElementById(`dot-${i}`);
+        if (dot) {
+          if (i < step) {
+            dot.className = 'p-dot done';
+          } else if (i === step) {
+            dot.className = 'p-dot active';
+          } else {
+            dot.className = 'p-dot';
+          }
+        }
+      }
+    }
+
+    function showTyping() {
+      const typing = document.getElementById('typingIndicator');
+      if (typing) {
+        typing.classList.add('visible');
+        scrollChatToBottom();
+      }
+    }
+
+    function hideTyping() {
+      const typing = document.getElementById('typingIndicator');
+      if (typing) typing.classList.remove('visible');
+    }
+
+    function scrollChatToBottom() {
+      const chat = document.getElementById('chatThread');
+      if (chat) {
+        chat.scrollTo({
+          top: chat.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    }
+
+    function revealStep(stepNum) {
+      const msgEl = document.getElementById(`msg-step-${stepNum}`);
+      if (msgEl) {
+        msgEl.classList.add('revealed');
+      }
+      updateProgressUI(stepNum);
+      scrollChatToBottom();
+
+      if (stepNum === 1 || stepNum === 4) {
+        playSmsSentSound();
+      } else if (stepNum === 2 || stepNum === 3 || stepNum === 5) {
+        playSmsReceivedSound();
+      } else if (stepNum === 6) {
+        startIvrCallSimulation();
+      }
+    }
+
+    function startIvrCallSimulation() {
+      playSmsReceivedSound();
+      let callSec = 0;
+      const timerEl = document.getElementById('callTimer');
+      
+      clearInterval(ivrCallInterval);
+      ivrCallInterval = setInterval(() => {
+        callSec++;
+        if (timerEl) {
+          const s = callSec < 10 ? `0${callSec}` : `${callSec}`;
+          timerEl.textContent = `00:${s}`;
+        }
+        if (callSec === 2) {
+          playDtmfTone();
+        }
+      }, 1000 / playbackSpeed);
+    }
+
+    function playNextStep() {
+      if (isPaused) return;
+
+      currentStep++;
+
+      if (currentStep > totalSteps) {
+        clearInterval(ivrCallInterval);
+        const cta = document.getElementById('simFinishCta');
+        if (cta) cta.classList.add('visible');
+
+        stepTimer = setTimeout(() => {
+          showScreen('screen-explainer');
+        }, 3500 / playbackSpeed);
+        return;
+      }
+
+      const baseDelay = 1500 / playbackSpeed;
+
+      if (currentStep === 1) {
+        revealStep(1);
+        stepTimer = setTimeout(() => {
+          showTyping();
+          stepTimer = setTimeout(() => {
+            hideTyping();
+            playNextStep();
+          }, 1100 / playbackSpeed);
+        }, baseDelay);
+      } else if (currentStep === 2) {
+        revealStep(2);
+        stepTimer = setTimeout(() => {
+          showTyping();
+          stepTimer = setTimeout(() => {
+            hideTyping();
+            playNextStep();
+          }, 1300 / playbackSpeed);
+        }, baseDelay);
+      } else if (currentStep === 3) {
+        revealStep(3);
+        stepTimer = setTimeout(() => {
+          playNextStep();
+        }, baseDelay + 400);
+      } else if (currentStep === 4) {
+        revealStep(4);
+        stepTimer = setTimeout(() => {
+          showTyping();
+          stepTimer = setTimeout(() => {
+            hideTyping();
+            playNextStep();
+          }, 1200 / playbackSpeed);
+        }, baseDelay);
+      } else if (currentStep === 5) {
+        revealStep(5);
+        stepTimer = setTimeout(() => {
+          playNextStep();
+        }, baseDelay + 500);
+      } else if (currentStep === 6) {
+        revealStep(6);
+        stepTimer = setTimeout(() => {
+          playNextStep();
+        }, (baseDelay * 2) + 1200);
+      }
+    }
+
+    function togglePauseSimulation() {
+      isPaused = !isPaused;
+      const btnText = document.getElementById('pausePlayText');
+      if (isPaused) {
+        clearTimeout(stepTimer);
+        clearInterval(ivrCallInterval);
+        if (btnText) btnText.textContent = "▶ Resume";
+      } else {
+        if (btnText) btnText.textContent = "⏸ Pause";
+        playNextStep();
+      }
+    }
+
+    function skipToEnd() {
+      clearTimeout(stepTimer);
+      clearInterval(ivrCallInterval);
+      hideTyping();
+
+      for (let i = 1; i <= totalSteps; i++) {
+        const el = document.getElementById(`msg-step-${i}`);
+        if (el) el.classList.add('revealed');
+      }
+
+      currentStep = totalSteps;
+      updateProgressUI(totalSteps);
+      scrollChatToBottom();
+
+      const cta = document.getElementById('simFinishCta');
+      if (cta) cta.classList.add('visible');
+
+      stepTimer = setTimeout(() => {
+        showScreen('screen-explainer');
+      }, 1800);
+    }
+
+    function togglePlaybackSpeed() {
+      if (playbackSpeed === 1.0) {
+        playbackSpeed = 1.5;
+      } else if (playbackSpeed === 1.5) {
+        playbackSpeed = 2.0;
+      } else {
+        playbackSpeed = 1.0;
+      }
+
+      const label = document.getElementById('speedLabel');
+      if (label) label.textContent = `${playbackSpeed.toFixed(1)}x Speed`;
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      const soundIcon = document.getElementById('soundIcon');
+      if (soundIcon) {
+        soundIcon.textContent = audioEnabled ? "🔊 Sound On" : "🔇 Sound Off";
+      }
+      if (audioEnabled) {
+        initAudioContext();
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        const simScreen = document.getElementById('screen-sim');
+        if (simScreen && simScreen.classList.contains('active')) {
+          e.preventDefault();
+          togglePauseSimulation();
+        }
+      } else if (e.code === 'ArrowRight') {
+        const simScreen = document.getElementById('screen-sim');
+        if (simScreen && simScreen.classList.contains('active')) {
+          skipToEnd();
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PULZ — Critical Blood Network</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&family=Space+Grotesk:wght@500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "on-surface": "#dfe4e0", "secondary": "#71db9b", "secondary-fixed": "#8df8b5",
+        "primary-fixed": "#cde9d9", "on-error-container": "#ffdad6", "on-primary-fixed": "#072016",
+        "background": "#0f1412", "surface-variant": "#313633", "on-primary": "#1d352b",
+        "surface": "#0f1412", "surface-bright": "#353a38", "on-tertiary-container": "#346e67",
+        "on-surface-variant": "#c2c8c3", "surface-tint": "#b2cdbe", "tertiary-fixed-dim": "#97d2c9",
+        "on-background": "#dfe4e0", "primary-fixed-dim": "#b2cdbe", "surface-container": "#1c211f",
+        "inverse-primary": "#4b6457", "surface-container-highest": "#313633", "inverse-surface": "#dfe4e0",
+        "surface-container-low": "#181d1b", "surface-dim": "#0f1412", "secondary-fixed-dim": "#71db9b",
+        "on-tertiary-fixed": "#00201d", "on-primary-fixed-variant": "#344c40", "tertiary-container": "#b3eee5",
+        "secondary-container": "#01864f", "on-tertiary-fixed-variant": "#0f4f49", "on-secondary": "#00391e",
+        "surface-container-lowest": "#0a0f0d", "on-tertiary": "#003733", "on-error": "#690005",
+        "primary-container": "#cde9d9", "error-container": "#93000a", "outline": "#8c928d",
+        "on-primary-container": "#516a5d", "on-secondary-fixed-variant": "#00522e", "error": "#ffb4ab",
+        "tertiary": "#ffffff", "on-secondary-container": "#f6fff5", "outline-variant": "#424844",
+        "primary": "#ffffff", "on-secondary-fixed": "#00210f", "surface-container-high": "#262b29",
+        "inverse-on-surface": "#2c322f", "tertiary-fixed": "#b3eee5",
+        "urgency-urgent": "#f5a623", "urgency-needed": "#e8c547"
+      },
+      borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+      spacing: { container_max: "560px", unit: "4px", gutter: "16px", margin_mobile: "20px" },
+      fontFamily: {
+        "body-md": ["Manrope"], "label-md": ["Space Grotesk"], "label-lg": ["Space Grotesk"],
+        "numeric-display": ["Space Grotesk"], "headline-sm": ["Syne"], "headline-md": ["Syne"],
+        "label-sm": ["Space Grotesk"], "headline-lg": ["Syne"], "body-lg": ["Manrope"]
+      },
+      fontSize: {
+        "body-md": ["14px", { lineHeight: "1.5", fontWeight: "400" }],
+        "label-md": ["14px", { lineHeight: "1.4", fontWeight: "500" }],
+        "label-lg": ["16px", { lineHeight: "1.4", letterSpacing: "0.05em", fontWeight: "700" }],
+        "numeric-display": ["40px", { lineHeight: "1", letterSpacing: "-0.04em", fontWeight: "700" }],
+        "headline-sm": ["20px", { lineHeight: "1.2", fontWeight: "700" }],
+        "headline-md": ["24px", { lineHeight: "1.2", fontWeight: "700" }],
+        "label-sm": ["12px", { lineHeight: "1.4", fontWeight: "500" }],
+        "headline-lg": ["32px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "800" }],
+        "body-lg": ["16px", { lineHeight: "1.6", fontWeight: "400" }]
+      }
+    }
+  }
+}
+</script>
+<style>
+  body { min-height: max(884px, 100dvh); }
+  .halo-bg { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(205,233,217,0.05) 0%, transparent 60%);
+    z-index: 0; pointer-events: none; filter: blur(80px); }
+  .glow-button { box-shadow: 0 0 12px 0 rgba(205,233,217,0.3); }
+  .bg-ambient-pattern { background-image: radial-gradient(circle at center, #1b2320 1px, transparent 1px); background-size: 24px 24px; }
+
+  html, body { height: 100%; }
+  body { display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 20%, #121815 0%, #050705 65%); }
+  .stage { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 32px 16px; }
+  .phone { position: relative; width: 393px; height: 852px; max-width: 94vw; max-height: 88vh; aspect-ratio: 393 / 852; background: #050705; border-radius: 54px; padding: 12px; box-shadow: 0 40px 90px -20px rgba(0,0,0,0.75), 0 0 0 1px rgba(255,255,255,0.04) inset; }
+  .phone-notch { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 118px; height: 26px; background: #050705; border-radius: 0 0 18px 18px; z-index: 80; }
+  .device-screen { position: relative; width: 100%; height: 100%; border-radius: 42px; overflow: hidden; background: #0f1412; display: flex; flex-direction: column; }
+  .status-bar { flex-shrink: 0; height: 46px; display: flex; align-items: center; justify-content: space-between; padding: 6px 28px 0; position: relative; z-index: 70; }
+  .home-indicator { position: absolute; bottom: 7px; left: 50%; transform: translateX(-50%); width: 134px; height: 5px; border-radius: 9999px; background: rgba(223,228,224,0.35); z-index: 80; pointer-events: none; }
+  #app-viewport { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; }
+
+  .screen { position: absolute !important; inset: 0 !important; display: flex; flex-direction: column; overflow-y: auto; -webkit-overflow-scrolling: touch; opacity: 0; pointer-events: none; z-index: 1; }
+  .screen.active { opacity: 1; pointer-events: auto; z-index: 3; transform: translateX(0); }
+  .screen::-webkit-scrollbar { display: none; }
+
+  .demo-controls { display: flex; align-items: center; gap: 10px; }
+  .stage-label { color: #6b7570; font-family: "Space Grotesk", sans-serif; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+
+  @keyframes fadeUp { from { opacity:0; transform: translateY(8px);} to { opacity:1; transform: translateY(0);} }
+  .fade-up { animation: fadeUp .35s cubic-bezier(.16,1,.3,1) both; }
+
+  @keyframes scan { 0% { transform: translateY(-100px); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(100px); opacity: 0; } }
+  .scan-line { animation: scan 2s linear infinite; }
+  @keyframes flash { 0% { border-color: #71db9b; box-shadow: 0 0 20px #71db9b; } 100% { border-color: #ffffff; box-shadow: 0 0 0 transparent; } }
+  .success-flash { animation: flash 0.5s ease-out forwards; }
+  @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .slide-up { animation: slideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards; }
+
+  @keyframes pulseDot { 0%,100% { opacity:1; transform:scale(1);} 50% { opacity:.4; transform:scale(.7);} }
+  .pulse-dot { animation: pulseDot 1.4s ease-in-out infinite; }
+
+  @keyframes toastIn { from { opacity:0; transform: translate(-50%,10px);} to { opacity:1; transform: translate(-50%,0);} }
+  #toast { animation: toastIn .25s ease-out; }
+
+  .seg-btn.active { background: #cde9d9; color:#1d352b; border-color:#cde9d9; }
+  .step-badge { font-variant-numeric: tabular-nums; }
+  .del-text { color:#ffb4ab; text-decoration: line-through; text-decoration-color: rgba(255,180,171,.6); }
+  .ins-text { color:#71db9b; }
+  .navlink.active .navlabel { color:#71db9b; }
+  .navlink.active .navicon-wrap { background:#01864f; color:#f6fff5; box-shadow: 0 0 16px rgba(1,134,79,.5); }
+</style>
+</head>
+<body class="text-on-surface font-body-md antialiased selection:bg-primary-container selection:text-on-primary-container overflow-x-hidden">
+
+<div class="stage">
+  <div class="phone">
+    <div class="phone-notch"></div>
+    <div class="device-screen">
+      <div class="halo-bg"></div>
+      <!-- Status bar -->
+      <div class="status-bar text-on-surface">
+        <span class="font-label-md text-label-md font-bold tracking-wide" id="status-clock">9:41</span>
+        <div class="flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[16px]" style="font-variation-settings:'FILL' 1;">signal_cellular_alt</span>
+          <span class="material-symbols-outlined text-[16px]" style="font-variation-settings:'FILL' 1;">wifi</span>
+          <span class="material-symbols-outlined text-[18px]" style="font-variation-settings:'FILL' 1;">battery_full</span>
+        </div>
+      </div>
+
+      <!-- ============ APP VIEWPORT ============ -->
+      <div id="app-viewport">
+
+  <!-- ================= SCREEN 1 — LOGIN ================= -->
+  <section class="screen active h-full flex items-center justify-center p-margin_mobile relative overflow-hidden bg-ambient-pattern" data-screen="login" data-step="1" data-label="Hospital Login">
+    <div class="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none z-0">
+      <span class="material-symbols-outlined text-[400px] text-primary-container" style="font-variation-settings:'FILL' 1;">add</span>
+    </div>
+    <main class="w-full max-w-[480px] bg-surface-container border border-outline-variant rounded-[20px] p-[20px] sm:p-8 relative z-10 fade-up">
+      <div class="flex flex-col items-center mb-8">
+        <div class="w-16 h-16 bg-surface-container-highest border border-outline-variant rounded-full flex items-center justify-center mb-4">
+          <span class="material-symbols-outlined text-secondary text-3xl" style="font-variation-settings:'FILL' 1;">local_hospital</span>
+        </div>
+        <h1 class="font-headline-lg text-headline-lg text-primary mb-2 text-center">Hospital portal</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant text-center">Sign in with your institutional credentials.</p>
+      </div>
+      <form class="space-y-5" onsubmit="return false;">
+        <div class="space-y-1">
+          <label class="font-label-sm text-label-sm text-on-surface-variant block ml-1" for="hospital-id">Hospital ID</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span class="material-symbols-outlined text-outline-variant">badge</span></div>
+            <input class="w-full bg-surface-container border border-outline-variant rounded-[12px] pl-10 pr-4 py-3 text-on-surface font-label-md text-label-md focus:border-primary focus:ring-1 focus:ring-primary transition-colors outline-none" id="hospital-id" placeholder="Enter ID (e.g., HOSP-928)" type="text" value="HOSP-928"/>
+          </div>
+        </div>
+        <div class="space-y-1">
+          <label class="font-label-sm text-label-sm text-on-surface-variant block ml-1" for="staff-id">Staff ID</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span class="material-symbols-outlined text-outline-variant">person</span></div>
+            <input class="w-full bg-surface-container border border-outline-variant rounded-[12px] pl-10 pr-4 py-3 text-on-surface font-label-md text-label-md focus:border-primary focus:ring-1 focus:ring-primary transition-colors outline-none" id="staff-id" placeholder="Enter Staff ID" type="text" value="ST-114"/>
+          </div>
+        </div>
+        <div class="space-y-1">
+          <label class="font-label-sm text-label-sm text-on-surface-variant block ml-1" for="password">Password</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span class="material-symbols-outlined text-outline-variant">lock</span></div>
+            <input class="w-full bg-surface-container border border-outline-variant rounded-[12px] pl-10 pr-4 py-3 text-on-surface font-label-md text-label-md focus:border-primary focus:ring-1 focus:ring-primary transition-colors outline-none" id="password" placeholder="Enter password" type="password" value="••••••••"/>
+          </div>
+        </div>
+        <button class="w-full bg-primary text-on-primary-container font-label-lg text-label-lg py-3 rounded-[20px] glow-button mt-6 active:scale-95 transition-transform duration-80 flex justify-center items-center gap-2" type="button" onclick="doLogin()">
+          Sign in <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </form>
+      <div class="mt-8 text-center border-t border-outline-variant pt-6">
+        <p class="font-label-sm text-label-sm text-on-surface-variant flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined text-sm">security</span> Access is restricted to verified hospital staff.
+        </p>
+      </div>
+    </main>
+  </section>
+
+  <!-- ================= SCREEN 2 — DASHBOARD ================= -->
+  <section class="screen h-full flex-col pb-28" data-screen="dashboard" data-step="2" data-label="Inventory Dashboard">
+    <header class="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-outline-variant">
+      <div class="flex justify-between items-center px-margin_mobile h-16 max-w-[480px] mx-auto">
+        <div class="w-10 h-10 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center text-secondary">
+          <span class="material-symbols-outlined text-[20px]" style="font-variation-settings:'FILL' 1;">bloodtype</span>
+        </div>
+        <div class="font-headline-sm text-headline-sm text-primary tracking-tighter">PULZ</div>
+        <button class="w-10 h-10 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center text-on-surface" onclick="goTo('login')">
+          <span class="material-symbols-outlined">person</span>
+        </button>
+      </div>
+    </header>
+    <main class="flex-1 flex flex-col gap-6 px-margin_mobile mt-6 fade-up">
+      <div class="flex flex-col gap-1">
+        <p class="font-label-sm text-label-sm text-secondary uppercase tracking-wide">City General Hospital</p>
+        <h1 class="font-headline-lg text-headline-lg text-primary tracking-tighter">Blood bank inventory</h1>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2">
+        <div class="rounded-xl border border-outline-variant bg-surface-container p-3 flex flex-col gap-1">
+          <span class="font-numeric-display text-[24px] text-primary" id="stat-total">—</span>
+          <span class="font-label-sm text-label-sm text-on-surface-variant">Total units</span>
+        </div>
+        <div class="rounded-xl border border-error/30 bg-error/5 p-3 flex flex-col gap-1">
+          <span class="font-numeric-display text-[24px] text-error" id="stat-critical">—</span>
+          <span class="font-label-sm text-label-sm text-on-surface-variant">Critical types</span>
+        </div>
+        <div class="rounded-xl border border-outline-variant bg-surface-container p-3 flex flex-col gap-1">
+          <span class="font-numeric-display text-[24px] text-urgency-needed" id="stat-expiring">—</span>
+          <span class="font-label-sm text-label-sm text-on-surface-variant">Expiring &lt;48h</span>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <h2 class="font-headline-sm text-headline-sm text-primary">Stock by type</h2>
+        <button class="font-label-sm text-label-sm text-secondary flex items-center gap-1" onclick="goTo('inventory')">Expiry reference <span class="material-symbols-outlined text-sm">chevron_right</span></button>
+      </div>
+      <div id="stock-grid" class="grid grid-cols-2 gap-3"></div>
+
+      <button class="w-full bg-primary text-on-primary-container font-label-lg text-label-lg py-3 rounded-[20px] glow-button active:scale-95 transition-transform duration-80 flex justify-center items-center gap-2" onclick="goTo('queue')">
+        View request queue <span class="material-symbols-outlined">arrow_forward</span>
+      </button>
+    </main>
+  </section>
+
+  <!-- ================= SCREEN 3 — QUEUE ================= -->
+  <section class="screen h-full flex-col pb-28" data-screen="queue" data-step="3" data-label="Request Queue">
+    <header class="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-outline-variant">
+      <div class="flex justify-between items-center px-margin_mobile h-16 max-w-[480px] mx-auto">
+        <button class="text-primary p-2 -ml-2 rounded-full active:scale-95 transition-transform duration-80" onclick="goTo('dashboard','back')"><span class="material-symbols-outlined">arrow_back</span></button>
+        <div class="font-headline-sm text-headline-sm text-primary tracking-tighter">PULZ</div>
+        <div class="w-10 h-10"></div>
+      </div>
+    </header>
+    <main class="flex-1 flex flex-col gap-5 px-margin_mobile mt-6 fade-up">
+      <h1 class="font-headline-lg text-headline-lg text-primary tracking-tighter">Requests</h1>
+
+      <div class="flex p-1 rounded-full bg-surface-container border border-outline-variant">
+        <button id="seg-emergency" class="seg-btn active flex-1 py-2 rounded-full font-label-md text-label-md border border-transparent transition-colors" onclick="setQueueTab('emergency')">Emergency</button>
+        <button id="seg-scheduled" class="seg-btn flex-1 py-2 rounded-full font-label-md text-label-md border border-transparent transition-colors text-on-surface-variant" onclick="setQueueTab('scheduled')">Scheduled</button>
+      </div>
+
+      <div id="queue-list" class="flex flex-col gap-3"></div>
+    </main>
+
+    <button class="absolute bottom-24 right-5 w-14 h-14 rounded-full bg-primary text-on-primary-container glow-button flex items-center justify-center active:scale-95 transition-transform duration-80 z-40" onclick="goTo('request-form')" aria-label="New request">
+      <span class="material-symbols-outlined">add</span>
+    </button>
+  </section>
+
+  <!-- ================= SCREEN 4 — DOCTOR REQUEST FORM ================= -->
+  <section class="screen h-full flex-col pb-10" data-screen="request-form" data-step="4" data-label="Doctor Request Form">
+    <header class="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-outline-variant">
+      <div class="flex justify-between items-center px-margin_mobile h-16 max-w-[480px] mx-auto">
+        <button class="text-primary p-2 -ml-2 rounded-full active:scale-95 transition-transform duration-80" onclick="resetRequestForm(); goTo('queue','back')"><span class="material-symbols-outlined">arrow_back</span></button>
+        <div class="font-headline-sm text-headline-sm text-primary tracking-tighter">PULZ</div>
+        <div class="w-10 h-10"></div>
+      </div>
+    </header>
+    <main class="flex-1 flex flex-col gap-6 px-margin_mobile mt-6 fade-up">
+      <h1 class="font-headline-lg text-headline-lg text-primary tracking-tighter">New request</h1>
+
+      <div id="request-form-body" class="rounded-xl border border-outline-variant bg-surface-container p-5 flex flex-col gap-5">
+        <div class="space-y-1">
+          <label class="font-label-sm text-label-sm text-on-surface-variant block ml-1">Doctor Name</label>
+          <input id="doc-name" class="w-full bg-surface-container-low border border-outline-variant rounded-[12px] px-4 py-3 text-on-surface font-label-md text-label-md focus:border-primary focus:ring-1 focus:ring-primary transition-colors outline-none" type="text" value="Dr. Sarah Chen"/>
+        </div>
+        <div class="space-y-1">
+          <label class="font-label-sm text-label-sm text-on-surface-variant block ml-1">NMC/MCI registration number</label>
+          <input id="doc-nmc" class="w-full bg-surface-container-low border border-outline-variant rounded-[12px] px-4 py-3 text-on-surface font-label-md text-label-md focus:border-primary focus:ring-1 focus:ring-primary transition-colors outline-none" type="text" value="NMC-99824-MH"/>
+        </div>
+        <div class="space-y-1">
+          <label class="font-label-sm text-label-sm text-on-surface-variant block ml-1">Department</label>
+          <select id="doc-dept" class="w-full bg-surface-container-low border border-outline-variant rounded-[12px] px-4 py-3 text-on-surface font-label-md text-label-md focus:border-primary focus:ring-1 focus:ring-primary transition-colors outline-none appearance-none">
+            <option>Hematology Dept.</option>
+            <option>Emergency Dept.</option>
+            <option>Cardiac Surgery</option>
+            <option>Oncology</option>
+            <option>Trauma Unit</option>
+          </select>
+        </div>
+
+        <div class="border-t border-outline-variant"></div>
+
+        <div class="space-y-2">
+          <label class="font-label-sm text-label-sm text-on-surface-variant block ml-1">Blood Group</label>
+          <div id="bg-grid" class="grid grid-cols-4 gap-2"></div>
+        </div>
+
+        <div class="flex items-center justify-between rounded-[12px] bg-surface-container-low border border-outline-variant px-4 py-3">
+          <span class="font-label-md text-label-md text-on-surface-variant">Units required</span>
+          <div class="flex items-center gap-4">
+            <button class="w-9 h-9 rounded-full bg-surface-container-highest flex items-center justify-center active:scale-90 transition-transform duration-80" onclick="changeUnits(-1)"><span class="material-symbols-outlined text-[18px]">remove</span></button>
+            <span id="units-value" class="font-numeric-display text-[24px] text-primary w-8 text-center">02</span>
+            <button class="w-9 h-9 rounded-full bg-surface-container-highest flex items-center justify-center active:scale-90 transition-transform duration-80" onclick="changeUnits(1)"><span class="material-symbols-outlined text-[18px]">add</span></button>
+          </div>
+        </div>
+
+        <button class="w-full bg-primary text-on-primary-container font-label-lg text-label-lg py-3 rounded-[20px] glow-button active:scale-95 transition-transform duration-80 flex justify-center items-center gap-2" onclick="submitRequestForm()">
+          Verify &amp; submit <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </div>
+
+      <div id="verify-card" class="hidden rounded-xl border border-secondary/40 bg-surface-container p-6 flex flex-col items-center gap-4 shadow-[0_4px_40px_rgba(113,219,155,0.1)] fade-up">
+        <div class="w-16 h-16 rounded-full bg-secondary-container flex items-center justify-center text-secondary-fixed shadow-[0_0_20px_rgba(1,134,79,0.4)]">
+          <span class="material-symbols-outlined" style="font-size:32px;">check_circle</span>
+        </div>
+        <div class="text-center">
+          <h2 class="font-headline-md text-headline-md text-primary mb-1">Doctor verified</h2>
+          <p id="verify-sub" class="font-body-md text-body-md text-on-surface-variant">Hospital-doctor directory match confirmed.</p>
+        </div>
+        <div class="w-full bg-surface-container-low border border-outline-variant rounded-lg p-4 flex items-center justify-between">
+          <div>
+            <div id="verify-name" class="font-label-lg text-label-lg text-on-surface">Dr. Sarah Chen</div>
+            <div id="verify-nmc" class="font-label-sm text-label-sm text-outline">NMC-99824-MH</div>
+          </div>
+          <div id="verify-bg" class="px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-label-md">O+</div>
+        </div>
+        <button class="w-full mt-2 h-12 bg-primary text-on-primary-container rounded-full font-label-lg text-label-lg glow-button hover:brightness-110 active:scale-[0.97] transition-all duration-80 flex items-center justify-center gap-2" onclick="goTo('incoming-donors')">
+          Continue to donor matching <span class="material-symbols-outlined" style="font-size:20px;">arrow_forward</span>
+        </button>
+      </div>
+    </main>
+  </section>
+
+  <!-- ================= SCREEN 5 — INCOMING DONORS ================= -->
+  <section class="screen h-full flex-col pb-32" data-screen="incoming-donors" data-step="5" data-label="Incoming Donors">
+    <header class="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-outline-variant">
+      <div class="flex justify-between items-center px-margin_mobile h-16 max-w-[480px] mx-auto">
+        <button class="text-primary p-2 -ml-2 rounded-full active:scale-95 transition-transform duration-80" onclick="goTo('queue','back')"><span class="material-symbols-outlined">arrow_back</span></button>
+        <div class="font-headline-sm text-headline-sm text-primary tracking-tighter">PULZ</div>
+        <div class="w-10 h-10"></div>
+      </div>
+    </header>
+    <main class="flex-1 flex flex-col gap-5 px-margin_mobile mt-6 fade-up">
+      <div class="flex flex-col gap-1">
+        <h1 class="font-headline-lg text-headline-lg text-primary tracking-tighter">Incoming donors</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant">3 O- matches notified for Bed 22 · Dr. Sarah Chen's request.</p>
+      </div>
+      <div id="donor-list" class="flex flex-col gap-3"></div>
+    </main>
+    <div class="absolute bottom-24 left-0 right-0 px-margin_mobile z-40">
+      <button class="w-full bg-primary text-on-primary-container font-label-lg text-label-lg py-3 rounded-[20px] glow-button active:scale-95 transition-transform duration-80 flex justify-center items-center gap-2" onclick="goTo('qr-scanner')">
+        <span class="material-symbols-outlined">qr_code_scanner</span> Scan donor on arrival
+      </button>
+    </div>
+  </section>
+
+  <!-- ================= SCREEN 6 — QR SCANNER ================= -->
+  <section class="screen h-full w-full flex-col items-center justify-center overflow-hidden relative" data-screen="qr-scanner" data-step="6" data-label="Verify Donor Arrival">
+    <style>
+      /* scoped tweaks not needed; classes reused from base styles */
+    </style>
+    <div class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
+      <div class="absolute -top-[10%] -left-[10%] w-[120%] h-[120%] bg-primary-container opacity-[0.05] blur-[80px]" style="clip-path: polygon(40% 0%, 60% 0%, 60% 40%, 100% 40%, 100% 60%, 60% 60%, 60% 100%, 40% 100%, 40% 60%, 0% 60%, 0% 40%, 40% 40%);"></div>
+    </div>
+    <main class="w-full h-full max-w-container_max mx-auto relative bg-surface-container-lowest/50 backdrop-blur-sm overflow-hidden flex flex-col shadow-2xl">
+      <header class="absolute top-0 left-0 w-full z-50 flex justify-between items-center px-margin_mobile h-16 bg-transparent border-none">
+        <button aria-label="Close Scanner" class="w-10 h-10 rounded-full flex items-center justify-center bg-surface-container-highest/50 backdrop-blur-md text-primary hover:bg-surface-variant transition-colors active:scale-95 duration-80" onclick="goTo('incoming-donors','back')">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+        <div class="font-headline-sm text-headline-sm text-primary tracking-tighter">PULZ</div>
+        <div class="w-10 h-10"></div>
+      </header>
+      <div class="flex-1 relative w-full h-full">
+        <div class="absolute inset-0 bg-surface-dim overflow-hidden pointer-events-none">
+          <div class="w-full h-full opacity-30" style="background-image: radial-gradient(circle at center, transparent 0%, rgba(10,15,13,0.8) 100%);"></div>
+          <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-surface-container-highest/20 blur-xl"></div>
+          <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border border-outline-variant/30 rounded-lg blur-sm"></div>
+        </div>
+        <div class="absolute inset-0 bg-background/80 pointer-events-none" style="clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 15% 25%, 85% 25%, 85% 65%, 15% 65%, 15% 25%);"></div>
+        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[70%] aspect-square max-w-[300px] pointer-events-none" id="scan-target">
+          <div class="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-lg transition-colors duration-300 qr-bracket"></div>
+          <div class="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-lg transition-colors duration-300 qr-bracket"></div>
+          <div class="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-lg transition-colors duration-300 qr-bracket"></div>
+          <div class="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-lg transition-colors duration-300 qr-bracket"></div>
+          <div class="scan-line absolute top-1/2 left-0 w-full h-[2px] bg-secondary shadow-[0_0_12px_rgba(113,219,155,0.8)]" id="scan-line"></div>
+        </div>
+        <div class="absolute top-[70%] left-0 w-full text-center px-8">
+          <p class="font-body-lg text-body-lg text-on-surface-variant max-w-[280px] mx-auto" id="scan-instructions">Scan the donor's QR code to verify arrival.</p>
+          <div class="mt-6 flex justify-center gap-4">
+            <button class="w-12 h-12 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center text-on-surface hover:bg-surface-variant transition-colors active:scale-95 duration-80"><span class="material-symbols-outlined">flashlight_on</span></button>
+            <button class="w-12 h-12 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center text-on-surface hover:bg-surface-variant transition-colors active:scale-95 duration-80"><span class="material-symbols-outlined">image</span></button>
+          </div>
+        </div>
+      </div>
+      <div class="absolute bottom-0 left-0 w-full p-margin_mobile pb-8 bg-gradient-to-t from-background via-background/95 to-transparent flex flex-col justify-end pointer-events-none opacity-0 transition-opacity duration-300 z-40 h-[60%]" id="success-overlay">
+        <div class="bg-surface-container border border-secondary/30 rounded-xl p-6 flex flex-col items-center gap-4 shadow-[0_4px_40px_rgba(113,219,155,0.1)] pointer-events-auto transform translate-y-full" id="success-card">
+          <div class="w-16 h-16 rounded-full bg-secondary-container flex items-center justify-center text-secondary-fixed shadow-[0_0_20px_rgba(1,134,79,0.4)]">
+            <span class="material-symbols-outlined" style="font-size:32px;">check_circle</span>
+          </div>
+          <div class="text-center">
+            <h2 class="font-headline-md text-headline-md text-primary mb-1">Donor verified</h2>
+            <p class="font-body-md text-body-md text-on-surface-variant">Arrival confirmed securely.</p>
+          </div>
+          <div class="w-full bg-surface-container-low border border-outline-variant rounded-lg p-4 mt-2 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center overflow-hidden"><span class="material-symbols-outlined text-on-surface-variant">person</span></div>
+              <div>
+                <div class="font-label-lg text-label-lg text-on-surface">Alex J.</div>
+                <div class="font-label-sm text-label-sm text-outline">ID: D-49281</div>
+              </div>
+            </div>
+            <div class="flex flex-col items-end">
+              <div class="px-3 py-1 rounded-full bg-error-container text-on-error-container font-label-md text-label-md">O-</div>
+              <div class="font-label-sm text-label-sm text-outline mt-1">Universal</div>
+            </div>
+          </div>
+          <button class="w-full mt-4 h-12 bg-primary text-on-primary-container rounded-full font-label-lg text-label-lg shadow-[0_0_12px_rgba(205,233,217,0.3)] hover:brightness-110 active:scale-[0.97] transition-all duration-80 flex items-center justify-center gap-2" onclick="goTo('auth-code')">
+            <span class="material-symbols-outlined" style="font-size:20px;">arrow_forward</span> Proceed to authorization
+          </button>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <!-- ================= SCREEN 7 — TRANSFUSION AUTHORIZATION ================= -->
+  <section class="screen h-full flex-col pb-10" data-screen="auth-code" data-step="7" data-label="Transfusion Authorization">
+    <header class="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-outline-variant">
+      <div class="flex justify-between items-center px-margin_mobile h-16 max-w-[480px] mx-auto">
+        <button class="text-primary p-2 -ml-2 rounded-full active:scale-95 transition-transform duration-80" onclick="goTo('qr-scanner','back')"><span class="material-symbols-outlined">arrow_back</span></button>
+        <div class="font-headline-sm text-headline-sm text-primary tracking-tighter">PULZ</div>
+        <div class="w-10 h-10"></div>
+      </div>
+    </header>
+    <main class="flex-1 flex flex-col gap-6 px-margin_mobile mt-6 fade-up">
+      <h1 class="font-headline-lg text-headline-lg text-primary tracking-tighter">Transfusion authorization</h1>
+
+      <div class="rounded-xl border border-outline-variant bg-surface-container p-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-secondary">volunteer_activism</span>
+          <div>
+            <div class="font-label-md text-label-md text-on-surface">Alex J. (O-) → Bed 22, ER</div>
+            <div class="font-label-sm text-label-sm text-outline">Ordered by Dr. Sarah Chen · Hematology Dept.</div>
+          </div>
+        </div>
+        <span class="material-symbols-outlined text-secondary">check_circle</span>
+      </div>
+
+      <div id="auth-card" class="rounded-xl border border-secondary/40 bg-surface-container p-6 flex flex-col items-center gap-4 shadow-[0_4px_40px_rgba(113,219,155,0.1)]">
+        <div class="w-16 h-16 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center text-secondary">
+          <span class="material-symbols-outlined" style="font-size:32px;">verified</span>
+        </div>
+        <div class="text-center">
+          <h2 class="font-headline-md text-headline-md text-primary mb-1">Verification complete</h2>
+          <p class="font-body-md text-body-md text-on-surface-variant">Cross-match verified. Ready for transfusion.</p>
+        </div>
+        <div class="w-full border-l-4 border-secondary bg-surface-container-low rounded-lg p-4 text-center">
+          <div class="font-label-sm text-label-sm text-on-surface-variant tracking-widest uppercase">Release code</div>
+          <div class="font-numeric-display text-secondary tracking-wider" style="font-size:40px;">842 109</div>
+        </div>
+        <p class="font-label-sm text-label-sm text-on-surface-variant text-center">Release code — valid for this request only</p>
+        <button class="w-full mt-2 h-12 bg-primary text-on-primary-container rounded-full font-label-lg text-label-lg glow-button hover:brightness-110 active:scale-[0.97] transition-all duration-80 flex items-center justify-center gap-2" onclick="confirmRelease()">
+          Confirm &amp; release unit <span class="material-symbols-outlined" style="font-size:20px;">arrow_forward</span>
+        </button>
+      </div>
+    </main>
+  </section>
+
+  <!-- ================= SCREEN 8 — NABH REPORT ================= -->
+  <section class="screen h-full flex-col pb-10" data-screen="nabh-report" data-step="8" data-label="NABH Compliance Report">
+    <header class="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-outline-variant">
+      <div class="flex justify-between items-center px-margin_mobile h-16 max-w-[480px] mx-auto">
+        <button class="text-primary p-2 -ml-2 rounded-full active:scale-95 transition-transform duration-80" onclick="goTo('auth-code','back')"><span class="material-symbols-outlined">arrow_back</span></button>
+        <div class="font-headline-sm text-headline-sm text-primary tracking-tighter">PULZ</div>
+        <div class="w-10 h-10"></div>
+      </div>
+    </header>
+    <main class="flex-1 flex flex-col gap-5 px-margin_mobile mt-6 fade-up">
+      <div class="flex flex-col gap-1">
+        <h1 class="font-headline-lg text-headline-lg text-primary tracking-tighter">NABH compliance report</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant">Case #TXN-84210 · Release code 842 109</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div class="rounded-xl border border-outline-variant bg-surface-container p-3 flex flex-col gap-1">
+          <span class="font-numeric-display text-[24px] text-secondary">11/12</span>
+          <span class="font-label-sm text-label-sm text-on-surface-variant">Fields verified</span>
+        </div>
+        <div class="rounded-xl border border-urgency-needed/30 bg-urgency-needed/5 p-3 flex flex-col gap-1">
+          <span class="font-numeric-display text-[24px] text-urgency-needed">1</span>
+          <span class="font-label-sm text-label-sm text-on-surface-variant">Flagged for review</span>
+        </div>
+      </div>
+
+      <div class="flex p-1 rounded-full bg-surface-container border border-outline-variant">
+        <button id="seg-ai" class="seg-btn active flex-1 py-2 rounded-full font-label-md text-label-md border border-transparent transition-colors" onclick="setReportTab('ai')">AI draft</button>
+        <button id="seg-human" class="seg-btn flex-1 py-2 rounded-full font-label-md text-label-md border border-transparent transition-colors text-on-surface-variant" onclick="setReportTab('human')">Human verified</button>
+      </div>
+
+      <div id="report-list" class="flex flex-col gap-3"></div>
+
+      <button class="w-full bg-primary text-on-primary-container font-label-lg text-label-lg py-3 rounded-[20px] glow-button active:scale-95 transition-transform duration-80 flex justify-center items-center gap-2 mt-2" onclick="approveReport()">
+        Approve &amp; file report <span class="material-symbols-outlined">task_alt</span>
+      </button>
+    </main>
+  </section>
+
+  <!-- ================= BONUS SCREEN — INVENTORY / EXPIRY REFERENCE ================= -->
+  <section class="screen h-full flex-col pb-28" data-screen="inventory" data-label="Expiry Reference">
+    <header class="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-outline-variant">
+      <div class="flex justify-between items-center px-margin_mobile h-16 max-w-[480px] mx-auto">
+        <button class="text-primary p-2 -ml-2 rounded-full active:scale-95 transition-transform duration-80" onclick="goTo('dashboard','back')"><span class="material-symbols-outlined">arrow_back</span></button>
+        <div class="font-headline-sm text-headline-sm text-primary tracking-tighter">PULZ</div>
+        <div class="w-10 h-10"></div>
+      </div>
+    </header>
+    <main class="flex-1 flex flex-col gap-6 px-margin_mobile mt-6 fade-up">
+      <div class="flex flex-col gap-2">
+        <h1 class="font-headline-lg text-headline-lg text-primary tracking-tighter">Expiry criteria</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant">Standard shelf life reference for blood components.</p>
+      </div>
+      <div class="flex flex-col rounded-xl border border-outline-variant bg-surface-container overflow-hidden">
+        <div class="flex justify-between items-center p-4 border-b border-outline-variant/50 bg-surface-container-high">
+          <div class="flex items-center gap-3"><span class="material-symbols-outlined text-outline">water_drop</span><span class="font-label-md text-label-md text-on-surface">Red Blood Cells (RBC)</span></div>
+          <span class="font-label-md text-label-md text-on-surface-variant text-right">Up to 42 days</span>
+        </div>
+        <div class="flex justify-between items-center p-4 border-b border-outline-variant/50 bg-surface-container-high">
+          <div class="flex items-center gap-3"><span class="material-symbols-outlined text-outline">medication</span><span class="font-label-md text-label-md text-on-surface">Platelets</span></div>
+          <span class="font-label-md text-label-md text-on-surface-variant text-right">5 to 7 days</span>
+        </div>
+        <div class="flex justify-between items-center p-4 border-b border-outline-variant/50 bg-surface-container-high">
+          <div class="flex items-center gap-3"><span class="material-symbols-outlined text-outline">bloodtype</span><span class="font-label-md text-label-md text-on-surface">Plasma (FFP)</span></div>
+          <span class="font-label-md text-label-md text-on-surface-variant text-right">Up to 1 year</span>
+        </div>
+        <div class="flex justify-between items-center p-4 border-b border-outline-variant/50 bg-surface-container-high">
+          <div class="flex items-center gap-3"><span class="material-symbols-outlined text-outline">ac_unit</span><span class="font-label-md text-label-md text-on-surface">Cryoprecipitate</span></div>
+          <span class="font-label-md text-label-md text-on-surface-variant text-right">Up to 1 year</span>
+        </div>
+        <div class="flex justify-between items-center p-4 bg-surface-container-high">
+          <div class="flex items-center gap-3"><span class="material-symbols-outlined text-outline">healing</span><span class="font-label-md text-label-md text-on-surface">Whole Blood</span></div>
+          <span class="font-label-md text-label-md text-on-surface-variant text-right">21 to 35 days</span>
+        </div>
+      </div>
+      <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 flex gap-3 items-start">
+        <span class="material-symbols-outlined text-outline text-[20px]">info</span>
+        <p class="font-body-md text-body-md text-on-surface-variant text-sm">Storage conditions and specific anticoagulant solutions may alter exact expiration dates. Always verify physical labels before administration.</p>
+      </div>
+    </main>
+  </section>
+
+        <!-- ============ BOTTOM NAV (shown on tab-root screens) ============ -->
+        <nav id="bottom-nav" class="hidden absolute bottom-0 left-0 right-0 bg-background/90 backdrop-blur-md border-t border-outline-variant z-40">
+          <div class="flex items-center justify-between px-6 py-3 pb-1">
+            <button class="navlink flex flex-col items-center gap-1 flex-1" data-nav="dashboard" onclick="goTo('dashboard','tab')">
+              <div class="navicon-wrap w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">dashboard</span></div>
+              <span class="navlabel font-label-sm text-label-sm text-on-surface-variant">Dashboard</span>
+            </button>
+            <button class="navlink flex flex-col items-center gap-1 flex-1" data-nav="inventory" onclick="goTo('inventory','tab')">
+              <div class="navicon-wrap w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">inventory_2</span></div>
+              <span class="navlabel font-label-sm text-label-sm text-on-surface-variant">Inventory</span>
+            </button>
+            <button class="navlink flex flex-col items-center gap-1 flex-1" data-nav="queue" onclick="goTo('queue','tab')">
+              <div class="navicon-wrap w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant transition-all"><span class="material-symbols-outlined text-[20px]">location_on</span></div>
+              <span class="navlabel font-label-sm text-label-sm text-on-surface-variant font-bold">Requests</span>
+            </button>
+            <button class="navlink flex flex-col items-center gap-1 flex-1" data-nav="incoming-donors" onclick="goTo('incoming-donors','tab')">
+              <div class="navicon-wrap w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">volunteer_activism</span></div>
+              <span class="navlabel font-label-sm text-label-sm text-on-surface-variant">Donors</span>
+            </button>
+          </div>
+        </nav>
+
+        <!-- ============ LOADING OVERLAY ============ -->
+        <div id="loading-overlay" class="hidden absolute inset-0 z-[60] bg-background/85 backdrop-blur-sm flex flex-col items-center justify-center gap-4">
+          <div class="w-12 h-12 border-4 border-outline-variant border-t-secondary rounded-full animate-spin"></div>
+          <p id="loading-message" class="font-label-md text-label-md text-on-surface-variant text-center px-10">Working…</p>
+        </div>
+
+        <!-- ============ TOAST ============ -->
+        <div id="toast" class="hidden absolute bottom-24 left-1/2 -translate-x-1/2 z-[70] bg-surface-container-high border border-secondary/40 text-on-surface px-4 py-2.5 rounded-full font-label-md text-label-md shadow-lg flex items-center gap-2 whitespace-nowrap">
+          <span class="material-symbols-outlined text-secondary text-[18px]">check_circle</span>
+          <span id="toast-text">Done</span>
+        </div>
+      </div>
+      <!-- /#app-viewport -->
+
+      <div class="home-indicator"></div>
+    </div>
+    <!-- /.device-screen -->
+  </div>
+  <!-- /.phone -->
+
+  <!-- ============ DEMO CONTROLS (outside the device, for the presenter) ============ -->
+  <div class="demo-controls">
+    <div id="step-badge" class="step-badge px-3 py-1.5 rounded-full bg-surface-container-high/90 backdrop-blur border border-outline-variant text-on-surface-variant font-label-sm text-label-sm">1 / 8 · Hospital Login</div>
+    <button class="w-9 h-9 rounded-full bg-surface-container-high/90 backdrop-blur border border-outline-variant flex items-center justify-center text-on-surface-variant active:scale-90 transition-transform duration-80" onclick="restartDemo()" aria-label="Restart demo" title="Restart demo">
+      <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+    </button>
+  </div>
+  <p class="stage-label">PULZ — Live clinical prototype</p>
+</div>
+<!-- /.stage -->
+
+<script>
+/* ============================= DATA ============================= */
+const stepMap = {
+  'login': {n:1, label:'Hospital Login'},
+  'dashboard': {n:2, label:'Inventory Dashboard'},
+  'queue': {n:3, label:'Request Queue'},
+  'request-form': {n:4, label:'Doctor Request Form'},
+  'incoming-donors': {n:5, label:'Incoming Donors'},
+  'qr-scanner': {n:6, label:'Verify Donor Arrival'},
+  'auth-code': {n:7, label:'Transfusion Authorization'},
+  'nabh-report': {n:8, label:'NABH Compliance Report'},
+};
+const tabRootScreens = ['dashboard','inventory','queue','incoming-donors'];
+
+const bloodStock = [
+  {type:'O-', units:9,  status:'critical', comps:{RBC:4,PLT:2,FFP:2,CRYO:1}, seg:[35,30,35]},
+  {type:'O+', units:52, status:'normal',   comps:{RBC:24,PLT:12,FFP:10,CRYO:6}, seg:[80,15,5]},
+  {type:'A+', units:38, status:'normal',   comps:{RBC:18,PLT:9,FFP:7,CRYO:4}, seg:[75,20,5]},
+  {type:'A-', units:14, status:'needed',   comps:{RBC:6,PLT:3,FFP:3,CRYO:2}, seg:[55,30,15]},
+  {type:'B+', units:21, status:'needed',   comps:{RBC:10,PLT:5,FFP:4,CRYO:2}, seg:[60,25,15]},
+  {type:'B-', units:7,  status:'critical', comps:{RBC:3,PLT:2,FFP:1,CRYO:1}, seg:[30,25,45]},
+  {type:'AB+',units:16, status:'normal',   comps:{RBC:8,PLT:4,FFP:3,CRYO:1}, seg:[70,20,10]},
+  {type:'AB-',units:5,  status:'urgent',   comps:{RBC:2,PLT:1,FFP:1,CRYO:1}, seg:[40,35,25]},
+];
+const statusMeta = {
+  critical: {label:'Critical', cls:'bg-error/15 text-error border border-error/30'},
+  urgent:   {label:'Urgent',   cls:'bg-urgency-urgent/15 text-urgency-urgent border border-urgency-urgent/30'},
+  needed:   {label:'Needed',   cls:'bg-urgency-needed/15 text-urgency-needed border border-urgency-needed/30'},
+  normal:   {label:'Normal',   cls:'bg-secondary/15 text-secondary border border-secondary/30'},
+};
+const segColor = ['bg-secondary','bg-urgency-needed','bg-error'];
+
+const emergencyRequests = [
+  {patient:'Bed 14 · ICU', doctor:'Dr. Rao', type:'O-', units:4, dept:'Trauma', time:'2 min ago', status:'Pending', urgency:'critical'},
+  {patient:'Bed 7 · OT-2', doctor:'Dr. Iyer', type:'AB-', units:2, dept:'Cardiac Surgery', time:'11 min ago', status:'Approved', urgency:'urgent'},
+  {patient:'Bed 22 · ER', doctor:'Dr. Sarah Chen', type:'B-', units:3, dept:'Emergency', time:'18 min ago', status:'Pending', urgency:'critical'},
+];
+const scheduledRequests = [
+  {patient:'Ward 3 · Bed 5', doctor:'Dr. Mehta', type:'A+', units:2, dept:'Oncology', time:'Today, 4:00 PM', status:'Scheduled', urgency:'normal'},
+  {patient:'Ward 1 · Bed 12', doctor:'Dr. Sarah Chen', type:'O+', units:2, dept:'Hematology', time:'Tomorrow, 9:00 AM', status:'Scheduled', urgency:'needed'},
+];
+
+const donors = [
+  {name:'Alex J.', id:'D-49281', type:'O-', eta:'4 min', distance:'1.2 km', mode:'directions_car'},
+  {name:'Priya N.', id:'D-30871', type:'O-', eta:'9 min', distance:'2.8 km', mode:'directions_bike'},
+  {name:'Karan S.', id:'D-11209', type:'O-', eta:'14 min', distance:'4.1 km', mode:'directions_car'},
+];
+
+const reportItems = [
+  {label:'Donor eligibility screening', ai:'Auto-flagged: pending confirmation', human:'Confirmed by staff — eligible', status:'flagged'},
+  {label:'Cold chain temperature log', ai:'4°C (sensor estimate)', human:'4.2°C — verified against printout', status:'edited'},
+  {label:'Component expiry check', ai:'Within limits', human:'Within limits — matches label', status:'match'},
+  {label:'Cross-match compatibility', ai:'O- donor → O+ patient: compatible', human:'Compatible — confirmed by lab', status:'match'},
+  {label:'NMC/MCI doctor verification', ai:'NMC-99824-MH verified', human:'NMC-99824-MH verified', status:'match'},
+  {label:'Release code audit trail', ai:'Code 842109 logged', human:'Code 842109 logged & timestamped', status:'match'},
+];
+const bloodGroups = ['A+','A-','B+','B-','O+','O-','AB+','AB-'];
+
+/* ============================= STATE ============================= */
+let selectedBloodGroup = 'O+';
+let unitsRequired = 2;
+let queueTab = 'emergency';
+let reportTab = 'ai';
+let qrTimer = null;
+
+/* ============================= NAV ============================= */
+const EASE = 'transform .34s cubic-bezier(.16,1,.3,1), opacity .34s cubic-bezier(.16,1,.3,1)';
+
+function goTo(id, dir){
+  dir = dir || 'forward';
+  const current = document.querySelector('.screen.active');
+  const target = document.querySelector(`.screen[data-screen="${id}"]`);
+  if (!target || target === current) return;
+
+  // clean up any stray screens left mid-transition
+  document.querySelectorAll('.screen').forEach(s => {
+    if (s !== current && s !== target) {
+      s.classList.remove('active');
+      s.style.transition = 'none';
+      s.style.transform = '';
+      s.style.opacity = '';
+      s.style.zIndex = '';
+    }
+  });
+
+  if (dir === 'tab') {
+    target.style.transition = 'none';
+    target.style.transform = 'none';
+    target.style.opacity = '0';
+    target.style.zIndex = 3;
+    target.classList.add('active');
+    if (current) { current.style.transition = 'none'; current.style.zIndex = 2; }
+    target.offsetHeight; // reflow
+    requestAnimationFrame(() => {
+      target.style.transition = 'opacity .2s ease';
+      target.style.opacity = '1';
+      if (current) { current.style.transition = 'opacity .2s ease'; current.style.opacity = '0'; }
+    });
+    setTimeout(() => finishTransition(current, target), 220);
+  } else {
+    const inFrom = dir === 'back' ? '-100%' : '100%';
+    const outTo  = dir === 'back' ? '100%'  : '-28%';
+    target.style.transition = 'none';
+    target.style.transform = `translateX(${inFrom})`;
+    target.style.opacity = '1';
+    target.style.zIndex = 3;
+    target.classList.add('active');
+    if (current) { current.style.transition = 'none'; current.style.transform = 'translateX(0)'; current.style.zIndex = 2; }
+    target.offsetHeight; // reflow
+    requestAnimationFrame(() => {
+      target.style.transition = EASE;
+      target.style.transform = 'translateX(0)';
+      if (current) { current.style.transition = EASE; current.style.transform = `translateX(${outTo})`; }
+    });
+    setTimeout(() => finishTransition(current, target), 360);
+  }
+
+  target.scrollTop = 0;
+
+  const nav = document.getElementById('bottom-nav');
+  if (tabRootScreens.includes(id)) {
+    nav.classList.remove('hidden');
+    document.querySelectorAll('.navlink').forEach(b => b.classList.toggle('active', b.dataset.nav === id));
+  } else {
+    nav.classList.add('hidden');
+  }
+
+  const badge = document.getElementById('step-badge');
+  if (stepMap[id]) {
+    badge.textContent = `${stepMap[id].n} / 8 · ${stepMap[id].label}`;
+  } else {
+    badge.textContent = 'Bonus · Expiry reference';
+  }
+
+  if (id === 'qr-scanner') startQrScan();
+}
+
+function finishTransition(current, target){
+  if (current && current !== target) {
+    current.classList.remove('active');
+    current.style.transition = 'none';
+    current.style.transform = '';
+    current.style.opacity = '';
+    current.style.zIndex = '';
+  }
+  target.style.transition = 'none';
+  target.style.transform = '';
+  target.style.zIndex = '';
+}
+
+function showLoading(msg, ms, cb){
+  const ov = document.getElementById('loading-overlay');
+  document.getElementById('loading-message').textContent = msg;
+  ov.classList.remove('hidden');
+  setTimeout(() => { ov.classList.add('hidden'); if (cb) cb(); }, ms);
+}
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  document.getElementById('toast-text').textContent = msg;
+  t.classList.remove('hidden');
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(() => t.classList.add('hidden'), 2200);
+}
+
+function doLogin(){
+  showLoading('Authenticating hospital staff credentials…', 1100, () => {
+    goTo('dashboard');
+    toast('Signed in as ST-114');
+  });
+}
+
+/* ============================= DASHBOARD ============================= */
+function renderDashboard(){
+  const total = bloodStock.reduce((a,b)=>a+b.units,0);
+  const critical = bloodStock.filter(b=>b.status==='critical').length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-critical').textContent = critical;
+  document.getElementById('stat-expiring').textContent = 6;
+
+  const grid = document.getElementById('stock-grid');
+  grid.innerHTML = bloodStock.map(b => {
+    const meta = statusMeta[b.status];
+    return `
+    <div class="rounded-xl border border-outline-variant bg-surface-container p-4 flex flex-col gap-3 active:scale-[0.97] transition-transform cursor-pointer" onclick="goTo('queue')">
+      <div class="flex justify-between items-start">
+        <span class="font-numeric-display text-[26px] text-primary">${b.type}</span>
+        <span class="px-2 py-0.5 rounded-full text-[10px] font-label-sm uppercase tracking-wide ${meta.cls}">${meta.label}</span>
+      </div>
+      <div class="font-label-sm text-label-sm text-on-surface-variant">${b.units} units total</div>
+      <div class="flex gap-0.5 h-1.5 rounded-full overflow-hidden bg-surface-container-high">
+        ${b.seg.map((w,i)=>`<div class="${segColor[i]}" style="width:${w}%"></div>`).join('')}
+      </div>
+      <div class="flex justify-between text-[9px] text-outline font-label-sm">
+        <span>RBC ${b.comps.RBC}</span><span>PLT ${b.comps.PLT}</span><span>FFP ${b.comps.FFP}</span><span>CRYO ${b.comps.CRYO}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================= QUEUE ============================= */
+function setQueueTab(tab){
+  queueTab = tab;
+  document.getElementById('seg-emergency').classList.toggle('active', tab==='emergency');
+  document.getElementById('seg-scheduled').classList.toggle('active', tab==='scheduled');
+  document.getElementById('seg-emergency').classList.toggle('text-on-surface-variant', tab!=='emergency');
+  document.getElementById('seg-scheduled').classList.toggle('text-on-surface-variant', tab!=='scheduled');
+  renderQueue();
+}
+function urgencyBorder(u){
+  return {critical:'border-l-error', urgent:'border-l-urgency-urgent', needed:'border-l-urgency-needed', normal:'border-l-secondary'}[u];
+}
+function renderQueue(){
+  const list = queueTab === 'emergency' ? emergencyRequests : scheduledRequests;
+  const el = document.getElementById('queue-list');
+  el.innerHTML = list.map(r => `
+    <div class="rounded-xl border border-outline-variant border-l-4 ${urgencyBorder(r.urgency)} bg-surface-container p-4 flex flex-col gap-2">
+      <div class="flex justify-between items-start">
+        <div>
+          <div class="font-label-lg text-label-lg text-on-surface">${r.patient}</div>
+          <div class="font-label-sm text-label-sm text-on-surface-variant">${r.dept} · ${r.doctor}</div>
+        </div>
+        <span class="font-numeric-display text-[20px] text-primary">${r.type}</span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="font-label-sm text-label-sm text-outline">${r.units} units · ${r.time}</span>
+        <span class="px-2 py-0.5 rounded-full text-[10px] font-label-sm uppercase tracking-wide bg-surface-container-highest text-on-surface-variant border border-outline-variant">${r.status}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ============================= REQUEST FORM ============================= */
+function renderBloodGroupGrid(){
+  const grid = document.getElementById('bg-grid');
+  grid.innerHTML = bloodGroups.map(g => `
+    <button type="button" class="bg-btn py-2.5 rounded-[10px] font-label-lg text-label-lg border transition-colors ${g===selectedBloodGroup ? 'bg-primary-container text-on-primary-container border-primary-container' : 'bg-surface-container-low text-on-surface border-outline-variant'}" onclick="selectBloodGroup('${g}')">${g}</button>
+  `).join('');
+}
+function selectBloodGroup(g){ selectedBloodGroup = g; renderBloodGroupGrid(); }
+function changeUnits(d){
+  unitsRequired = Math.min(10, Math.max(1, unitsRequired + d));
+  document.getElementById('units-value').textContent = String(unitsRequired).padStart(2,'0');
+}
+function resetRequestForm(){
+  document.getElementById('request-form-body').classList.remove('hidden');
+  document.getElementById('verify-card').classList.add('hidden');
+}
+function submitRequestForm(){
+  const name = document.getElementById('doc-name').value.trim();
+  const nmc = document.getElementById('doc-nmc').value.trim();
+  if (!name || !nmc) { toast('Please fill in doctor name and NMC number'); return; }
+  showLoading('Checking hospital-doctor directory…', 1400, () => {
+    document.getElementById('verify-name').textContent = name;
+    document.getElementById('verify-nmc').textContent = nmc;
+    document.getElementById('verify-bg').textContent = selectedBloodGroup;
+    document.getElementById('verify-sub').textContent = `${document.getElementById('doc-dept').value} · ${unitsRequired} unit(s) of ${selectedBloodGroup} requested.`;
+    document.getElementById('request-form-body').classList.add('hidden');
+    document.getElementById('verify-card').classList.remove('hidden');
+    toast('Directory match confirmed');
+  });
+}
+
+/* ============================= INCOMING DONORS ============================= */
+function renderDonors(){
+  const el = document.getElementById('donor-list');
+  el.innerHTML = donors.map(d => `
+    <div class="rounded-xl border border-outline-variant bg-surface-container p-4 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface-variant"><span class="material-symbols-outlined">person</span></div>
+        <div>
+          <div class="font-label-lg text-label-lg text-on-surface">${d.name}</div>
+          <div class="font-label-sm text-label-sm text-outline">${d.distance} away · ${d.eta} ETA</div>
+        </div>
+      </div>
+      <div class="flex flex-col items-end gap-1">
+        <span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm">${d.type}</span>
+        <span class="flex items-center gap-1 text-secondary font-label-sm text-label-sm"><span class="w-1.5 h-1.5 rounded-full bg-secondary pulse-dot"></span>En route</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ============================= QR SCANNER ============================= */
+function startQrScan(){
+  clearTimeout(qrTimer);
+  const scanLine = document.getElementById('scan-line');
+  const brackets = document.querySelectorAll('.qr-bracket');
+  const overlay = document.getElementById('success-overlay');
+  const card = document.getElementById('success-card');
+  const instructions = document.getElementById('scan-instructions');
+
+  scanLine.style.display = 'block';
+  overlay.classList.remove('opacity-100'); overlay.classList.add('opacity-0');
+  card.classList.remove('slide-up'); card.classList.add('translate-y-full');
+  brackets.forEach(b => { b.classList.remove('border-secondary','success-flash'); b.classList.add('border-primary'); });
+  instructions.textContent = "Scan the donor's QR code to verify arrival.";
+
+  qrTimer = setTimeout(() => {
+    scanLine.style.display = 'none';
+    brackets.forEach(b => { b.classList.remove('border-primary'); b.classList.add('border-secondary','success-flash'); });
+    instructions.textContent = 'Donor identity confirmed.';
+    overlay.classList.remove('opacity-0'); overlay.classList.add('opacity-100');
+    setTimeout(() => { card.classList.add('slide-up'); card.classList.remove('translate-y-full'); }, 100);
+  }, 2500);
+}
+
+/* ============================= AUTH CODE ============================= */
+function confirmRelease(){
+  showLoading('Logging transfusion record…', 1200, () => {
+    goTo('nabh-report');
+    toast('Blood unit released — 842 109');
+  });
+}
+
+/* ============================= NABH REPORT ============================= */
+function setReportTab(tab){
+  reportTab = tab;
+  document.getElementById('seg-ai').classList.toggle('active', tab==='ai');
+  document.getElementById('seg-human').classList.toggle('active', tab==='human');
+  document.getElementById('seg-ai').classList.toggle('text-on-surface-variant', tab!=='ai');
+  document.getElementById('seg-human').classList.toggle('text-on-surface-variant', tab!=='human');
+  renderReport();
+}
+function renderReport(){
+  const el = document.getElementById('report-list');
+  el.innerHTML = reportItems.map(item => {
+    if (reportTab === 'ai') {
+      const flagged = item.status === 'flagged';
+      return `
+      <div class="rounded-xl border border-outline-variant bg-surface-container p-4 flex flex-col gap-1.5">
+        <div class="flex justify-between items-center">
+          <span class="font-label-md text-label-md text-on-surface">${item.label}</span>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-label-sm uppercase bg-surface-container-highest text-on-surface-variant border border-outline-variant">AI draft</span>
+        </div>
+        <p class="font-body-md text-body-md ${flagged ? 'text-urgency-needed' : 'text-on-surface-variant'} flex items-center gap-1.5">
+          ${flagged ? '<span class="material-symbols-outlined text-[16px]">warning</span>' : ''} ${item.ai}
+        </p>
+      </div>`;
+    } else {
+      const changed = item.status !== 'match';
+      return `
+      <div class="rounded-xl border border-secondary/30 bg-surface-container p-4 flex flex-col gap-1.5">
+        <div class="flex justify-between items-center">
+          <span class="font-label-md text-label-md text-on-surface">${item.label}</span>
+          <span class="material-symbols-outlined text-secondary text-[18px]">check_circle</span>
+        </div>
+        ${changed
+          ? `<p class="font-body-md text-body-md"><span class="del-text">${item.ai}</span></p><p class="font-body-md text-body-md"><span class="ins-text">${item.human}</span></p>`
+          : `<p class="font-body-md text-body-md text-on-surface-variant">${item.human}</p>`}
+      </div>`;
+    }
+  }).join('');
+}
+function approveReport(){
+  showLoading('Filing signed report to NABH audit log…', 1300, () => {
+    toast('Report filed · returning to dashboard');
+    goTo('dashboard');
+  });
+}
+
+/* ============================= RESET / INIT ============================= */
+function restartDemo(){
+  clearTimeout(qrTimer);
+  selectedBloodGroup = 'O+'; unitsRequired = 2; queueTab = 'emergency'; reportTab = 'ai';
+  resetRequestForm();
+  document.getElementById('units-value').textContent = '02';
+  renderBloodGroupGrid();
+  setQueueTab('emergency');
+  setReportTab('ai');
+  goTo('login', 'back');
+}
+
+renderDashboard();
+renderBloodGroupGrid();
+renderQueue();
+renderDonors();
+renderReport();
+</script>
+</body>
+</html>

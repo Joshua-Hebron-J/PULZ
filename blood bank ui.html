@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<title>PULZ — Blood Bank Portal Prototype</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Syne:wght@400;700;800&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "on-error-container": "#ffdad6", "primary-fixed-dim": "#d2bfe7", "on-tertiary-container": "#656335",
+        "primary-container": "#ead6ff", "on-tertiary-fixed-variant": "#4a481d", "on-primary-fixed-variant": "#4f4061",
+        "on-secondary-fixed-variant": "#5925a7", "on-secondary-fixed": "#260058", "tertiary": "#fffbe1",
+        "inverse-on-surface": "#323032", "error": "#ffb4ab", "on-surface": "#e6e1e4", "on-primary-container": "#6a5b7e",
+        "surface-container-high": "#2b292c", "on-tertiary-fixed": "#1e1d00", "on-background": "#e6e1e4",
+        "secondary-container": "#5b28aa", "on-tertiary": "#333209", "on-primary": "#382a4a", "surface": "#141315",
+        "secondary-fixed-dim": "#d4bbff", "outline": "#958f97", "surface-variant": "#363437",
+        "surface-container-low": "#1d1b1d", "on-primary-fixed": "#221533", "primary": "#fff8fd",
+        "surface-bright": "#3b383b", "secondary-fixed": "#ebdcff", "error-container": "#93000a",
+        "outline-variant": "#4a454d", "tertiary-fixed": "#e9e5ac", "on-surface-variant": "#cbc4cd",
+        "inverse-surface": "#e6e1e4", "surface-container-highest": "#363437", "on-secondary-container": "#c8a9ff",
+        "tertiary-container": "#e4e0a7", "tertiary-fixed-dim": "#cdc992", "primary-fixed": "#eedcff",
+        "surface-dim": "#141315", "background": "#141315", "secondary": "#d4bbff", "surface-container": "#211f21",
+        "inverse-primary": "#67587a", "surface-tint": "#d2bfe7", "on-error": "#690005",
+        "surface-container-lowest": "#0f0e10", "on-secondary": "#41008b",
+        "good": "#8fd4a8", "warn": "#f0c869"
+      },
+      borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px", btn: "20px", input: "12px", card: "20px", "20": "20px" },
+      spacing: { xs: "4px", sm: "8px", lg: "24px", md: "16px", gutter: "16px", xl: "32px", margin: "20px", "nav-h": "64px", "bottom-nav-h": "76px" },
+      fontFamily: {
+        "headline-sm": ["Syne"], "headline-md": ["Syne"], "display-lg": ["Syne"],
+        "body-lg": ["Manrope"], "label-numeric-md": ["Space Grotesk"], "label-caps": ["Space Grotesk"],
+        "body-md": ["Manrope"], "body-sm": ["Manrope"], "body-xs": ["Manrope"], "label-numeric-lg": ["Space Grotesk"]
+      },
+      fontSize: {
+        "headline-sm": ["20px", { lineHeight: "28px", fontWeight: "700" }],
+        "headline-md": ["24px", { lineHeight: "32px", fontWeight: "700" }],
+        "display-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "800" }],
+        "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+        "label-numeric-md": ["14px", { lineHeight: "18px", letterSpacing: "0.05em", fontWeight: "500" }],
+        "label-caps": ["12px", { lineHeight: "16px", fontWeight: "700", letterSpacing: "0.05em", textTransform: "uppercase" }],
+        "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+        "body-sm": ["13px", { lineHeight: "18px", fontWeight: "400" }],
+        "body-xs": ["12px", { lineHeight: "16px", fontWeight: "400" }],
+        "label-numeric-lg": ["18px", { lineHeight: "24px", fontWeight: "700" }]
+      },
+      boxShadow: { "primary-glow": "0 0 12px rgba(234, 214, 255, 0.3)" }
+    }
+  }
+}
+</script>
+<style>
+  html,body{height:100%;}
+  body{
+    background:#0f0e10; color:#e6e1e4; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    overflow-x:hidden;
+  }
+  .material-symbols-outlined{ font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24; }
+  .material-symbols-outlined.filled{ font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 24; }
+
+  .phone{
+    width:100%; max-width:480px; margin:0 auto; position:relative;
+    min-height:100vh; background:#0f0e10;
+    box-shadow:0 0 80px rgba(0,0,0,.6);
+    display:flex; flex-direction:column;
+  }
+  @media (min-width:560px){
+    body{ display:flex; align-items:center; justify-content:center; padding:24px 0;}
+    .phone{ min-height:880px; height:880px; border-radius:36px; overflow:hidden; border:1px solid #2b292c; }
+  }
+
+  .ambient-bg{ position:absolute; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+  .ambient-shape{ position:absolute; background:#fff8fd; filter:blur(80px); opacity:.05; border-radius:50%; }
+
+  .glass-panel{ background:rgba(33,31,33,.6); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border:1px solid #4a454d; }
+
+  .app-screen{ position:absolute; inset:0; display:none; flex-direction:column; overflow-y:auto; overflow-x:hidden; z-index:1; scrollbar-width:none; }
+  .app-screen::-webkit-scrollbar{ display:none; }
+  .app-screen.active{ display:flex; animation: screenIn .28s cubic-bezier(.2,.8,.2,1); }
+  @keyframes screenIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;} }
+
+  .pulse-ring{ animation: pulse-ring 2s cubic-bezier(0.215,0.61,0.355,1) infinite; }
+  @keyframes pulse-ring{ 0%{transform:scale(.8);opacity:.5;} 80%,100%{transform:scale(1.5);opacity:0;} }
+  .btn-press:active{ transform:scale(.97); transition:transform .15s cubic-bezier(.4,0,.2,1); }
+
+  .bottom-nav{ position:absolute; left:0; right:0; bottom:0; z-index:20; display:none; }
+  .bottom-nav.show{ display:flex; }
+  .nav-item.active-nav{ color:#fff8fd; }
+  .nav-item.active-nav .nav-dot{ opacity:1; }
+
+  .step-dot{ width:7px; height:7px; border-radius:50%; background:#4a454d; }
+  .step-dot.done{ background:#d2bfe7; }
+  .step-dot.current{ background:#d2bfe7; box-shadow:0 0 0 3px rgba(210,191,231,.25); }
+
+  .toast{ position:absolute; left:50%; top:20px; transform:translateX(-50%) translateY(-30px); opacity:0; z-index:50;
+    transition:all .3s cubic-bezier(.2,.8,.2,1); pointer-events:none; }
+  .toast.show{ transform:translateX(-50%) translateY(0); opacity:1; }
+
+  .spin{ animation:spin 1s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg);} }
+
+  ::-webkit-scrollbar{ width:0; height:0; }
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+
+  <!-- TOAST -->
+  <div id="toast" class="toast">
+    <div class="bg-surface-container-highest border border-outline-variant rounded-full pl-3 pr-4 py-2 flex items-center gap-2 shadow-2xl">
+      <span class="material-symbols-outlined filled text-good text-[18px]" id="toast-icon">check_circle</span>
+      <span class="font-body-sm text-body-sm text-primary" id="toast-text">Done</span>
+    </div>
+  </div>
+
+  <!-- ================= SCREEN 1: LOGIN ================= -->
+  <section class="app-screen active" id="screen-login" data-nav="none">
+    <div class="ambient-bg">
+      <div class="ambient-shape w-72 h-72 -top-10 -left-10"></div>
+      <div class="ambient-shape w-80 h-80 -bottom-16 -right-10"></div>
+    </div>
+    <main class="w-full flex-1 flex flex-col justify-center relative z-10 p-margin">
+      <div class="bg-surface-container rounded-card border border-outline-variant p-xl shadow-2xl flex flex-col gap-lg backdrop-blur-sm">
+        <div class="flex flex-col items-center text-center gap-sm mt-4">
+          <div class="w-16 h-16 bg-surface-container-highest rounded-full flex items-center justify-center border border-outline-variant mb-2">
+            <span class="material-symbols-outlined text-4xl text-primary-fixed-dim">bloodtype</span>
+          </div>
+          <h1 class="font-display-lg text-display-lg text-primary">Blood bank portal</h1>
+          <p class="font-body-md text-body-md text-on-surface-variant max-w-xs mx-auto">Sign in with your facility credentials.</p>
+        </div>
+        <form class="flex flex-col gap-md mt-4" onsubmit="return false;">
+          <div class="flex flex-col gap-xs">
+            <label class="font-label-caps text-label-caps text-on-surface-variant ml-1" for="facilityId">Facility ID</label>
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">domain</span>
+              <input id="facilityId" value="FAC-8932" class="w-full bg-surface text-on-surface border border-outline-variant rounded-input py-3 pl-10 pr-4 font-body-md focus:outline-none focus:border-primary-fixed-dim focus:ring-1 focus:ring-primary-fixed-dim transition-colors placeholder:text-outline-variant" placeholder="e.g. FAC-8932" type="text">
+            </div>
+          </div>
+          <div class="flex flex-col gap-xs">
+            <label class="font-label-caps text-label-caps text-on-surface-variant ml-1" for="staffPass">Staff ID / Password</label>
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">badge</span>
+              <input id="staffPass" value="••••••••" class="w-full bg-surface text-on-surface border border-outline-variant rounded-input py-3 pl-10 pr-4 font-body-md focus:outline-none focus:border-primary-fixed-dim focus:ring-1 focus:ring-primary-fixed-dim transition-colors placeholder:text-outline-variant" placeholder="••••••••" type="password">
+            </div>
+          </div>
+          <div class="mt-2">
+            <button onclick="goTo('screen-dashboard')" class="w-full bg-primary-container text-on-primary rounded-btn py-4 font-label-caps text-label-caps glow-effect active:scale-95 transition-transform duration-200 hover:bg-primary flex justify-center items-center gap-2 btn-press" type="button" style="box-shadow:0 0 12px rgba(234,214,255,.3)">
+              <span>Sign in</span>
+              <span class="material-symbols-outlined">arrow_forward</span>
+            </button>
+          </div>
+        </form>
+        <div class="mt-2 text-center border-t border-outline-variant pt-md">
+          <p class="font-body-md text-body-md text-on-surface-variant text-xs opacity-70 flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-[16px]">gpp_maybe</span>
+            Access is restricted to State Blood Transfusion Council-registered staff.
+          </p>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <!-- ================= SCREEN 2: DASHBOARD ================= -->
+  <section class="app-screen" id="screen-dashboard" data-nav="home">
+    <div class="ambient-bg">
+      <div class="ambient-shape w-72 h-72 -top-10 -right-10"></div>
+    </div>
+    <header class="w-full px-margin pt-lg pb-sm flex items-center justify-between relative z-10">
+      <div>
+        <p class="font-label-caps text-label-caps text-on-surface-variant">FAC-8932 · Central Blood Bank</p>
+        <h1 class="font-headline-md text-headline-md text-primary mt-1">Good shift, Dr. Thorne</h1>
+      </div>
+      <div class="w-11 h-11 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center">
+        <span class="material-symbols-outlined text-primary-fixed-dim">person</span>
+      </div>
+    </header>
+
+    <main class="w-full flex-1 px-margin pb-[calc(var(--bnh,76px)+24px)] flex flex-col gap-lg relative z-10">
+      <!-- stats -->
+      <section class="grid grid-cols-3 gap-sm">
+        <div class="bg-surface-container rounded-card border border-outline-variant p-sm flex flex-col gap-1">
+          <span class="font-label-numeric-lg text-label-numeric-lg text-primary" id="stat-units">—</span>
+          <span class="font-label-caps text-label-caps text-on-surface-variant">Units in stock</span>
+        </div>
+        <div class="bg-surface-container rounded-card border border-error/30 p-sm flex flex-col gap-1">
+          <span class="font-label-numeric-lg text-label-numeric-lg text-error" id="stat-critical">—</span>
+          <span class="font-label-caps text-label-caps text-on-surface-variant">Expiring ≤3d</span>
+        </div>
+        <div class="bg-surface-container rounded-card border border-outline-variant p-sm flex flex-col gap-1">
+          <span class="font-label-numeric-lg text-label-numeric-lg text-primary" id="stat-dispatched">—</span>
+          <span class="font-label-caps text-label-caps text-on-surface-variant">Dispatched today</span>
+        </div>
+      </section>
+
+      <!-- incoming transfer alert -->
+      <section id="incoming-alert-card" class="rounded-20 bg-error-container/20 border border-error/30 p-md flex gap-md items-start btn-press cursor-pointer" onclick="startTransferFlow()">
+        <div class="bg-error-container text-on-error-container rounded-full p-2 flex-shrink-0">
+          <span class="material-symbols-outlined filled">warning</span>
+        </div>
+        <div class="flex flex-col gap-xs flex-1">
+          <div class="flex items-center justify-between">
+            <h2 class="font-label-caps text-label-caps text-on-error-container">Incoming transfer request</h2>
+            <span class="material-symbols-outlined text-on-error-container text-[18px]">chevron_right</span>
+          </div>
+          <p class="font-body-md text-body-md text-on-surface">Mercy General Hospital is reporting an O-Negative supply drop below safe thresholds. Tap to coordinate.</p>
+        </div>
+      </section>
+
+      <!-- quick actions -->
+      <section class="grid grid-cols-2 gap-sm">
+        <button onclick="goTo('screen-inventory'); renderInventory();" class="bg-surface-container hover:bg-surface-container-high transition-colors rounded-card border border-outline-variant p-md flex flex-col items-start gap-md btn-press text-left">
+          <span class="material-symbols-outlined text-primary-fixed-dim text-3xl">qr_code_2</span>
+          <div>
+            <p class="font-headline-sm text-headline-sm text-primary">QR Inventory</p>
+            <p class="font-body-xs text-body-xs text-on-surface-variant">7-stage unit lifecycle</p>
+          </div>
+        </button>
+        <button onclick="goTo('screen-expiry'); renderExpiry();" class="bg-surface-container hover:bg-surface-container-high transition-colors rounded-card border border-outline-variant p-md flex flex-col items-start gap-md btn-press text-left">
+          <span class="material-symbols-outlined text-warn text-3xl">schedule</span>
+          <div>
+            <p class="font-headline-sm text-headline-sm text-primary">Expiry alerts</p>
+            <p class="font-body-xs text-body-xs text-on-surface-variant" id="expiry-quick-count">units nearing expiry</p>
+          </div>
+        </button>
+      </section>
+
+      <!-- recent activity -->
+      <section class="flex flex-col gap-sm">
+        <h3 class="font-label-caps text-label-caps text-on-surface-variant">Recent activity</h3>
+        <div id="activity-feed" class="flex flex-col gap-xs"></div>
+      </section>
+    </main>
+  </section>
+
+  <!-- ================= SCREEN 3: QR INVENTORY GRID ================= -->
+  <section class="app-screen" id="screen-inventory" data-nav="inventory">
+    <header class="w-full px-margin pt-lg pb-sm flex items-center justify-between relative z-10">
+      <button onclick="goTo('screen-dashboard')" class="p-2 -ml-2 rounded-full hover:bg-surface-container transition-colors text-on-surface-variant flex items-center justify-center btn-press">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </button>
+      <h1 class="font-headline-md text-headline-md text-primary">QR Inventory</h1>
+      <div class="w-10"></div>
+    </header>
+    <p class="px-margin font-body-md text-body-md text-on-surface-variant">Every unit's 7-stage lifecycle, scan-tracked.</p>
+
+    <main class="w-full flex-1 px-margin pt-md pb-[calc(var(--bnh,76px)+24px)] relative z-10">
+      <div id="inventory-grid" class="grid grid-cols-2 gap-sm"></div>
+    </main>
+  </section>
+
+  <!-- ================= SCREEN 3b: UNIT DETAIL ================= -->
+  <section class="app-screen" id="screen-unit-detail" data-nav="none">
+    <header class="w-full px-margin pt-lg pb-sm flex items-center justify-between relative z-10">
+      <button onclick="goTo('screen-inventory')" class="p-2 -ml-2 rounded-full hover:bg-surface-container transition-colors text-on-surface-variant flex items-center justify-center btn-press">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </button>
+      <span class="font-label-caps text-label-caps text-on-surface-variant tracking-wider">Unit detail</span>
+      <div class="w-10"></div>
+    </header>
+
+    <main class="w-full flex-1 px-margin pb-xl flex flex-col gap-lg relative z-10" id="unit-detail-body">
+      <!-- injected -->
+    </main>
+  </section>
+
+  <!-- ================= SCREEN 4: EXPIRY ALERT FEED ================= -->
+  <section class="app-screen" id="screen-expiry" data-nav="alerts">
+    <header class="w-full px-margin pt-lg pb-sm flex items-center justify-between relative z-10">
+      <button onclick="goTo('screen-dashboard')" class="p-2 -ml-2 rounded-full hover:bg-surface-container transition-colors text-on-surface-variant flex items-center justify-center btn-press">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </button>
+      <h1 class="font-headline-md text-headline-md text-primary">Expiry alerts</h1>
+      <div class="w-10"></div>
+    </header>
+    <p class="px-margin font-body-md text-body-md text-on-surface-variant">Sorted by urgency — flag for transfer before loss.</p>
+
+    <main class="w-full flex-1 px-margin pt-md pb-[calc(var(--bnh,76px)+24px)] flex flex-col gap-sm relative z-10" id="expiry-list"></main>
+  </section>
+
+  <!-- ================= SCREEN 5: STAFF CREDENTIAL CHECK ================= -->
+  <section class="app-screen" id="screen-credential" data-nav="none">
+    <div class="ambient-bg"><div class="ambient-shape w-72 h-72 top-1/4 -left-16"></div></div>
+    <header class="w-full px-margin pt-xl pb-sm flex items-center justify-between relative z-10">
+      <button onclick="goTo(credentialReturnScreen)" class="p-2 -ml-2 rounded-full hover:bg-surface-container transition-colors text-on-surface-variant flex items-center justify-center btn-press">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </button>
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary-fixed-dim">shield_person</span>
+        <span class="font-label-caps text-label-caps text-on-surface-variant tracking-wider">Authentication</span>
+      </div>
+      <div class="w-10"></div>
+    </header>
+
+    <main class="w-full flex-1 flex flex-col px-margin pt-xl pb-margin relative z-10">
+      <div class="mb-xl text-center">
+        <h1 class="font-headline-md text-headline-md text-primary mb-2">Verify staff credential</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant">State Blood Transfusion Council verification.</p>
+      </div>
+
+      <div class="mb-lg w-full">
+        <label class="block font-label-caps text-label-caps text-on-surface-variant mb-sm">Staff ID Number</label>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <span class="material-symbols-outlined text-outline">badge</span>
+          </div>
+          <input class="w-full bg-surface-container-low border border-outline-variant rounded-input py-3 pl-12 pr-4 font-label-numeric-lg text-label-numeric-lg text-primary" readonly type="text" value="SBTC-9042-XL">
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center justify-center py-lg mb-lg" id="scanning-state">
+        <div class="relative w-16 h-16 mb-4 flex items-center justify-center">
+          <div class="absolute inset-0 rounded-full border-2 border-primary-container opacity-20"></div>
+          <div class="absolute inset-0 rounded-full border-2 border-primary-container pulse-ring"></div>
+          <span class="material-symbols-outlined text-primary-container text-2xl z-10">radar</span>
+        </div>
+        <p class="font-body-sm text-body-sm text-primary-fixed-dim animate-pulse">Checking council registry…</p>
+      </div>
+
+      <div class="bg-surface-container rounded-card border border-outline-variant p-md mb-xl flex-col gap-md relative overflow-hidden hidden" id="success-card">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-primary-container/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+        <div class="flex items-start justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center border border-primary-container/30">
+              <span class="material-symbols-outlined filled text-primary-fixed-dim">verified</span>
+            </div>
+            <div>
+              <h3 class="font-headline-sm text-headline-sm text-primary">Staff credential verified</h3>
+              <p class="font-body-xs text-body-xs text-on-surface-variant flex items-center gap-1 mt-0.5">
+                <span class="material-symbols-outlined text-[14px]">database</span>SBTC Registry Match
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="h-px w-full bg-outline-variant/50 my-md"></div>
+        <div class="grid grid-cols-2 gap-y-4 gap-x-2">
+          <div>
+            <p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Staff Member</p>
+            <p class="font-body-md text-body-md text-primary">Dr. Aris Thorne</p>
+          </div>
+          <div>
+            <p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Role</p>
+            <p class="font-body-md text-body-md text-primary">Senior Phlebotomist</p>
+          </div>
+          <div class="col-span-2">
+            <p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Registration ID</p>
+            <div class="flex items-center gap-2 bg-surface-container-low rounded-lg p-2 border border-outline-variant/50 w-fit">
+              <span class="material-symbols-outlined text-primary-fixed-dim text-[16px]">tag</span>
+              <p class="font-label-numeric-md text-label-numeric-md text-primary tracking-widest">SBTC-9042-XL</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex-1"></div>
+      <button id="credential-continue-btn" onclick="onCredentialContinue()" disabled class="w-full bg-primary-container/40 text-on-primary-container/50 font-label-caps text-label-caps py-4 rounded-btn flex items-center justify-center gap-2 mt-auto transition-colors">
+        <span>Continue</span>
+        <span class="material-symbols-outlined">arrow_forward</span>
+      </button>
+    </main>
+  </section>
+
+  <!-- ================= SCREEN 6: CROSS-MATCH GATE ================= -->
+  <section class="app-screen" id="screen-crossmatch" data-nav="none">
+    <div class="ambient-bg"><div class="ambient-shape w-72 h-72 bottom-0 -right-16"></div></div>
+    <header class="w-full px-margin pt-xl pb-sm flex items-center justify-between relative z-10">
+      <button onclick="goTo('screen-credential')" class="p-2 -ml-2 rounded-full hover:bg-surface-container transition-colors text-on-surface-variant flex items-center justify-center btn-press">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </button>
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary-fixed-dim">science</span>
+        <span class="font-label-caps text-label-caps text-on-surface-variant tracking-wider">Cross-match Gate</span>
+      </div>
+      <div class="w-10"></div>
+    </header>
+
+    <main class="w-full flex-1 flex flex-col px-margin pt-lg pb-margin relative z-10">
+      <div class="mb-lg text-center">
+        <h1 class="font-headline-md text-headline-md text-primary mb-2">Confirm compatibility</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant">No unit leaves the bank without a cleared cross-match.</p>
+      </div>
+
+      <div class="bg-surface-container rounded-card border border-outline-variant p-md mb-md flex items-center justify-between">
+        <div class="flex flex-col">
+          <span class="font-label-caps text-label-caps text-on-surface-variant">Donor unit</span>
+          <span class="font-label-numeric-lg text-label-numeric-lg text-primary" id="xm-donor-type">—</span>
+          <span class="font-body-xs text-body-xs text-on-surface-variant" id="xm-donor-id">—</span>
+        </div>
+        <span class="material-symbols-outlined text-outline">sync_alt</span>
+        <div class="flex flex-col text-right">
+          <span class="font-label-caps text-label-caps text-on-surface-variant">Recipient</span>
+          <span class="font-label-numeric-lg text-label-numeric-lg text-primary" id="xm-recipient-type">—</span>
+          <span class="font-body-xs text-body-xs text-on-surface-variant" id="xm-recipient-name">—</span>
+        </div>
+      </div>
+
+      <div class="bg-surface-container rounded-card border border-outline-variant p-md mb-xl flex flex-col items-center justify-center gap-3 min-h-[140px]" id="xm-status-card">
+        <span class="material-symbols-outlined text-primary-container text-3xl spin" id="xm-status-icon">progress_activity</span>
+        <p class="font-body-md text-body-md text-on-surface-variant" id="xm-status-text">Running serological cross-match…</p>
+      </div>
+
+      <div class="flex-1"></div>
+      <button id="xm-continue-btn" onclick="onCrossmatchConfirm()" disabled class="w-full bg-primary-container/40 text-on-primary-container/50 font-label-caps text-label-caps py-4 rounded-btn flex items-center justify-center gap-2 mt-auto transition-colors">
+        <span>Confirm &amp; proceed</span>
+        <span class="material-symbols-outlined">arrow_forward</span>
+      </button>
+    </main>
+  </section>
+
+  <!-- ================= SCREEN 7: HOSPITAL-TO-HOSPITAL TRANSFER FLAG ================= -->
+  <section class="app-screen" id="screen-transfer" data-nav="none">
+    <div class="ambient-bg">
+      <div class="ambient-shape w-96 h-96 -top-24 -left-24"></div>
+      <div class="ambient-shape w-[28rem] h-[28rem] -bottom-32 -right-32"></div>
+    </div>
+    <main class="w-full flex-1 px-margin pt-xl pb-margin flex flex-col gap-lg relative z-10">
+      <header class="flex flex-col gap-sm">
+        <button onclick="goTo('screen-dashboard')" class="flex items-center gap-xs text-on-surface-variant hover:text-primary transition-colors self-start mb-2 group btn-press">
+          <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+          <span class="font-label-caps text-label-caps">Back</span>
+        </button>
+        <h1 class="font-headline-md text-headline-md text-primary">Transfer coordination</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant">Auto-flagged: shortage detected nearby.</p>
+      </header>
+
+      <section class="rounded-20 bg-error-container/20 border border-error/30 p-md flex gap-md items-start">
+        <div class="bg-error-container text-on-error-container rounded-full p-2 flex-shrink-0">
+          <span class="material-symbols-outlined filled">warning</span>
+        </div>
+        <div class="flex flex-col gap-xs">
+          <h2 class="font-label-caps text-label-caps text-on-error-container">Critical Shortage</h2>
+          <p class="font-body-md text-body-md text-on-surface">Mercy General Hospital is reporting an O-Negative supply drop below safe thresholds. Immediate transfer requested.</p>
+        </div>
+      </section>
+
+      <section class="glass-panel rounded-20 p-md flex flex-col gap-md">
+        <div class="flex items-center justify-between border-b border-outline-variant pb-md">
+          <h2 class="font-headline-sm text-headline-sm text-primary">This facility can help</h2>
+          <span class="material-symbols-outlined text-primary">local_hospital</span>
+        </div>
+        <p class="font-body-md text-body-md text-on-surface-variant">Select units to approve for expedited transfer.</p>
+        <div class="flex flex-col gap-sm" id="transfer-unit-list"></div>
+      </section>
+
+      <div class="mt-auto flex flex-col gap-sm">
+        <button id="approve-transfer-btn" onclick="onApproveTransfer()" class="w-full rounded-20 bg-primary-container text-on-primary font-label-caps text-label-caps py-4 flex items-center justify-center gap-sm active:scale-95 transition-transform relative overflow-hidden group btn-press">
+          <span class="relative z-10 material-symbols-outlined">send</span>
+          <span class="relative z-10">Approve transfer</span>
+        </button>
+        <p class="font-label-caps text-label-caps text-on-surface-variant text-center opacity-70">Ties into the requesting facility's SOS escalation.</p>
+      </div>
+    </main>
+  </section>
+
+  <!-- BOTTOM NAV -->
+  <nav id="bottom-nav" class="bottom-nav w-full border-t border-outline-variant bg-surface-container-lowest/95 backdrop-blur-sm px-margin py-3 items-center justify-around" style="height:76px;">
+    <button class="nav-item flex flex-col items-center gap-1 text-on-surface-variant btn-press" onclick="goTo('screen-dashboard')" data-target="home">
+      <span class="material-symbols-outlined">home</span>
+      <span class="font-label-caps text-[10px] tracking-wide">Home</span>
+    </button>
+    <button class="nav-item flex flex-col items-center gap-1 text-on-surface-variant btn-press" onclick="goTo('screen-inventory'); renderInventory();" data-target="inventory">
+      <span class="material-symbols-outlined">qr_code_2</span>
+      <span class="font-label-caps text-[10px] tracking-wide">Inventory</span>
+    </button>
+    <button class="nav-item flex flex-col items-center gap-1 text-on-surface-variant btn-press" onclick="goTo('screen-expiry'); renderExpiry();" data-target="alerts">
+      <span class="material-symbols-outlined">notifications</span>
+      <span class="font-label-caps text-[10px] tracking-wide">Alerts</span>
+    </button>
+  </nav>
+</div>
+
+<script>
+/* ===================== DATA ===================== */
+const STATES = ["Collected","Tested","Processed","Stored","Reserved","Cross-matched","Dispatched"];
+const STATE_ICONS = ["opacity","biotech","science","inventory_2","bookmark","join_left","local_shipping"];
+const TYPES = ["O-","O+","A+","A-","B+","B-","AB+","AB-"];
+
+function daysFromNow(n){ const d = new Date(); d.setDate(d.getDate()+n); return d; }
+function fmt(d){ return d.toLocaleDateString(undefined,{month:"short",day:"numeric"}); }
+
+let units = [
+  { id:"8942-A", type:"O-", state:3, expIn:2 },
+  { id:"8945-C", type:"O-", state:3, expIn:5 },
+  { id:"7710-B", type:"O+", state:6, expIn:30 },
+  { id:"7712-D", type:"A+", state:5, expIn:9 },
+  { id:"7733-E", type:"A-", state:2, expIn:38 },
+  { id:"7801-F", type:"B+", state:1, expIn:41 },
+  { id:"7802-G", type:"B-", state:4, expIn:3 },
+  { id:"7855-H", type:"AB+", state:0, expIn:42 },
+  { id:"7860-I", type:"AB-", state:3, expIn:14 },
+  { id:"7899-J", type:"O+", state:4, expIn:7 },
+  { id:"7911-K", type:"A+", state:6, expIn:22 },
+  { id:"7920-L", type:"O-", state:2, expIn:40 },
+];
+units.forEach(u=>{ u.expiryDate = daysFromNow(u.expIn); u.collectedDate = daysFromNow(u.expIn-42); });
+
+let activity = [
+  { icon:"login", text:"Signed in to Central Blood Bank", time:"Just now" },
+  { icon:"inventory_2", text:"Unit #7710-B moved to Dispatched", time:"14m ago" },
+  { icon:"schedule", text:"3 units flagged for expiry review", time:"41m ago" },
+];
+
+let dispatchedToday = 4;
+let credentialReturnScreen = "screen-dashboard";
+let flowContext = null; // 'unit' | 'transfer'
+let currentUnit = null;
+let selectedTransferUnits = [];
+
+/* ===================== NAV ===================== */
+function goTo(id){
+  document.querySelectorAll(".app-screen").forEach(s=>s.classList.remove("active"));
+  const target = document.getElementById(id);
+  target.classList.add("active");
+  target.scrollTop = 0;
+
+  const navMode = target.getAttribute("data-nav");
+  const nav = document.getElementById("bottom-nav");
+  if(navMode && navMode !== "none"){
+    nav.classList.add("show");
+    document.querySelectorAll(".nav-item").forEach(b=>{
+      b.classList.toggle("active-nav", b.getAttribute("data-target")===navMode);
+      b.style.color = b.getAttribute("data-target")===navMode ? "#fff8fd" : "#cbc4cd";
+    });
+  } else {
+    nav.classList.remove("show");
+  }
+
+  if(id==="screen-dashboard") renderDashboard();
+}
+
+function showToast(text, icon="check_circle", color="text-good"){
+  const t = document.getElementById("toast");
+  document.getElementById("toast-text").textContent = text;
+  const iEl = document.getElementById("toast-icon");
+  iEl.textContent = icon;
+  iEl.className = "material-symbols-outlined filled text-[18px] " + color;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+/* ===================== DASHBOARD ===================== */
+function renderDashboard(){
+  document.getElementById("stat-units").textContent = units.length;
+  document.getElementById("stat-critical").textContent = units.filter(u=>u.expIn<=3).length;
+  document.getElementById("stat-dispatched").textContent = dispatchedToday;
+  const expiring = units.filter(u=>u.expIn<=7).length;
+  document.getElementById("expiry-quick-count").textContent = expiring + " unit" + (expiring===1?"":"s") + " nearing expiry";
+
+  const feed = document.getElementById("activity-feed");
+  feed.innerHTML = activity.slice(0,4).map(a=>`
+    <div class="flex items-center gap-3 bg-surface-container rounded-lg border border-outline-variant/60 p-sm">
+      <span class="material-symbols-outlined text-primary-fixed-dim text-[18px]">${a.icon}</span>
+      <span class="font-body-sm text-body-sm text-on-surface flex-1">${a.text}</span>
+      <span class="font-body-xs text-body-xs text-on-surface-variant">${a.time}</span>
+    </div>`).join("");
+
+  const alertCard = document.getElementById("incoming-alert-card");
+  alertCard.style.display = transferResolved ? "none" : "flex";
+}
+let transferResolved = false;
+
+/* ===================== INVENTORY GRID ===================== */
+function renderInventory(){
+  const grid = document.getElementById("inventory-grid");
+  grid.innerHTML = units.map((u,idx)=>`
+    <button onclick="openUnit(${idx})" class="bg-surface-container hover:bg-surface-container-high transition-colors rounded-card border border-outline-variant p-sm flex flex-col gap-2 text-left btn-press">
+      <div class="flex items-center justify-between">
+        <span class="material-symbols-outlined text-primary-fixed-dim text-[22px]">qr_code_2</span>
+        <span class="font-label-caps text-label-caps px-2 py-0.5 rounded-full ${stateBadgeClass(u.state)}">${STATES[u.state]}</span>
+      </div>
+      <div>
+        <p class="font-label-numeric-lg text-label-numeric-lg text-primary">${u.type}</p>
+        <p class="font-body-xs text-body-xs text-on-surface-variant">Unit #${u.id}</p>
+      </div>
+      <div class="flex items-center gap-1 mt-1">
+        ${STATES.map((s,i)=>`<span class="step-dot ${i<u.state?'done':''} ${i===u.state?'current':''}"></span>`).join("")}
+      </div>
+    </button>`).join("");
+}
+
+function stateBadgeClass(state){
+  if(state===6) return "bg-good/15 text-good";
+  if(state>=4) return "bg-primary-container/20 text-primary-fixed-dim";
+  return "bg-surface-container-high text-on-surface-variant";
+}
+
+function openUnit(idx){
+  currentUnit = units[idx];
+  const u = currentUnit;
+  const body = document.getElementById("unit-detail-body");
+  body.innerHTML = `
+    <div class="flex flex-col items-center text-center gap-sm">
+      <div class="w-16 h-16 bg-surface-container-highest rounded-full flex items-center justify-center border border-outline-variant">
+        <span class="material-symbols-outlined text-3xl text-primary-fixed-dim">qr_code_2</span>
+      </div>
+      <h1 class="font-headline-md text-headline-md text-primary">Unit #${u.id}</h1>
+      <p class="font-label-numeric-lg text-label-numeric-lg text-primary-fixed-dim">${u.type}</p>
+    </div>
+
+    <div class="bg-surface-container rounded-card border border-outline-variant p-md flex flex-col gap-md">
+      <div class="grid grid-cols-2 gap-y-3">
+        <div><p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Collected</p><p class="font-body-md text-body-md text-primary">${fmt(u.collectedDate)}</p></div>
+        <div><p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Expires</p><p class="font-body-md text-body-md ${u.expIn<=3?'text-error':'text-primary'}">${fmt(u.expiryDate)} · ${u.expIn}d</p></div>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-3">
+      <h3 class="font-label-caps text-label-caps text-on-surface-variant">Lifecycle</h3>
+      ${STATES.map((s,i)=>`
+        <div class="flex items-start gap-3">
+          <div class="flex flex-col items-center">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center border ${i<=u.state?'bg-primary-container/20 border-primary-container/40':'bg-surface-container border-outline-variant'}">
+              <span class="material-symbols-outlined text-[16px] ${i<=u.state?'text-primary-fixed-dim':'text-outline'}">${i<u.state?'check':STATE_ICONS[i]}</span>
+            </div>
+            ${i<STATES.length-1?`<div class="w-px h-6 ${i<u.state?'bg-primary-container/40':'bg-outline-variant'}"></div>`:''}
+          </div>
+          <div class="pt-1">
+            <p class="font-body-md text-body-md ${i<=u.state?'text-primary':'text-on-surface-variant'}">${s}</p>
+            ${i===u.state?'<p class="font-body-xs text-body-xs text-primary-fixed-dim">Current stage</p>':''}
+          </div>
+        </div>`).join("")}
+    </div>
+
+    <div class="mt-2">
+      ${u.state===6
+        ? `<div class="w-full bg-good/10 text-good font-label-caps text-label-caps py-4 rounded-btn flex items-center justify-center gap-2"><span class="material-symbols-outlined">check_circle</span><span>Already dispatched</span></div>`
+        : u.state<3
+          ? `<div class="w-full bg-surface-container text-on-surface-variant font-label-caps text-label-caps py-4 rounded-btn flex items-center justify-center gap-2"><span class="material-symbols-outlined">lock_clock</span><span>Not yet eligible for dispatch</span></div>`
+          : `<button onclick="dispatchUnit()" class="w-full bg-primary-container text-on-primary font-label-caps text-label-caps py-4 rounded-btn flex items-center justify-center gap-2 btn-press"><span class="material-symbols-outlined">local_shipping</span><span>Initiate dispatch</span></button>`
+      }
+    </div>
+  `;
+  goTo("screen-unit-detail");
+}
+
+function dispatchUnit(){
+  flowContext = "unit";
+  credentialReturnScreen = "screen-unit-detail";
+  enterCredentialCheck();
+}
+
+/* ===================== EXPIRY FEED ===================== */
+function renderExpiry(){
+  const sorted = [...units].sort((a,b)=>a.expIn-b.expIn);
+  const list = document.getElementById("expiry-list");
+  list.innerHTML = sorted.map(u=>{
+    const severity = u.expIn<=3 ? {label:"Critical",cls:"bg-error-container/20 border-error/30",text:"text-error"} :
+                      u.expIn<=7 ? {label:"Warning",cls:"bg-warn/10 border-warn/30",text:"text-warn"} :
+                      {label:"OK",cls:"bg-surface-container border-outline-variant",text:"text-on-surface-variant"};
+    return `
+      <div class="rounded-card border ${severity.cls} p-md flex items-center gap-md">
+        <div class="flex flex-col flex-1">
+          <div class="flex items-center gap-2">
+            <span class="font-label-numeric-lg text-label-numeric-lg text-primary">${u.type}</span>
+            <span class="font-label-caps text-label-caps ${severity.text}">${severity.label}</span>
+          </div>
+          <span class="font-body-xs text-body-xs text-on-surface-variant">Unit #${u.id} · ${STATES[u.state]}</span>
+          <span class="font-body-sm text-body-sm ${severity.text} mt-1">Expires ${fmt(u.expiryDate)} · ${u.expIn}d left</span>
+        </div>
+        ${u.expIn<=7 ? `<button onclick="flagForTransfer('${u.id}')" class="font-label-caps text-label-caps px-3 py-2 rounded-full bg-primary-container/20 text-primary-fixed-dim border border-primary-container/30 btn-press whitespace-nowrap">Flag transfer</button>` : ''}
+      </div>`;
+  }).join("");
+}
+
+function flagForTransfer(id){
+  showToast("Unit #"+id+" flagged for transfer review", "flag", "text-warn");
+}
+
+/* ===================== TRANSFER FLOW ===================== */
+function startTransferFlow(){
+  flowContext = "transfer";
+  credentialReturnScreen = "screen-dashboard";
+  selectedTransferUnits = units.filter(u=>u.type==="O-" && u.state>=3).slice(0,2);
+  enterCredentialCheck();
+}
+
+/* ===================== CREDENTIAL CHECK ===================== */
+function enterCredentialCheck(){
+  goTo("screen-credential");
+  const scanning = document.getElementById("scanning-state");
+  const success = document.getElementById("success-card");
+  const btn = document.getElementById("credential-continue-btn");
+  scanning.classList.remove("hidden");
+  success.classList.add("hidden");
+  success.classList.remove("flex");
+  btn.disabled = true;
+  btn.classList.add("bg-primary-container/40","text-on-primary-container/50");
+  btn.classList.remove("bg-primary-container","text-on-primary-container","shadow-primary-glow");
+
+  setTimeout(()=>{
+    scanning.classList.add("hidden");
+    success.classList.remove("hidden");
+    success.classList.add("flex");
+    btn.disabled = false;
+    btn.classList.remove("bg-primary-container/40","text-on-primary-container/50");
+    btn.classList.add("bg-primary-container","text-on-primary-container");
+    btn.style.boxShadow = "0 0 12px rgba(234,214,255,.3)";
+  }, 1600);
+}
+
+function onCredentialContinue(){
+  enterCrossmatch();
+}
+
+/* ===================== CROSS-MATCH GATE ===================== */
+function enterCrossmatch(){
+  goTo("screen-crossmatch");
+  let donorType, donorId, recipientType, recipientName;
+
+  if(flowContext==="unit" && currentUnit){
+    donorType = currentUnit.type; donorId = "#"+currentUnit.id;
+    recipientType = currentUnit.type; recipientName = "Ward 4 · Emergency";
+  } else {
+    donorType = selectedTransferUnits.map(u=>u.type).join(" / ") || "O-";
+    donorId = selectedTransferUnits.map(u=>"#"+u.id).join(", ") || "—";
+    recipientType = "O-"; recipientName = "Mercy General Hospital";
+  }
+
+  document.getElementById("xm-donor-type").textContent = donorType;
+  document.getElementById("xm-donor-id").textContent = "Unit "+donorId;
+  document.getElementById("xm-recipient-type").textContent = recipientType;
+  document.getElementById("xm-recipient-name").textContent = recipientName;
+
+  const icon = document.getElementById("xm-status-icon");
+  const text = document.getElementById("xm-status-text");
+  const btn = document.getElementById("xm-continue-btn");
+  icon.textContent = "progress_activity";
+  icon.className = "material-symbols-outlined text-primary-container text-3xl spin";
+  text.textContent = "Running serological cross-match…";
+  btn.disabled = true;
+  btn.classList.add("bg-primary-container/40","text-on-primary-container/50");
+  btn.classList.remove("bg-primary-container","text-on-primary-container");
+
+  setTimeout(()=>{
+    icon.textContent = "task_alt";
+    icon.className = "material-symbols-outlined filled text-good text-3xl";
+    text.innerHTML = 'Compatibility confirmed <span class="text-good font-label-caps text-label-caps block mt-1">No agglutination detected</span>';
+    btn.disabled = false;
+    btn.classList.remove("bg-primary-container/40","text-on-primary-container/50");
+    btn.classList.add("bg-primary-container","text-on-primary-container");
+  }, 1400);
+}
+
+function onCrossmatchConfirm(){
+  if(flowContext==="unit"){
+    currentUnit.state = 6;
+    currentUnit.expIn = currentUnit.expIn;
+    dispatchedToday++;
+    activity.unshift({icon:"local_shipping", text:"Unit #"+currentUnit.id+" dispatched to Ward 4", time:"Just now"});
+    showToast("Unit #"+currentUnit.id+" dispatched", "local_shipping", "text-good");
+    goTo("screen-unit-detail");
+    openUnit(units.indexOf(currentUnit));
+  } else {
+    renderTransferScreen();
+    goTo("screen-transfer");
+  }
+}
+
+/* ===================== TRANSFER SCREEN ===================== */
+function renderTransferScreen(){
+  const list = document.getElementById("transfer-unit-list");
+  list.innerHTML = selectedTransferUnits.map(u=>`
+    <label class="flex items-center justify-between p-sm rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer border border-transparent hover:border-outline-variant">
+      <div class="flex items-center gap-md">
+        <input checked class="form-checkbox h-5 w-5 text-primary-container rounded border-outline-variant bg-surface-container" type="checkbox">
+        <div class="flex flex-col">
+          <span class="font-label-numeric-lg text-label-numeric-lg text-primary">${u.type === "O-" ? "O-Negative" : u.type}</span>
+          <span class="font-label-caps text-label-caps text-on-surface-variant">Unit #${u.id} • Exp ${fmt(u.expiryDate)}</span>
+        </div>
+      </div>
+      <span class="font-label-caps text-label-caps px-2 py-1 bg-surface-container-high rounded text-on-surface">Ready</span>
+    </label>`).join("");
+}
+
+function onApproveTransfer(){
+  const btn = document.getElementById("approve-transfer-btn");
+  btn.disabled = true;
+  btn.innerHTML = `<span class="material-symbols-outlined spin">progress_activity</span><span>Sending…</span>`;
+  setTimeout(()=>{
+    selectedTransferUnits.forEach(u=>{ u.state = 6; });
+    dispatchedToday += selectedTransferUnits.length;
+    transferResolved = true;
+    activity.unshift({icon:"send", text:"Approved transfer of "+selectedTransferUnits.length+" O- units to Mercy General", time:"Just now"});
+    showToast("Transfer approved — Mercy General notified", "check_circle", "text-good");
+    btn.disabled = false;
+    btn.innerHTML = `<span class="material-symbols-outlined">send</span><span>Approve transfer</span>`;
+    goTo("screen-dashboard");
+  }, 1100);
+}
+
+/* ===================== INIT ===================== */
+renderDashboard();
+</script>
+</body>
+</html>

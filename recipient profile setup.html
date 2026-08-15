@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PULZ - Profile Setup</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&amp;family=Syne:wght@700;800&amp;family=Manrope:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#99cfda",
+                        "primary": "#ffffff",
+                        "tertiary": "#ffffff",
+                        "on-error": "#690005",
+                        "on-primary-fixed": "#2a1616",
+                        "error": "#ffb4ab",
+                        "surface-dim": "#111414",
+                        "on-tertiary": "#680011",
+                        "primary-fixed-dim": "#e2bebc",
+                        "background": "#151313", // Updated from prompt
+                        "inverse-primary": "#735856",
+                        "secondary-fixed-dim": "#99cfda",
+                        "on-primary": "#412b2a",
+                        "inverse-on-surface": "#2e3131",
+                        "surface-container-high": "#2a2626", // Updated from prompt
+                        "tertiary-fixed": "#ffdad8",
+                        "outline-variant": "#4f4443",
+                        "on-primary-fixed-variant": "#5a403f",
+                        "on-secondary": "#00363d",
+                        "surface-tint": "#e2bebc",
+                        "on-secondary-fixed-variant": "#114e57",
+                        "on-surface-variant": "#d3c3c2",
+                        "surface-container": "#221f1f", // Updated from prompt
+                        "surface-bright": "#373a3a",
+                        "surface-container-low": "#191c1c",
+                        "outline": "#9c8d8c",
+                        "surface-variant": "#323535",
+                        "surface": "#151313",
+                        "surface-container-highest": "#323535",
+                        "on-primary-container": "#795e5c",
+                        "on-surface": "#e1e3e2",
+                        "on-secondary-container": "#8bc1cb",
+                        "secondary-container": "#145059",
+                        "tertiary-fixed-dim": "#ffb3b1",
+                        "on-tertiary-fixed": "#410007",
+                        "on-tertiary-container": "#c12434",
+                        "on-secondary-fixed": "#001f24",
+                        "primary-fixed": "#ffdad8",
+                        "on-tertiary-fixed-variant": "#92001c",
+                        "primary-container": "#ffdad8",
+                        "surface-container-lowest": "#0c0f0f",
+                        "tertiary-container": "#ffdad8",
+                        "on-background": "#e1e3e2",
+                        "on-error-container": "#ffdad6",
+                        "error-container": "#93000a",
+                        "inverse-surface": "#e1e3e2",
+                        "secondary-fixed": "#b5ecf6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1.25rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "md": "16px",
+                        "container-max-width": "448px",
+                        "base": "4px",
+                        "xl": "32px",
+                        "stack-lg": "32px", // Added from prompt instruction
+                        "stack-md": "16px",
+                        "stack-sm": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Syne", "sans-serif"],
+                        "body-lg": ["Manrope", "sans-serif"],
+                        "headline-sm": ["Syne", "sans-serif"],
+                        "headline-lg": ["Syne", "sans-serif"],
+                        "label-numeric-lg": ["Space Grotesk", "sans-serif"],
+                        "label-numeric-sm": ["Space Grotesk", "sans-serif"],
+                        "body-md": ["Manrope", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-sm": ["20px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                        "label-numeric-lg": ["18px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "label-numeric-sm": ["12px", { "lineHeight": "1", "fontWeight": "500", "letterSpacing": "0.05em" }],
+                        "body-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Ambient Background Blur System */
+        .ambient-blob {
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background-color: var(--color-primary-container, #ffdad8);
+            opacity: 0.05;
+            filter: blur(60px);
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        .ambient-blob-top {
+            top: -100px;
+            right: -100px;
+        }
+        
+        .ambient-blob-bottom {
+            bottom: -100px;
+            left: -100px;
+        }
+
+        /* Outer Glow for Primary Button */
+        .glow-primary {
+            box-shadow: 0 0 16px 0 rgba(255, 218, 216, 0.2);
+        }
+
+        /* Input autofill override */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active{
+            -webkit-box-shadow: 0 0 0 30px #2a2626 inset !important;
+            -webkit-text-fill-color: #e1e3e2 !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
+        /* Smooth reveal for conditional fields */
+        .reveal-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out, margin 0.3s ease-out;
+            opacity: 0;
+        }
+        .reveal-content.active {
+            max-height: 100px;
+            opacity: 1;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-lg antialiased min-h-screen selection:bg-primary-container selection:text-on-primary-container overflow-x-hidden">
+<!-- Ambient Background -->
+<div class="ambient-blob ambient-blob-top"></div>
+<div class="ambient-blob ambient-blob-bottom"></div>
+<!-- Main Container (Mobile First Fixed Grid) -->
+<main class="w-full max-w-container-max-width mx-auto min-h-screen relative flex flex-col pt-[72px] pb-xl px-md sm:px-lg">
+<!-- TopAppBar (Shell) -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-md py-sm max-w-container-max-width mx-auto bg-background/80 backdrop-blur-md h-[72px] shadow-[0_4px_12px_rgba(0,0,0,0.3)] border-b border-white/5 left-1/2 -translate-x-1/2">
+<button aria-label="Go back" class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<div class="font-headline-lg text-headline-lg font-extrabold text-primary tracking-tighter absolute left-1/2 -translate-x-1/2">PULZ</div>
+<div class="w-10 h-10"></div> <!-- Spacer for centering -->
+</header>
+<!-- Scrollable Content Canvas -->
+<div class="flex-1 flex flex-col gap-stack-lg mt-md z-10">
+<!-- Section 1: Header -->
+<section class="flex flex-col gap-stack-sm">
+<h1 class="font-headline-lg text-headline-lg text-primary">Set up your profile</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">A few details so hospitals and donors can reach you.</p>
+</section>
+<form class="flex flex-col gap-stack-lg" id="profileSetupForm">
+<!-- Section 2: Personal Info -->
+<section class="flex flex-col gap-stack-md bg-surface-container p-md rounded-2xl border border-white/5">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors z-10">person</span>
+<input class="w-full h-14 pl-12 pr-md bg-surface-container-high border border-transparent rounded-xl text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary focus:ring-0 transition-colors font-body-lg" id="fullName" placeholder="Full Name" required="" type="text"/>
+</div>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors z-10">call</span>
+<input class="w-full h-14 pl-12 pr-md bg-surface-container-high border border-transparent rounded-xl text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary focus:ring-0 transition-colors font-label-numeric-lg tracking-wider" id="mobileNumber" placeholder="Mobile Number" required="" type="tel"/>
+</div>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors z-10">location_on</span>
+<input class="w-full h-14 pl-12 pr-md bg-surface-container-high border border-transparent rounded-xl text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary focus:ring-0 transition-colors font-body-lg" id="cityLocation" placeholder="City / Location" required="" type="text"/>
+</div>
+</section>
+<!-- Section 3: Requesting For -->
+<section class="flex flex-col gap-stack-md">
+<h2 class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant uppercase">REQUESTING FOR</h2>
+<div class="flex gap-md w-full">
+<label class="flex-1 cursor-pointer">
+<input checked="" class="peer sr-only" name="requestingFor" type="radio" value="myself"/>
+<div class="h-12 flex items-center justify-center rounded-full bg-surface-container-high border border-outline-variant text-on-surface-variant peer-checked:bg-primary-container peer-checked:text-on-primary-container peer-checked:border-primary-container font-body-md font-semibold transition-all duration-200">
+                                Myself
+                            </div>
+</label>
+<label class="flex-1 cursor-pointer">
+<input class="peer sr-only" name="requestingFor" type="radio" value="someoneElse"/>
+<div class="h-12 flex items-center justify-center rounded-full bg-surface-container-high border border-outline-variant text-on-surface-variant peer-checked:bg-primary-container peer-checked:text-on-primary-container peer-checked:border-primary-container font-body-md font-semibold transition-all duration-200">
+                                Someone else
+                            </div>
+</label>
+</div>
+<div class="reveal-content relative group" id="patientNameContainer">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors z-10">badge</span>
+<input class="w-full h-14 pl-12 pr-md bg-surface-container-highest border border-transparent rounded-xl text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary focus:ring-0 transition-colors font-body-lg" id="patientName" placeholder="Patient's Full Name" type="text"/>
+</div>
+</section>
+<!-- Section 4: Emergency Contact -->
+<section class="flex flex-col gap-stack-sm mt-md bg-surface-container p-md rounded-2xl border border-white/5">
+<div class="flex items-center justify-between mb-xs">
+<h2 class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant uppercase flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">contact_emergency</span>
+                            EMERGENCY CONTACT
+                        </h2>
+</div>
+<div class="flex flex-col gap-stack-md">
+<div class="relative group">
+<input class="w-full h-12 px-md bg-surface-container-high border border-transparent rounded-lg text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary focus:ring-0 transition-colors font-body-lg" id="emergencyName" placeholder="Contact Name" type="text"/>
+</div>
+<div class="flex gap-md">
+<div class="relative group flex-[2]">
+<input class="w-full h-12 px-md bg-surface-container-high border border-transparent rounded-lg text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary focus:ring-0 transition-colors font-label-numeric-lg tracking-wider" id="emergencyNumber" placeholder="Contact Number" type="tel"/>
+</div>
+<div class="relative group flex-1">
+<input class="w-full h-12 px-md bg-surface-container-high border border-transparent rounded-lg text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary focus:ring-0 transition-colors font-body-md" id="emergencyRelation" placeholder="Relation" type="text"/>
+</div>
+</div>
+</div>
+<p class="font-body-md text-[12px] text-on-surface-variant/70 mt-sm flex items-start gap-1">
+<span class="material-symbols-outlined text-[14px] mt-[1px]">info</span>
+                        Only contacted during active emergency requests.
+                    </p>
+</section>
+<!-- Section 5: Action -->
+<div class="mt-lg mb-md">
+<button class="w-full h-[56px] rounded-[20px] bg-primary-container text-on-primary-container font-headline-sm flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none hover:scale-[0.98] active:scale-95 disabled:hover:scale-100 disabled:bg-surface-container-highest disabled:text-on-surface-variant" disabled="" id="finishSetupBtn" type="submit">
+<span>Finish setup</span>
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+</div>
+</form>
+</div>
+</main>
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('profileSetupForm');
+            const fullName = document.getElementById('fullName');
+            const mobileNumber = document.getElementById('mobileNumber');
+            const cityLocation = document.getElementById('cityLocation');
+            const finishBtn = document.getElementById('finishSetupBtn');
+            
+            const radioButtons = document.querySelectorAll('input[name="requestingFor"]');
+            const patientNameContainer = document.getElementById('patientNameContainer');
+
+            // Form Validation Logic for Button State
+            function checkFormValidity() {
+                const isValid = fullName.value.trim() !== '' && 
+                                mobileNumber.value.trim() !== '' && 
+                                cityLocation.value.trim() !== '';
+                
+                finishBtn.disabled = !isValid;
+                if(isValid) {
+                    finishBtn.classList.add('glow-primary');
+                } else {
+                    finishBtn.classList.remove('glow-primary');
+                }
+            }
+
+            [fullName, mobileNumber, cityLocation].forEach(input => {
+                input.addEventListener('input', checkFormValidity);
+            });
+
+            // Toggle "Someone else" logic
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    if (e.target.value === 'someoneElse') {
+                        patientNameContainer.classList.add('active');
+                        // Optional: Add a slight delay then focus
+                        setTimeout(() => document.getElementById('patientName').focus(), 300);
+                    } else {
+                        patientNameContainer.classList.remove('active');
+                        document.getElementById('patientName').value = ''; // Clear value when hiding
+                    }
+                });
+            });
+
+            // Prevent form submit for demo
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if(!finishBtn.disabled) {
+                    // Simulate loading state
+                    const originalText = finishBtn.innerHTML;
+                    finishBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span><span>Saving...</span>';
+                    finishBtn.classList.remove('hover:scale-[0.98]', 'active:scale-95');
+                    
+                    setTimeout(() => {
+                        finishBtn.innerHTML = '<span class="material-symbols-outlined">check_circle</span><span>Profile Ready</span>';
+                        finishBtn.classList.replace('bg-primary-container', 'bg-secondary-container');
+                        finishBtn.classList.replace('text-on-primary-container', 'text-on-secondary-container');
+                        finishBtn.classList.remove('glow-primary');
+                    }, 1500);
+                }
+            });
+        });
+    </script>
+</body></html>

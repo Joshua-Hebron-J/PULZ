@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>PULZ — Donor Flow (Combined)</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "surface-container-highest": "#323535",
+        "surface": "#111414",
+        "outline-variant": "#4f4443",
+        "on-secondary-container": "#8bc1cb",
+        "surface-tint": "#e2bebc",
+        "on-secondary": "#00363d",
+        "primary-container": "#ffdad8",
+        "outline": "#9c8d8c",
+        "inverse-on-surface": "#2e3131",
+        "surface-container": "#1d2020",
+        "surface-container-high": "#282a2a",
+        "tertiary": "#ffffff",
+        "on-primary-fixed-variant": "#5a403f",
+        "secondary-fixed-dim": "#99cfda",
+        "tertiary-fixed-dim": "#ffb3b1",
+        "on-surface": "#e1e3e2",
+        "surface-variant": "#323535",
+        "error": "#ffb4ab",
+        "primary": "#ffffff",
+        "inverse-surface": "#e1e3e2",
+        "surface-dim": "#111414",
+        "on-error": "#690005",
+        "secondary": "#99cfda",
+        "on-error-container": "#ffdad6",
+        "surface-bright": "#373a3a",
+        "primary-fixed-dim": "#e2bebc",
+        "on-tertiary-fixed": "#410007",
+        "on-secondary-fixed": "#001f24",
+        "on-tertiary": "#680011",
+        "on-primary-container": "#795e5c",
+        "surface-container-low": "#191c1c",
+        "on-tertiary-fixed-variant": "#92001c",
+        "primary-fixed": "#ffdad8",
+        "tertiary-fixed": "#ffdad8",
+        "background": "#111414",
+        "on-surface-variant": "#d3c3c2",
+        "inverse-primary": "#735856",
+        "on-secondary-fixed-variant": "#114e57",
+        "secondary-fixed": "#b5ecf6",
+        "secondary-container": "#145059",
+        "surface-container-lowest": "#0c0f0f",
+        "on-tertiary-container": "#c12434",
+        "on-primary": "#412b2a",
+        "error-container": "#93000a",
+        "tertiary-container": "#ffdad8",
+        "on-background": "#e1e3e2",
+        "on-primary-fixed": "#2a1616",
+        "emergency-red": "#ff535b"
+      },
+      borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+      spacing: { "stack-sm":"8px","gutter":"16px","stack-lg":"32px","stack-md":"16px","max-width":"448px","margin-page":"20px" },
+      fontFamily: {
+        "headline-md":["Syne"], "headline-lg":["Syne"], "label-lg":["Space Grotesk"],
+        "body-md":["Manrope"], "numeric-display":["Space Grotesk"], "display-lg":["Syne"],
+        "label-md":["Space Grotesk"], "body-lg":["Manrope"]
+      },
+      fontSize: {
+        "headline-md":["24px",{"lineHeight":"32px","fontWeight":"700"}],
+        "headline-md-mobile":["20px",{"lineHeight":"28px","fontWeight":"700"}],
+        "headline-lg":["32px",{"lineHeight":"40px","fontWeight":"700"}],
+        "headline-lg-mobile":["28px",{"lineHeight":"36px","fontWeight":"700"}],
+        "label-lg":["16px",{"lineHeight":"20px","fontWeight":"700"}],
+        "body-md":["16px",{"lineHeight":"24px","fontWeight":"400"}],
+        "numeric-display":["24px",{"lineHeight":"24px","fontWeight":"700"}],
+        "display-lg":["48px",{"lineHeight":"52px","letterSpacing":"-0.02em","fontWeight":"800"}],
+        "label-md":["14px",{"lineHeight":"18px","fontWeight":"500"}],
+        "body-lg":["18px",{"lineHeight":"28px","fontWeight":"400"}]
+      },
+      boxShadow: { "primary-glow": "0 0 15px rgba(255, 83, 91, 0.3)" }
+    }
+  }
+}
+</script>
+<style>
+body{background:#111414;color:#e1e3e2;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.blood-drop-bg{position:fixed;top:20%;left:-10%;width:300px;height:300px;background:#ffdad8;opacity:.05;filter:blur(60px);border-radius:50% 50% 50% 50%/60% 60% 40% 40%;transform:rotate(-15deg);z-index:0;pointer-events:none}
+.blood-drop-bg-2{position:fixed;bottom:10%;right:-20%;width:400px;height:400px;background:#ffdad8;opacity:.05;filter:blur(80px);border-radius:50% 50% 50% 50%/60% 60% 40% 40%;transform:rotate(45deg);z-index:0;pointer-events:none}
+.screen{display:none;min-height:100vh}
+.screen.active{display:flex;flex-direction:column;animation:fadeIn .3s ease-out}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.toggle-checkbox:checked{right:0;border-color:#99cfda}
+.toggle-checkbox:checked + .toggle-label{background-color:#145059}
+@keyframes pulseBgFast{0%,100%{background-color:#111414}50%{background-color:rgba(147,0,10,.4)}}
+.animate-fast-pulse{animation:pulseBgFast 1s cubic-bezier(.4,0,.6,1) infinite}
+@keyframes pulseBgSlow{0%,100%{background-color:#111414}50%{background-color:rgba(0,54,61,.35)}}
+.animate-slow-pulse{animation:pulseBgSlow 2.4s ease-in-out infinite}
+@keyframes sirenPulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.2);opacity:.8}100%{transform:scale(1);opacity:1}}
+.animate-siren-pulse{animation:sirenPulse .8s ease-in-out infinite}
+.critical-glow{box-shadow:0 0 20px rgba(255,180,171,.5)}
+.accept-glow{box-shadow:0 0 20px rgba(153,207,218,.4)}
+.timer-svg{transform:rotate(-90deg)}
+.timer-circle{fill:none;stroke:#4f4443;stroke-width:4}
+.timer-path{fill:none;stroke:#ffb4ab;stroke-width:4;stroke-linecap:round;stroke-dasharray:283;stroke-dashoffset:0}
+@keyframes scanmove{0%{top:5%;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:95%;opacity:0}}
+.animate-scan{animation:scanmove 2.5s cubic-bezier(.4,0,.2,1) infinite}
+@keyframes bracketpulse{0%,100%{opacity:1}50%{opacity:.6}}
+.animate-brackets{animation:bracketpulse 3s ease-in-out infinite}
+.scan-overlay{box-shadow:0 0 0 4000px rgba(17,20,20,.85)}
+.glow-pulse{animation:glowPulse 2.5s infinite alternate}
+@keyframes glowPulse{0%{box-shadow:0 0 20px rgba(153,207,218,.2)}100%{box-shadow:0 0 40px rgba(153,207,218,.5)}}
+.pin-dot{transition:all .2s ease}
+.pin-dot.filled{background:#ffdad8;box-shadow:0 0 8px rgba(255,218,216,.4)}
+.keypad-btn{transition:all .1s ease}
+.keypad-btn:active{transform:scale(.95);background:#373a3a}
+.ambient-glow{position:fixed;border-radius:50%;background:#ffdad8;filter:blur(120px);opacity:.05;z-index:0;pointer-events:none}
+.glow-top-right{top:-10%;right:-10%;width:400px;height:400px}
+.glow-bottom-left{bottom:-10%;left:-20%;width:500px;height:500px;background:#145059;opacity:.08}
+::-webkit-scrollbar{display:none}
+.devnav{position:fixed;bottom:0;left:0;right:0;z-index:999;background:#0c0f0fee;backdrop-filter:blur(6px);border-top:1px solid #4f4443;padding:8px 10px;display:flex;gap:6px;overflow-x:auto}
+.devnav button{flex:0 0 auto;font-family:'Space Grotesk',sans-serif;font-size:10.5px;padding:6px 10px;border-radius:16px;background:#1d2020;border:1px solid #4f4443;color:#9c8d8c;cursor:pointer;white-space:nowrap}
+.devnav button.active{background:#ffdad8;color:#412b2a;font-weight:700;border-color:#ffdad8}
+</style>
+</head>
+<body class="font-body-md antialiased">
+<div class="blood-drop-bg"></div>
+<div class="blood-drop-bg-2"></div>
+
+<!-- ============ SCREEN 1: DONOR HOME ============ -->
+<div class="screen active" id="screen-1">
+  <header class="fixed top-0 w-full z-50 backdrop-blur-md border-b border-outline-variant bg-surface/80 shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
+    <div class="flex justify-between items-center px-margin-page h-16 max-w-max-width mx-auto">
+      <button class="text-on-surface-variant hover:bg-surface-container-highest transition-colors rounded-full p-2"><span class="material-symbols-outlined">arrow_back</span></button>
+      <div class="font-headline-md text-headline-md text-primary tracking-tighter">PULZ</div>
+      <button class="text-on-surface-variant hover:bg-surface-container-highest transition-colors rounded-full p-2"><span class="material-symbols-outlined">more_vert</span></button>
+    </div>
+  </header>
+  <main class="max-w-max-width mx-auto px-margin-page pt-24 pb-28 w-full relative z-10">
+    <div class="mb-stack-lg">
+      <p class="font-label-lg text-label-lg text-on-surface-variant mb-1">Good evening, Alex</p>
+      <h1 class="font-display-lg text-display-lg text-primary">Home</h1>
+    </div>
+    <div class="bg-surface-container border border-outline-variant rounded-[20px] p-gutter mb-stack-md flex items-center justify-between">
+      <div>
+        <h3 class="font-label-lg text-label-lg text-on-surface mb-1">Emergency Calls</h3>
+        <p class="font-body-md text-body-md text-on-surface-variant text-sm">Available for emergencies</p>
+      </div>
+      <div class="relative inline-block w-14 mr-2 align-middle select-none transition duration-200 ease-in">
+        <input checked class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-primary border-4 border-outline-variant appearance-none cursor-pointer z-10 transition-transform duration-300 ease-in-out left-1 top-1" id="availability-toggle" type="checkbox" onclick="onToggleAvailable()"/>
+        <label class="toggle-label block overflow-hidden h-8 rounded-full bg-secondary-container cursor-pointer border border-outline-variant transition-colors duration-300 ease-in-out" for="availability-toggle"></label>
+      </div>
+    </div>
+    <div class="bg-surface-container border border-outline-variant rounded-[20px] p-gutter mb-stack-lg flex items-center gap-4" id="cooldown-card">
+      <div class="w-12 h-12 rounded-full bg-secondary-container/30 flex items-center justify-center border border-secondary-container">
+        <span class="material-symbols-outlined text-secondary" style="font-variation-settings:'FILL' 1">check_circle</span>
+      </div>
+      <div>
+        <h3 class="font-label-lg text-label-lg text-on-surface mb-1">Ready to Donate</h3>
+        <div class="inline-flex items-center px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold uppercase tracking-wider">Eligible</div>
+      </div>
+    </div>
+    <div class="bg-surface-container border border-outline-variant rounded-[20px] p-gutter text-center shadow-[inset_0_0_20px_rgba(255,255,255,0.02)]">
+      <h2 class="font-headline-md text-headline-md text-primary mb-6">Your Impact</h2>
+      <div class="flex justify-center mb-8 relative">
+        <svg class="text-primary-container/80" fill="none" height="120" viewBox="0 0 120 120" width="120" xmlns="http://www.w3.org/2000/svg">
+          <path d="M60 110V70" stroke="currentColor" stroke-linecap="round" stroke-width="4"></path>
+          <path d="M60 70C50 60 30 50 30 30C30 15 45 15 50 25" stroke="currentColor" stroke-linecap="round" stroke-width="4"></path>
+          <path d="M60 70C70 60 90 50 90 30C90 15 75 15 70 25" stroke="currentColor" stroke-linecap="round" stroke-width="4"></path>
+          <path d="M45 50C35 45 25 35 25 20" stroke="currentColor" stroke-linecap="round" stroke-width="4"></path>
+          <path d="M75 50C85 45 95 35 95 20" stroke="currentColor" stroke-linecap="round" stroke-width="4"></path>
+          <circle cx="50" cy="25" fill="currentColor" r="4"></circle>
+          <circle cx="70" cy="25" fill="currentColor" r="4"></circle>
+          <circle cx="25" cy="20" fill="currentColor" r="4"></circle>
+          <circle cx="95" cy="20" fill="currentColor" r="4"></circle>
+          <circle cx="60" cy="15" fill="#ffdad8" r="5"></circle>
+        </svg>
+      </div>
+      <div class="grid grid-cols-3 gap-2">
+        <div class="bg-surface-container-high rounded-lg p-3 border border-outline-variant/50"><p class="font-numeric-display text-numeric-display text-primary mb-1" id="stat-donations">12</p><p class="font-label-md text-label-md text-on-surface-variant text-[10px] uppercase tracking-wide">Donations</p></div>
+        <div class="bg-surface-container-high rounded-lg p-3 border border-outline-variant/50"><p class="font-numeric-display text-numeric-display text-secondary mb-1">4</p><p class="font-label-md text-label-md text-on-surface-variant text-[10px] uppercase tracking-wide">Emergencies</p></div>
+        <div class="bg-surface-container-high rounded-lg p-3 border border-outline-variant/50"><p class="font-numeric-display text-numeric-display text-primary mb-1">2</p><p class="font-label-md text-label-md text-on-surface-variant text-[10px] uppercase tracking-wide">Camps</p></div>
+      </div>
+    </div>
+    <button class="mt-6 w-full h-[48px] rounded-[16px] border border-outline-variant text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high transition-colors" onclick="goTo(3);resetAlertPhase()">Simulate: incoming emergency alert →</button>
+  </main>
+  <nav class="fixed bottom-0 w-full z-50 rounded-t-xl border-t border-outline-variant bg-surface-container-low shadow-[0_-4px_12px_rgba(0,0,0,0.1)]">
+    <div class="flex justify-around items-center h-20 px-4 pb-safe max-w-max-width mx-auto">
+      <button class="flex flex-col items-center justify-center text-primary font-bold bg-secondary-container/20 rounded-full px-4 py-1 scale-95 duration-150"><span class="material-symbols-outlined mb-1" style="font-variation-settings:'FILL' 1">home</span><span class="font-label-md text-label-md">Home</span></button>
+      <button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all" onclick="goTo(8);showTab('history')"><span class="material-symbols-outlined mb-1">history</span><span class="font-label-md text-label-md">History</span></button>
+      <button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all" onclick="goTo(8);showTab('profile')"><span class="material-symbols-outlined mb-1">person</span><span class="font-label-md text-label-md">Profile</span></button>
+    </div>
+  </nav>
+</div>
+
+<!-- ============ SCREEN 2: TOGGLE AVAILABLE CONFIRMATION ============ -->
+<div class="screen" id="screen-2">
+  <main class="max-w-max-width mx-auto px-margin-page w-full flex-1 flex flex-col items-center justify-center relative z-10 text-center gap-6">
+    <div class="relative flex justify-center items-center w-28 h-28">
+      <div class="absolute inset-0 bg-secondary/20 rounded-full blur-xl scale-150 animate-pulse"></div>
+      <div class="w-24 h-24 rounded-full bg-surface-container border border-outline-variant flex items-center justify-center relative z-10 glow-pulse">
+        <span class="material-symbols-outlined text-[44px] text-secondary" style="font-variation-settings:'FILL' 1">favorite</span>
+      </div>
+    </div>
+    <div>
+      <h2 class="font-headline-lg text-headline-lg-mobile text-primary mb-2">You're now available</h2>
+      <p class="text-on-surface-variant font-body-md max-w-[280px] mx-auto">We'll alert you if a compatible request comes in nearby.</p>
+    </div>
+  </main>
+</div>
+
+<!-- ============ SCREEN 3: EMERGENCY ALERT (locked -> active) ============ -->
+<div class="screen" id="screen-3">
+  <main class="w-full max-w-[448px] mx-auto h-[884px] md:h-[800px] overflow-hidden relative flex flex-col items-center justify-between py-10 px-margin-page z-10" id="alert-bg">
+    <div class="absolute -top-32 -left-32 w-96 h-96 bg-error/10 rounded-full blur-[100px] pointer-events-none"></div>
+    <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-error/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+    <div class="w-full flex justify-center z-20">
+      <div class="flex items-center gap-2 bg-error-container/80 backdrop-blur-md border border-error/50 rounded-full px-4 py-2 critical-glow">
+        <span class="w-3 h-3 rounded-full bg-error animate-ping absolute"></span>
+        <span class="w-3 h-3 rounded-full bg-error relative z-10"></span>
+        <span class="font-label-lg text-label-lg text-on-error-container uppercase tracking-widest">Critical Need</span>
+      </div>
+    </div>
+
+    <div class="flex flex-col items-center text-center z-20 w-full space-y-8">
+      <div class="relative w-32 h-32 flex items-center justify-center">
+        <div class="absolute inset-0 bg-error/20 rounded-full animate-siren-pulse blur-md"></div>
+        <div class="absolute inset-4 bg-error/30 rounded-full animate-siren-pulse blur-sm"></div>
+        <span class="material-symbols-outlined text-error text-[80px] relative z-10" style="font-variation-settings:'FILL' 1">bloodtype</span>
+      </div>
+      <div class="space-y-2">
+        <h1 class="font-display-lg text-display-lg text-error tracking-tight">O NEGATIVE</h1>
+        <p class="font-headline-md text-headline-md text-on-surface">St. Jude Medical</p>
+        <div class="flex items-center justify-center gap-2 font-label-md text-label-md text-on-surface-variant">
+          <span class="material-symbols-outlined text-[18px]">location_on</span><span>2.4 km away</span>
+        </div>
+      </div>
+      <div class="w-full bg-surface-container-high/80 backdrop-blur-md border border-outline-variant rounded-[20px] p-6 flex flex-col items-center">
+        <span class="font-numeric-display text-numeric-display text-primary">4 <span class="font-body-md text-body-md text-on-surface-variant">of 6 units needed</span></span>
+        <div class="w-full h-2 bg-surface-container-lowest rounded-full mt-4 overflow-hidden">
+          <div class="h-full bg-error w-2/3 rounded-full critical-glow"></div>
+        </div>
+      </div>
+      <div class="relative w-24 h-24 flex items-center justify-center">
+        <svg class="timer-svg w-full h-full absolute inset-0" viewBox="0 0 100 100">
+          <circle class="timer-circle" cx="50" cy="50" r="45"></circle>
+          <circle class="timer-path" cx="50" cy="50" r="45" id="timer-path"></circle>
+        </svg>
+        <div class="flex flex-col items-center text-center">
+          <span class="font-numeric-display text-[28px] leading-none font-bold text-error" id="countdown-text">15</span>
+          <span class="font-label-md text-[10px] text-on-surface-variant uppercase tracking-wider" id="countdown-label">reviewing</span>
+        </div>
+      </div>
+      <p class="font-label-md text-label-md text-on-surface-variant" id="phase-note">Reviewing request — actions unlock shortly</p>
+    </div>
+
+    <div class="w-full flex gap-4 z-20">
+      <button class="flex-1 py-4 px-6 rounded-[20px] border border-outline-variant text-on-surface-variant font-label-lg text-label-lg bg-surface-container transition-colors flex items-center justify-center gap-2 opacity-40 cursor-not-allowed" id="btn-decline" disabled onclick="goTo(1)">
+        <span class="material-symbols-outlined text-[20px]">close</span> Decline
+      </button>
+      <button class="flex-1 py-4 px-6 rounded-[20px] bg-secondary-container text-on-secondary-container font-label-lg text-label-lg flex items-center justify-center gap-2 opacity-40 cursor-not-allowed" id="btn-accept" disabled onclick="goTo(4)">
+        <span class="material-symbols-outlined text-[20px]" style="font-variation-settings:'FILL' 1">check</span> Accept
+      </button>
+    </div>
+  </main>
+</div>
+
+<!-- ============ SCREEN 4: PIN ENTRY ============ -->
+<div class="screen" id="screen-4">
+  <header class="fixed top-0 w-full z-50 backdrop-blur-md border-b border-outline-variant bg-surface/80 flex justify-between items-center px-margin-page h-16 max-w-max-width mx-auto left-1/2 -translate-x-1/2">
+    <button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container text-primary border border-outline-variant" onclick="goTo(3)"><span class="material-symbols-outlined">arrow_back</span></button>
+    <h1 class="font-headline-md text-headline-md-mobile text-primary tracking-tighter">PULZ</h1>
+    <div class="w-10"></div>
+  </header>
+  <main class="max-w-max-width mx-auto px-margin-page pt-28 pb-10 w-full flex-1 flex flex-col relative z-10">
+    <div class="text-center mb-stack-lg">
+      <h2 class="font-headline-lg text-headline-lg-mobile text-primary mb-2">Confirm your identity</h2>
+      <p class="text-on-surface-variant font-body-md text-sm">Enter your 4-digit PIN to continue.</p>
+    </div>
+    <div class="bg-surface-container border border-outline-variant rounded-[20px] p-4 flex items-center gap-3 mb-stack-lg">
+      <span class="material-symbols-outlined text-error">bloodtype</span>
+      <div class="text-left"><p class="font-label-lg text-label-lg text-on-surface">O Negative · 4 of 6 units</p><p class="font-body-md text-body-md text-on-surface-variant text-sm">St. Jude Medical</p></div>
+    </div>
+    <div class="flex-1 flex flex-col items-center justify-center">
+      <div class="flex space-x-4 mb-10" id="pinIndicators">
+        <div class="pin-dot w-4 h-4 rounded-full bg-surface-container-highest border border-outline-variant"></div>
+        <div class="pin-dot w-4 h-4 rounded-full bg-surface-container-highest border border-outline-variant"></div>
+        <div class="pin-dot w-4 h-4 rounded-full bg-surface-container-highest border border-outline-variant"></div>
+        <div class="pin-dot w-4 h-4 rounded-full bg-surface-container-highest border border-outline-variant"></div>
+      </div>
+      <div class="grid grid-cols-3 gap-3 w-full max-w-[280px] mx-auto">
+        <button class="keypad-btn bg-surface-container-high rounded-full w-full aspect-square flex items-center justify-center font-numeric-display text-xl text-on-surface" onclick="pinPress('1')">1</button>
+        <button class="keypad-btn bg-surface-container-high rounded-full w-full aspect-square flex items-center justify-center font-numeric-display text-xl text-on-surface" onclick="pinPress('2')">2</button>
+        <button class="keypad-btn bg-surface-container-high rounded-full w-full aspect-square flex items-center justify-center font-numeric-display text-xl text-on-surface" onclick="pinPress('3')">3</button>
+        <button class="keypad-btn bg-surface-container-high rounded-full w-full aspect-square flex items-center justify-center font-numeric-display text-xl text-on-surface" onclick="pinPress('4')">4</button>
+        <button class="keypad-btn bg-surface-container-high rounded-full w-full aspect-square flex items-center justify-center font-numeric-display text-xl text-on-surface" onclick="pinPress('5')">5</button>
+        <button class="keypad-btn bg-surface-container-high rounded-full w-full aspect-square flex items-center justify-center font-numeric-display text-xl text-on-surface" onclick="pinPress('6')">6</button>
+        <button class="keypad-btn bg-surface-container-high rounded-full w-full aspect-square flex items-center justify-center font-numeric-display text-xl text-on-surface" onclick="pinPress('7')">7</button>
+        <button class="keypad-btn bg-surface-container-high rounded-full w-full aspect-square flex items-center justify-center font-numeric-display text-xl text-on-surface" onclick="pinPress('8')">8</button>
+        <button class="keypad-btn bg-surface-container-high rounded-full w-full aspect-square flex items-center justify-center font-numeric-display text-xl text-on-surface" onclick="pinPress('9')">9</button>
+        <div></div>
+        <button class="keypad-btn bg-surface-container-high rounded-full w-full aspect-square flex items-center justify-center font-numeric-display text-xl text-on-surface" onclick="pinPress('0')">0</button>
+        <button class="keypad-btn bg-surface-container-high rounded-full w-full aspect-square flex items-center justify-center text-on-surface-variant" onclick="pinPress('back')"><span class="material-symbols-outlined">backspace</span></button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============ SCREEN 5: TRANSIT ============ -->
+<div class="screen" id="screen-5">
+  <div class="ambient-drop-holder"></div>
+  <div class="w-full max-w-max-width flex-grow flex flex-col relative pb-[100px] mx-auto z-10">
+    <header class="fixed top-0 w-full max-w-max-width z-50 backdrop-blur-md bg-surface/80 border-b border-outline-variant flex justify-between items-center px-margin-page h-16 left-1/2 -translate-x-1/2">
+      <button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container text-primary border border-outline-variant" onclick="goTo(4)"><span class="material-symbols-outlined">arrow_back</span></button>
+      <h1 class="font-headline-md text-headline-md-mobile text-primary tracking-tighter">PULZ</h1>
+      <button class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant"><span class="material-symbols-outlined">more_vert</span></button>
+    </header>
+    <main class="flex-grow pt-[88px] px-margin-page flex flex-col gap-gutter">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="font-headline-lg text-headline-lg-mobile text-primary">En route</h2>
+        <div class="px-3 py-1 rounded-full bg-surface-container border border-outline-variant text-secondary text-label-md font-label-md flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span> Live</div>
+      </div>
+      <div class="w-full h-[240px] rounded-[20px] bg-surface-container-high border border-outline-variant relative overflow-hidden flex flex-col items-center justify-center">
+        <svg class="absolute inset-0 z-0 opacity-50" fill="none" height="100%" viewBox="0 0 400 240" width="100%" xmlns="http://www.w3.org/2000/svg">
+          <path d="M50 120 C 150 120, 250 40, 350 120" stroke="#4f4443" stroke-dasharray="6 6" stroke-width="2"></path>
+          <path d="M50 120 C 150 120, 200 80, 220 95" stroke="#ffdad8" stroke-linecap="round" stroke-width="4"></path>
+        </svg>
+        <div class="absolute left-[10%] top-[45%] flex flex-col items-center z-10">
+          <div class="w-4 h-4 bg-primary rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)] border-2 border-surface"></div>
+          <span class="text-[10px] font-label-md text-on-surface-variant mt-1 bg-surface/80 px-2 rounded-full">Donor</span>
+        </div>
+        <div class="absolute right-[10%] top-[45%] flex flex-col items-center z-10">
+          <div class="w-6 h-6 bg-error rounded-full flex items-center justify-center shadow-primary-glow border-2 border-surface"><span class="material-symbols-outlined text-[14px] text-surface" style="font-variation-settings:'FILL' 1">local_hospital</span></div>
+          <span class="text-[10px] font-label-md text-on-surface-variant mt-1 bg-surface/80 px-2 rounded-full">Destination</span>
+        </div>
+        <div class="absolute left-[52%] top-[38%] z-20 flex flex-col items-center -translate-x-1/2 -translate-y-1/2">
+          <div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center border-2 border-secondary shadow-[0_0_15px_rgba(153,207,218,0.4)]"><span class="material-symbols-outlined text-[16px] text-secondary">directions_car</span></div>
+        </div>
+      </div>
+      <div class="w-full rounded-[20px] bg-surface-container border border-outline-variant p-stack-md flex flex-col gap-4 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-1 h-full bg-secondary"></div>
+        <div class="flex justify-between items-start">
+          <div class="flex items-center gap-2"><span class="material-symbols-outlined text-secondary">shield</span><span class="font-label-lg text-label-lg text-secondary uppercase tracking-wider">PulseGuard active</span></div>
+          <div class="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center bg-surface-container-high animate-fast-pulse"><span class="material-symbols-outlined text-error" style="font-variation-settings:'FILL' 1">vital_signs</span></div>
+        </div>
+        <div class="flex flex-col items-center justify-center py-4">
+          <span class="font-label-md text-label-md text-on-surface-variant mb-1">Estimated Arrival</span>
+          <span class="font-numeric-display text-display-lg text-primary tracking-tighter">12:45</span>
+          <span class="font-label-md text-label-md text-on-surface mt-2 bg-surface-container-high px-3 py-1 rounded-full border border-outline-variant">9 mins away</span>
+        </div>
+      </div>
+      <div class="w-full rounded-[20px] bg-surface-container border border-outline-variant p-stack-md flex items-center gap-4">
+        <div class="w-12 h-12 rounded-full bg-surface-container-high border border-outline-variant flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-on-surface">business</span></div>
+        <div class="flex flex-col flex-grow"><span class="font-label-md text-label-md text-on-surface-variant">Destination</span><span class="font-label-lg text-label-lg text-primary">St. Jude Medical</span><span class="font-body-md text-body-md text-on-surface-variant text-sm">122 Hope Blvd.</span></div>
+        <button class="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center"><span class="material-symbols-outlined text-on-surface-variant text-[20px]">call</span></button>
+      </div>
+      <button class="mt-4 w-full h-[48px] rounded-[16px] bg-primary-container text-on-primary-container font-label-lg text-label-lg flex items-center justify-center gap-2" onclick="goTo(6)">Arrived — scan QR <span class="material-symbols-outlined text-[18px]">arrow_forward</span></button>
+      <div class="pt-4 pb-4 flex justify-center">
+        <a class="font-label-md text-label-md text-on-surface-variant underline decoration-outline-variant underline-offset-4 flex items-center gap-1" href="#"><span class="material-symbols-outlined text-[16px]">report</span> Report an issue</a>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ============ SCREEN 6: QR SCAN ============ -->
+<div class="screen" id="screen-6">
+  <main class="relative w-full max-w-max-width mx-auto h-[884px] overflow-hidden flex flex-col bg-black shadow-2xl z-10">
+    <div class="absolute inset-0 bg-cover bg-center z-0 opacity-60" style="background:linear-gradient(160deg,#1d2020,#0c0f0f)"></div>
+    <header class="absolute top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center px-margin-page h-16">
+      <button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container text-primary" onclick="goTo(5)"><span class="material-symbols-outlined">arrow_back</span></button>
+      <h1 class="font-headline-md text-headline-md text-primary tracking-tighter">PULZ</h1>
+      <button class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant"><span class="material-symbols-outlined">more_vert</span></button>
+    </header>
+    <div class="flex-1 flex flex-col items-center justify-center relative z-10 px-margin-page mt-16">
+      <div class="relative w-64 h-64 sm:w-72 sm:h-72 flex-shrink-0 mb-stack-lg" onclick="simulateScan()">
+        <div class="absolute inset-0 scan-overlay rounded-2xl pointer-events-none"></div>
+        <div class="absolute inset-0 border border-outline/30 rounded-2xl"></div>
+        <div class="absolute inset-0 animate-brackets pointer-events-none" id="qr-brackets">
+          <div class="absolute top-[-2px] left-[-2px] w-12 h-12 border-t-4 border-l-4 border-primary-container rounded-tl-2xl"></div>
+          <div class="absolute top-[-2px] right-[-2px] w-12 h-12 border-t-4 border-r-4 border-primary-container rounded-tr-2xl"></div>
+          <div class="absolute bottom-[-2px] left-[-2px] w-12 h-12 border-b-4 border-l-4 border-primary-container rounded-bl-2xl"></div>
+          <div class="absolute bottom-[-2px] right-[-2px] w-12 h-12 border-b-4 border-r-4 border-primary-container rounded-br-2xl"></div>
+        </div>
+        <div class="absolute left-0 right-0 h-[2px] bg-secondary shadow-[0_0_12px_rgba(153,207,218,0.9)] animate-scan pointer-events-none z-20" id="scanline"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center opacity-30 pointer-events-none"><span class="material-symbols-outlined text-outline" style="font-size:32px">add</span></div>
+      </div>
+      <div class="relative z-20 text-center max-w-[280px] bg-surface-container/60 backdrop-blur-sm p-4 rounded-xl border border-outline-variant">
+        <p class="font-body-md text-body-md text-on-surface" id="scan-instruction">Scan the recipient's QR code to confirm your donation. (Tap the frame to simulate)</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============ SCREEN 7: COMPLETION ============ -->
+<div class="screen" id="screen-7">
+  <div class="fixed inset-0 pointer-events-none z-0">
+    <div class="absolute top-[-5%] left-[20%] w-[400px] h-[500px] bg-primary-container/5 rounded-full blur-[100px] opacity-70"></div>
+    <div class="absolute bottom-[10%] right-[-10%] w-[300px] h-[400px] bg-secondary-container/10 rounded-full blur-[80px]"></div>
+  </div>
+  <header class="fixed top-0 left-0 right-0 z-50 w-full max-w-max-width mx-auto bg-surface/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center px-margin-page h-16">
+    <div class="w-10"></div>
+    <h1 class="font-headline-md text-headline-md text-primary tracking-tighter">PULZ</h1>
+    <button class="w-10 h-10 flex items-center justify-end text-primary opacity-70"><span class="material-symbols-outlined">more_vert</span></button>
+  </header>
+  <main class="relative z-10 w-full max-w-max-width mx-auto px-margin-page pt-24 flex flex-col items-center pb-32">
+    <div class="relative flex justify-center items-center mt-stack-md mb-stack-lg w-32 h-32">
+      <div class="absolute inset-0 bg-secondary/20 rounded-full blur-xl scale-150 animate-pulse"></div>
+      <div class="w-24 h-24 rounded-full bg-surface-container border border-outline-variant flex items-center justify-center relative z-10 glow-pulse">
+        <span class="material-symbols-outlined text-[48px] text-secondary" style="font-variation-settings:'FILL' 1">favorite</span>
+      </div>
+    </div>
+    <div class="text-center mb-stack-sm w-full">
+      <h2 class="font-headline-lg text-headline-lg-mobile text-primary tracking-tight leading-tight">Donation complete<br><span class="text-on-surface-variant opacity-80">— thank you</span></h2>
+    </div>
+    <div class="text-center mb-stack-lg"><p class="font-numeric-display text-numeric-display text-secondary">+10 credits earned</p></div>
+    <div class="w-full bg-surface-container rounded-[20px] border border-outline-variant overflow-hidden mb-stack-md relative shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
+      <div class="w-full h-32 flex items-center justify-center" style="background:linear-gradient(160deg,#1d2020,#145059)">
+        <svg fill="none" height="70" viewBox="0 0 120 120" width="70" xmlns="http://www.w3.org/2000/svg">
+          <path d="M60 110V70" stroke="#ffdad8" stroke-linecap="round" stroke-width="4"></path>
+          <path d="M60 70C50 60 30 50 30 30C30 15 45 15 50 25" stroke="#ffdad8" stroke-linecap="round" stroke-width="4"></path>
+          <path d="M60 70C70 60 90 50 90 30C90 15 75 15 70 25" stroke="#ffdad8" stroke-linecap="round" stroke-width="4"></path>
+          <path d="M45 50C35 45 25 35 25 20" stroke="#99cfda" stroke-linecap="round" stroke-width="4"></path>
+          <path d="M75 50C85 45 95 35 95 20" stroke="#99cfda" stroke-linecap="round" stroke-width="4"></path>
+          <circle cx="60" cy="15" fill="#ffdad8" r="5"></circle>
+        </svg>
+      </div>
+      <div class="relative z-20 p-4 text-center">
+        <h3 class="font-label-lg text-label-lg text-primary mb-1">Impact Tree Updated</h3>
+        <p class="font-body-md text-body-md text-on-surface-variant flex items-center justify-center gap-1"><span class="material-symbols-outlined text-[16px] text-secondary">trending_up</span> Level 4: Lifeblood</p>
+      </div>
+    </div>
+    <div class="w-full grid grid-cols-3 gap-3 mb-stack-lg">
+      <div class="bg-surface-container-high border border-outline-variant rounded-[12px] p-3 flex flex-col items-center justify-center"><span class="font-numeric-display text-numeric-display text-primary">13</span><span class="font-label-md text-label-md text-on-surface-variant mt-1 text-center">Donations</span></div>
+      <div class="bg-surface-container-high border border-outline-variant rounded-[12px] p-3 flex flex-col items-center justify-center"><span class="font-numeric-display text-numeric-display text-error">5</span><span class="font-label-md text-label-md text-on-surface-variant mt-1 text-center">Emergencies</span></div>
+      <div class="bg-surface-container-high border border-outline-variant rounded-[12px] p-3 flex flex-col items-center justify-center"><span class="font-numeric-display text-numeric-display text-secondary">2</span><span class="font-label-md text-label-md text-on-surface-variant mt-1 text-center">Camps</span></div>
+    </div>
+    <div class="w-full bg-surface-container-low border border-outline-variant rounded-[12px] p-4 flex items-center justify-center gap-3 mb-stack-lg">
+      <span class="material-symbols-outlined text-[20px] text-on-surface-variant">hourglass_empty</span>
+      <p class="font-body-md text-body-md text-on-surface-variant">Next eligible: Nov 13, 2026 (90-day cooldown)</p>
+    </div>
+  </main>
+  <div class="fixed bottom-0 left-0 right-0 w-full px-margin-page pb-8 pt-4 z-40 bg-gradient-to-t from-background via-background to-transparent flex justify-center">
+    <button class="w-full max-w-max-width h-[56px] rounded-[20px] bg-primary-container text-on-primary-container font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(255,218,216,0.3)] active:scale-[0.98] transition-all" onclick="finishDonation()">
+      Back to home <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+    </button>
+  </div>
+</div>
+
+<!-- ============ SCREEN 8: HOME (updated) / HISTORY / PROFILE ============ -->
+<div class="screen" id="screen-8">
+  <div class="ambient-glow glow-top-right"></div>
+  <div class="ambient-glow glow-bottom-left"></div>
+  <header class="fixed top-0 w-full z-50 backdrop-blur-md border-b border-outline-variant bg-surface/80 flex justify-between items-center px-margin-page h-16 max-w-max-width mx-auto left-1/2 -translate-x-1/2">
+    <button class="text-primary hover:bg-surface-container-highest transition-colors rounded-full w-10 h-10 flex items-center justify-center opacity-70" onclick="goTo(1)"><span class="material-symbols-outlined">arrow_back</span></button>
+    <div class="font-headline-md text-headline-md text-primary tracking-tighter">PULZ</div>
+    <button class="text-primary rounded-full w-10 h-10 flex items-center justify-center opacity-70"><span class="material-symbols-outlined">person</span></button>
+  </header>
+  <main class="flex-1 w-full mx-auto px-margin-page pt-24 pb-28 relative z-10 flex flex-col max-w-max-width">
+
+    <div id="tab-history">
+      <header class="mb-stack-lg"><h1 class="font-headline-lg text-headline-lg text-primary">History</h1></header>
+      <section>
+        <h2 class="font-label-md text-label-md text-on-surface-variant mb-stack-sm uppercase tracking-wider pl-2">Recent</h2>
+        <div class="bg-surface-container rounded-[20px] border border-outline-variant p-4 flex items-center justify-between mb-3">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center shadow-[0_0_15px_rgba(255,218,216,0.15)]"><span class="font-headline-md text-primary" style="font-size:18px">O-</span></div>
+            <div><h3 class="font-label-lg text-label-lg text-on-surface">St. Jude Medical</h3><p class="font-body-md text-body-md text-on-surface-variant text-sm mt-0.5">Today</p></div>
+          </div>
+          <div class="text-right flex flex-col items-end"><div class="font-numeric-display text-numeric-display text-secondary">+10</div><div class="font-label-md text-label-md text-on-surface-variant text-[11px] uppercase tracking-wider">Credits</div></div>
+        </div>
+      </section>
+      <section class="mt-4">
+        <h2 class="font-label-md text-label-md text-on-surface-variant mb-stack-sm uppercase tracking-wider pl-2">Past</h2>
+        <div class="bg-surface-container rounded-[20px] border border-outline-variant p-4 flex items-center justify-between mb-3">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center"><span class="font-headline-md text-on-surface-variant" style="font-size:18px">A+</span></div>
+            <div><h3 class="font-label-lg text-label-lg text-on-surface">City Hospital</h3><p class="font-body-md text-body-md text-on-surface-variant text-sm mt-0.5">July 12</p></div>
+          </div>
+          <div class="text-right flex flex-col items-end"><div class="font-numeric-display text-numeric-display text-on-surface">+5</div><div class="font-label-md text-label-md text-on-surface-variant text-[11px] uppercase tracking-wider">Credits</div></div>
+        </div>
+        <div class="bg-surface-container rounded-[20px] border border-outline-variant p-4 flex items-center justify-between mb-3">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center"><span class="font-headline-md text-on-surface-variant" style="font-size:18px">A+</span></div>
+            <div><h3 class="font-label-lg text-label-lg text-on-surface">Mobile Camp</h3><p class="font-body-md text-body-md text-on-surface-variant text-sm mt-0.5">May 03</p></div>
+          </div>
+          <div class="text-right flex flex-col items-end"><div class="font-numeric-display text-numeric-display text-on-surface">+5</div><div class="font-label-md text-label-md text-on-surface-variant text-[11px] uppercase tracking-wider">Credits</div></div>
+        </div>
+      </section>
+    </div>
+
+    <div id="tab-profile" style="display:none">
+      <header class="mb-stack-lg"><h1 class="font-headline-lg text-headline-lg text-primary">Profile</h1></header>
+      <div class="bg-surface-container border border-outline-variant rounded-[20px] p-gutter mb-stack-md flex items-center gap-4">
+        <div class="w-14 h-14 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center"><span class="material-symbols-outlined text-primary">person</span></div>
+        <div><h3 class="font-label-lg text-label-lg text-on-surface">Alex Rivera</h3><p class="font-body-md text-body-md text-on-surface-variant text-sm">+1 (555) 013-2290</p></div>
+      </div>
+      <div class="bg-surface-container border border-outline-variant rounded-[20px] p-gutter mb-stack-md flex items-center justify-between">
+        <span class="font-label-lg text-label-lg text-on-surface-variant">Blood group</span><span class="font-numeric-display text-numeric-display text-primary">O−</span>
+      </div>
+      <div class="bg-surface-container border border-outline-variant rounded-[20px] p-gutter mb-stack-md flex items-center justify-between">
+        <span class="font-label-lg text-label-lg text-on-surface-variant">Total donations</span><span class="font-numeric-display text-numeric-display text-primary" id="profile-donations">13</span>
+      </div>
+      <button class="w-full h-[48px] rounded-[16px] border border-outline-variant text-on-surface-variant font-label-md text-label-md">Edit profile</button>
+    </div>
+
+  </main>
+  <nav class="fixed bottom-0 w-full z-50 rounded-t-xl border-t border-outline-variant bg-surface-container-low shadow-[0_-4px_12px_rgba(0,0,0,0.1)] max-w-max-width mx-auto left-1/2 -translate-x-1/2">
+    <div class="flex justify-around items-center h-20 px-4 pb-safe w-full">
+      <button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all flex-1 py-2" onclick="goTo(1)"><span class="material-symbols-outlined mb-1">home</span><span class="font-label-md text-label-md text-[12px]">Home</span></button>
+      <button class="flex flex-col items-center justify-center text-primary font-bold bg-secondary-container/20 rounded-full px-6 py-1.5 flex-1" onclick="showTab('history')"><span class="material-symbols-outlined mb-0.5 text-secondary" style="font-variation-settings:'FILL' 1">history</span><span class="font-label-md text-label-md text-[12px]">History</span></button>
+      <button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all flex-1 py-2" onclick="showTab('profile')"><span class="material-symbols-outlined mb-1">person</span><span class="font-label-md text-label-md text-[12px]">Profile</span></button>
+    </div>
+  </nav>
+</div>
+
+<!-- DEV NAV -->
+<div class="devnav" id="devnav"></div>
+
+<script>
+const labels = ['1 Home','2 Toggle','3 Alert','4 PIN','5 Transit','6 QR','7 Done','8 Home+'];
+const devnav = document.getElementById('devnav');
+labels.forEach((l,i)=>{
+  const b = document.createElement('button');
+  b.textContent = l; b.onclick = ()=>goTo(i+1);
+  b.id = 'devbtn-'+(i+1);
+  devnav.appendChild(b);
+});
+
+function goTo(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+n).classList.add('active');
+  document.querySelectorAll('[id^="devbtn-"]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('devbtn-'+n).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function onToggleAvailable(){
+  goTo(2);
+  setTimeout(()=>{ if(document.getElementById('screen-2').classList.contains('active')) goTo(1); }, 1500);
+}
+
+// ---- Emergency alert: 15s locked -> 45s active ----
+let alertTimer = null;
+function resetAlertPhase(){
+  clearInterval(alertTimer);
+  const bg = document.getElementById('alert-bg');
+  const path = document.getElementById('timer-path');
+  const txt = document.getElementById('countdown-text');
+  const lbl = document.getElementById('countdown-label');
+  const note = document.getElementById('phase-note');
+  const decline = document.getElementById('btn-decline');
+  const accept = document.getElementById('btn-accept');
+
+  let phase = 'locked';
+  let t = 15;
+  decline.disabled = true; decline.classList.add('opacity-40','cursor-not-allowed');
+  accept.disabled = true; accept.classList.add('opacity-40','cursor-not-allowed');
+  txt.textContent = t; lbl.textContent = 'locked';
+  note.textContent = 'Reviewing request — actions unlock shortly';
+  path.style.animation = 'none'; path.style.strokeDashoffset = 0;
+  void path.offsetWidth;
+  path.style.animation = 'lockedCountdown 15s linear forwards';
+
+  const style = document.createElement('style');
+  style.id = 'dyn-countdown-style';
+  const old = document.getElementById('dyn-countdown-style'); if(old) old.remove();
+  style.textContent = '@keyframes lockedCountdown{0%{stroke-dashoffset:0}100%{stroke-dashoffset:283}} @keyframes activeCountdown{0%{stroke-dashoffset:0}100%{stroke-dashoffset:283}}';
+  document.head.appendChild(style);
+
+  alertTimer = setInterval(()=>{
+    t--;
+    if(phase==='locked'){
+      txt.textContent = t;
+      if(t<=0){
+        phase='active'; t=45;
+        txt.textContent = t; lbl.textContent='sec';
+        note.textContent = 'Respond now — decision window open';
+        decline.disabled=false; decline.classList.remove('opacity-40','cursor-not-allowed');
+        accept.disabled=false; accept.classList.remove('opacity-40','cursor-not-allowed');
+        accept.classList.add('accept-glow');
+        path.style.animation='none'; path.style.strokeDashoffset=0;
+        void path.offsetWidth;
+        path.style.animation='activeCountdown 45s linear forwards';
+      }
+    } else {
+      txt.textContent = t;
+      if(t<=0){ clearInterval(alertTimer); }
+    }
+  },1000);
+}
+
+// ---- PIN entry ----
+let pin = '';
+function pinPress(k){
+  if(k==='back'){ pin = pin.slice(0,-1); }
+  else if(pin.length<4){ pin += k; }
+  const dots = document.querySelectorAll('#pinIndicators .pin-dot');
+  dots.forEach((d,i)=>{
+    if(i<pin.length){ d.classList.add('filled'); } else { d.classList.remove('filled'); }
+  });
+  if(pin.length===4){
+    setTimeout(()=>{ pin=''; goTo(5); }, 400);
+  }
+}
+
+// ---- QR scan simulate ----
+function simulateScan(){
+  const brackets = document.getElementById('qr-brackets');
+  const scanline = document.getElementById('scanline');
+  const instr = document.getElementById('scan-instruction');
+  scanline.style.display='none';
+  brackets.querySelectorAll('div').forEach(b=> b.style.borderColor = '#99cfda');
+  instr.textContent = 'Donor verified ✓';
+  setTimeout(()=>{ goTo(7); }, 700);
+}
+
+function finishDonation(){
+  const d = document.getElementById('stat-donations');
+  d.textContent = 13;
+  goTo(8); showTab('history');
+}
+
+function showTab(name){
+  document.getElementById('tab-history').style.display = name==='history' ? 'block':'none';
+  document.getElementById('tab-profile').style.display = name==='profile' ? 'block':'none';
+}
+
+goTo(1);
+</script>
+</body>
+</html>

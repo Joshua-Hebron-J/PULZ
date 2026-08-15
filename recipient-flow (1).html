@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PULZ - Recipient Flow</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                "colors": {
+                    "on-surface": "#dfe4e0",
+                    "secondary": "#ff5c5c",
+                    "secondary-fixed": "#ffb3ab",
+                    "primary-fixed": "#cde9d9",
+                    "on-error-container": "#ffdad6",
+                    "on-primary-fixed": "#072016",
+                    "background": "#0f1412",
+                    "surface-variant": "#313633",
+                    "on-primary": "#1d352b",
+                    "surface": "#0f1412",
+                    "surface-bright": "#353a38",
+                    "on-tertiary-container": "#346e67",
+                    "on-surface-variant": "#c2c8c3",
+                    "surface-tint": "#b2cdbe",
+                    "tertiary-fixed-dim": "#97d2c9",
+                    "on-background": "#dfe4e0",
+                    "primary-fixed-dim": "#b2cdbe",
+                    "surface-container": "#1c211f",
+                    "inverse-primary": "#4b6457",
+                    "surface-container-highest": "#313633",
+                    "inverse-surface": "#dfe4e0",
+                    "surface-container-low": "#181d1b",
+                    "surface-dim": "#0f1412",
+                    "secondary-fixed-dim": "#ff5c5c",
+                    "on-tertiary-fixed": "#00201d",
+                    "on-primary-fixed-variant": "#344c40",
+                    "tertiary-container": "#b3eee5",
+                    "secondary-container": "#8f1f1f",
+                    "on-tertiary-fixed-variant": "#0f4f49",
+                    "on-secondary": "#3a0a0a",
+                    "surface-container-lowest": "#0a0f0d",
+                    "on-tertiary": "#003733",
+                    "on-error": "#690005",
+                    "primary-container": "#cde9d9",
+                    "error-container": "#93000a",
+                    "outline": "#8c928d",
+                    "on-primary-container": "#516a5d",
+                    "on-secondary-fixed-variant": "#6e1414",
+                    "error": "#ffb4ab",
+                    "tertiary": "#ffffff",
+                    "on-secondary-container": "#fff3f2",
+                    "outline-variant": "#424844",
+                    "primary": "#ffffff",
+                    "on-secondary-fixed": "#2a0505",
+                    "surface-container-high": "#262b29",
+                    "inverse-on-surface": "#2c322f",
+                    "tertiary-fixed": "#b3eee5",
+                    "amber": "#f2b968",
+                    "on-amber": "#3a2707"
+                },
+                "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                "spacing": { "container_max": "560px", "unit": "4px", "gutter": "16px", "margin_mobile": "20px" },
+                "fontFamily": {
+                    "body-md": ["Manrope"], "label-md": ["Space Grotesk"], "label-lg": ["Space Grotesk"],
+                    "numeric-display": ["Space Grotesk"], "headline-sm": ["Syne"], "headline-md": ["Syne"],
+                    "label-sm": ["Space Grotesk"], "headline-lg": ["Syne"], "body-lg": ["Manrope"]
+                },
+                "fontSize": {
+                    "body-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                    "label-md": ["14px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                    "label-lg": ["16px", { "lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                    "numeric-display": ["40px", { "lineHeight": "1", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+                    "headline-sm": ["20px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                    "headline-md": ["24px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                    "label-sm": ["12px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                    "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                    "body-lg": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }]
+                }
+            }
+        }
+    }
+</script>
+<style>
+    body { background-color: #0a0f0d; color: #dfe4e0; font-family: 'Manrope', sans-serif; overflow-x: hidden; min-height: max(884px, 100dvh); }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .icon-fill { font-variation-settings: 'FILL' 1; }
+    .halo-bg::before {
+        content: ''; position: fixed; top: -10%; left: -10%; width: 120%; height: 120%;
+        background: radial-gradient(circle at 50% 50%, rgba(255, 92, 92, 0.06) 0%, transparent 60%);
+        z-index: -1; pointer-events: none; filter: blur(60px);
+    }
+    .glow-button { box-shadow: 0 0 12px 0 rgba(255, 92, 92, 0.35); }
+    .app-container { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; position: relative; }
+    .screen.hidden { display: none; }
+    .press { transition: transform 80ms ease; }
+    .press:active { transform: scale(0.97); }
+
+    /* Radius ring animation for live status */
+    .ring-wrap { position: relative; width: 260px; height: 260px; margin: 0 auto; }
+    .ring { position: absolute; top: 50%; left: 50%; border-radius: 9999px; border: 1.5px solid rgba(255,92,92,0.35); transform: translate(-50%, -50%); }
+    .ring-pulse { animation: ringPulse 2.6s cubic-bezier(0.2, 0.6, 0.4, 1) infinite; }
+    @keyframes ringPulse {
+        0% { width: 24px; height: 24px; opacity: 0.9; border-color: rgba(255,92,92,0.9); }
+        100% { width: 260px; height: 260px; opacity: 0; border-color: rgba(255,92,92,0); }
+    }
+    .center-dot { position: absolute; top: 50%; left: 50%; width: 14px; height: 14px; border-radius: 9999px; background: #ff5c5c; transform: translate(-50%,-50%); box-shadow: 0 0 16px rgba(255,92,92,0.9); z-index: 5; }
+
+    .light-dot { width: 10px; height: 10px; border-radius: 9999px; background: theme('colors.outline-variant'); transition: all .3s ease; }
+    .light-dot.on-red { background: theme('colors.error'); box-shadow: 0 0 10px rgba(255,180,171,0.8); }
+    .light-dot.on-amber { background: theme('colors.amber'); box-shadow: 0 0 10px rgba(242,185,104,0.8); }
+    .light-dot.on-green { background: theme('colors.secondary'); box-shadow: 0 0 10px rgba(255,92,92,0.8); }
+
+    .qr-module { background: #0a0f0d; }
+    .step-dot { width: 6px; height: 6px; border-radius: 9999px; background: theme('colors.outline-variant'); }
+    .step-dot.active { background: theme('colors.secondary'); width: 16px; border-radius: 9999px; }
+</style>
+</head>
+<body class="halo-bg antialiased selection:bg-primary-container selection:text-on-primary-container">
+<div class="app-container" id="app">
+
+  <!-- ============ SCREEN 1: RECIPIENT HOME ============ -->
+  <section class="screen flex flex-col flex-1" data-screen="home">
+    <header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant" style="max-width:480px;">
+      <div class="flex justify-between items-center px-margin_mobile h-16 w-full">
+        <span class="font-headline-md text-headline-md font-extrabold text-primary tracking-tighter">PULZ</span>
+        <button class="press w-9 h-9 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center text-on-surface-variant">
+          <span class="material-symbols-outlined text-[20px]">notifications</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="flex-1 px-margin_mobile pt-24 pb-28 flex flex-col gap-6">
+      <div>
+        <p class="font-body-md text-body-md text-on-surface-variant mb-1">Good evening,</p>
+        <h1 class="font-headline-lg text-headline-lg text-primary">Hi, Priya</h1>
+      </div>
+
+      <div class="bg-surface-container border border-outline-variant rounded-[20px] p-5 flex items-center justify-between">
+        <div>
+          <p class="font-label-sm text-label-sm text-on-surface-variant mb-1">Your blood group</p>
+          <p class="font-numeric-display text-numeric-display text-primary">O+</p>
+        </div>
+        <div class="w-14 h-14 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center">
+          <span class="material-symbols-outlined text-secondary text-2xl icon-fill">bloodtype</span>
+        </div>
+      </div>
+
+      <button onclick="nav('type')" class="press w-full bg-primary text-on-primary-container font-label-lg text-label-lg py-4 rounded-[20px] glow-button flex justify-center items-center gap-2 hover:brightness-110 transition-all">
+        <span class="material-symbols-outlined">emergency</span>
+        Request blood
+        <span class="material-symbols-outlined ml-auto">arrow_forward</span>
+      </button>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-surface-container-low border border-outline-variant/60 rounded-xl p-4">
+          <p class="font-headline-sm text-headline-sm text-primary">0</p>
+          <p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Active requests</p>
+        </div>
+        <div class="bg-surface-container-low border border-outline-variant/60 rounded-xl p-4">
+          <p class="font-headline-sm text-headline-sm text-primary">3</p>
+          <p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Past donations received</p>
+        </div>
+      </div>
+
+      <div class="mt-2">
+        <p class="font-label-sm text-label-sm text-on-surface-variant mb-3 ml-1">Recent activity</p>
+        <div class="bg-surface-container border border-outline-variant rounded-xl p-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-secondary">check_circle</span>
+            <div>
+              <p class="font-label-md text-label-md text-on-surface">Apollo Speciality</p>
+              <p class="font-label-sm text-label-sm text-outline">2 units &middot; Fulfilled</p>
+            </div>
+          </div>
+          <span class="font-label-sm text-label-sm text-outline">3d ago</span>
+        </div>
+      </div>
+    </main>
+
+    <nav class="fixed bottom-0 w-full bg-surface/90 backdrop-blur-md border-t border-outline-variant flex px-margin_mobile pt-2 pb-6 gap-2 z-40" style="max-width:480px;">
+      <button class="press flex-1 flex flex-col items-center gap-1 py-2 text-primary">
+        <span class="material-symbols-outlined icon-fill">home</span>
+        <span class="font-label-sm text-label-sm">Home</span>
+      </button>
+      <button onclick="nav('history')" class="press flex-1 flex flex-col items-center gap-1 py-2 text-on-surface-variant">
+        <span class="material-symbols-outlined">history</span>
+        <span class="font-label-sm text-label-sm">History</span>
+      </button>
+    </nav>
+  </section>
+
+  <!-- ============ SCREEN 2: EMERGENCY / STATIC TOGGLE ============ -->
+  <section class="screen hidden flex flex-col flex-1" data-screen="type">
+    <header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant" style="max-width:480px;">
+      <div class="flex items-center gap-3 px-margin_mobile h-16 w-full">
+        <button onclick="nav('home')" class="press text-primary p-2 -ml-2 rounded-full"><span class="material-symbols-outlined">arrow_back</span></button>
+        <h1 class="font-headline-sm text-headline-sm text-primary">Request type</h1>
+      </div>
+    </header>
+    <main class="flex-1 px-margin_mobile pt-24 pb-28 flex flex-col gap-6">
+      <div class="flex items-center gap-1.5" id="dots-type"></div>
+      <p class="font-body-md text-body-md text-on-surface-variant -mt-2">How urgent is this need? This determines the search radius and speed of matching.</p>
+
+      <button onclick="selectType('emergency')" id="card-emergency" class="press text-left bg-surface-container border-2 border-outline-variant rounded-[20px] p-5 relative overflow-hidden transition-colors">
+        <div class="absolute left-0 top-0 bottom-0 w-1 bg-error"></div>
+        <div class="flex items-start justify-between pl-2">
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="material-symbols-outlined text-error icon-fill">bolt</span>
+              <h3 class="font-label-lg text-label-lg text-primary">Emergency SOS</h3>
+            </div>
+            <p class="font-body-md text-body-md text-on-surface-variant text-sm">Immediate, life-threatening need. Alerts nearby donors within minutes and expands radius automatically.</p>
+          </div>
+          <span class="material-symbols-outlined text-outline check-icon">radio_button_unchecked</span>
+        </div>
+      </button>
+
+      <button onclick="selectType('static')" id="card-static" class="press text-left bg-surface-container border-2 border-outline-variant rounded-[20px] p-5 relative overflow-hidden transition-colors">
+        <div class="absolute left-0 top-0 bottom-0 w-1 bg-outline"></div>
+        <div class="flex items-start justify-between pl-2">
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="material-symbols-outlined text-on-surface-variant icon-fill">event_available</span>
+              <h3 class="font-label-lg text-label-lg text-primary">Standard request</h3>
+            </div>
+            <p class="font-body-md text-body-md text-on-surface-variant text-sm">Planned need ahead of a procedure. Wider search radius, more time for donors to respond.</p>
+          </div>
+          <span class="material-symbols-outlined text-outline check-icon">radio_button_unchecked</span>
+        </div>
+      </button>
+    </main>
+    <div class="fixed bottom-0 w-full bg-surface/90 backdrop-blur-md border-t border-outline-variant pt-4 pb-8 px-margin_mobile z-40" style="max-width:480px;">
+      <button id="btn-type-continue" onclick="nav('hospital')" class="press w-full bg-primary text-on-primary-container font-label-lg text-label-lg py-4 rounded-[20px] glow-button flex justify-center items-center gap-2 opacity-40 pointer-events-none transition-opacity">
+        Continue <span class="material-symbols-outlined">arrow_forward</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 3: HOSPITAL SELECT ============ -->
+  <section class="screen hidden flex flex-col flex-1" data-screen="hospital">
+    <header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant" style="max-width:480px;">
+      <div class="flex items-center gap-3 px-margin_mobile h-16 w-full">
+        <button onclick="nav('type')" class="press text-primary p-2 -ml-2 rounded-full"><span class="material-symbols-outlined">arrow_back</span></button>
+        <h1 class="font-headline-sm text-headline-sm text-primary">Select hospital</h1>
+      </div>
+    </header>
+    <main class="flex-1 px-margin_mobile pt-24 pb-28 flex flex-col gap-5">
+      <div class="flex items-center gap-1.5" id="dots-hospital"></div>
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span class="material-symbols-outlined text-outline-variant">search</span></div>
+        <input type="text" placeholder="Search curated hospitals" class="w-full bg-surface-container border border-outline-variant rounded-[12px] pl-10 pr-4 py-3 text-on-surface font-label-md text-label-md focus:border-primary focus:ring-1 focus:ring-primary transition-colors outline-none"/>
+      </div>
+      <div class="flex flex-col gap-3" id="hospital-list">
+        <!-- items injected/static -->
+      </div>
+    </main>
+    <div class="fixed bottom-0 w-full bg-surface/90 backdrop-blur-md border-t border-outline-variant pt-4 pb-8 px-margin_mobile z-40" style="max-width:480px;">
+      <button id="btn-hospital-continue" onclick="nav('details')" class="press w-full bg-primary text-on-primary-container font-label-lg text-label-lg py-4 rounded-[20px] glow-button flex justify-center items-center gap-2 opacity-40 pointer-events-none transition-opacity">
+        Continue <span class="material-symbols-outlined">arrow_forward</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 4: BLOOD GROUP + UNITS ============ -->
+  <section class="screen hidden flex flex-col flex-1" data-screen="details">
+    <header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant" style="max-width:480px;">
+      <div class="flex items-center gap-3 px-margin_mobile h-16 w-full">
+        <button onclick="nav('hospital')" class="press text-primary p-2 -ml-2 rounded-full"><span class="material-symbols-outlined">arrow_back</span></button>
+        <h1 class="font-headline-sm text-headline-sm text-primary">Blood group &amp; units</h1>
+      </div>
+    </header>
+    <main class="flex-1 px-margin_mobile pt-24 pb-28 flex flex-col gap-6">
+      <div class="flex items-center gap-1.5" id="dots-details"></div>
+      <div>
+        <p class="font-label-sm text-label-sm text-on-surface-variant mb-3 ml-1">Blood group needed</p>
+        <div class="grid grid-cols-4 gap-2" id="bg-grid">
+          <!-- injected -->
+        </div>
+      </div>
+      <div class="bg-surface-container border border-outline-variant rounded-[20px] p-5 flex items-center justify-between">
+        <div>
+          <p class="font-label-sm text-label-sm text-on-surface-variant mb-1">Units needed</p>
+          <p class="font-numeric-display text-numeric-display text-primary" id="units-value">2</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="stepUnits(-1)" class="press w-11 h-11 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center text-primary"><span class="material-symbols-outlined">remove</span></button>
+          <button onclick="stepUnits(1)" class="press w-11 h-11 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center text-primary"><span class="material-symbols-outlined">add</span></button>
+        </div>
+      </div>
+    </main>
+    <div class="fixed bottom-0 w-full bg-surface/90 backdrop-blur-md border-t border-outline-variant pt-4 pb-8 px-margin_mobile z-40" style="max-width:480px;">
+      <button id="btn-details-continue" onclick="goConfirm()" class="press w-full bg-primary text-on-primary-container font-label-lg text-label-lg py-4 rounded-[20px] glow-button flex justify-center items-center gap-2 opacity-40 pointer-events-none transition-opacity">
+        Continue <span class="material-symbols-outlined">arrow_forward</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 5: CONFIRM & DISPATCH ============ -->
+  <section class="screen hidden flex flex-col flex-1" data-screen="confirm">
+    <header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant" style="max-width:480px;">
+      <div class="flex items-center gap-3 px-margin_mobile h-16 w-full">
+        <button onclick="nav('details')" class="press text-primary p-2 -ml-2 rounded-full"><span class="material-symbols-outlined">arrow_back</span></button>
+        <h1 class="font-headline-sm text-headline-sm text-primary">Confirm request</h1>
+      </div>
+    </header>
+    <main class="flex-1 px-margin_mobile pt-24 pb-28 flex flex-col gap-6">
+      <div class="flex items-center gap-1.5" id="dots-confirm"></div>
+      <div class="bg-surface-container border border-outline-variant rounded-[20px] overflow-hidden">
+        <div class="p-5 border-b border-outline-variant/50 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-on-surface-variant">local_hospital</span>
+            <span class="font-label-md text-label-md text-on-surface-variant">Hospital</span>
+          </div>
+          <span class="font-label-md text-label-md text-primary" id="confirm-hospital">—</span>
+        </div>
+        <div class="p-5 border-b border-outline-variant/50 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-on-surface-variant">bloodtype</span>
+            <span class="font-label-md text-label-md text-on-surface-variant">Blood group</span>
+          </div>
+          <span class="font-label-md text-label-md text-primary" id="confirm-bg">—</span>
+        </div>
+        <div class="p-5 border-b border-outline-variant/50 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-on-surface-variant">inventory_2</span>
+            <span class="font-label-md text-label-md text-on-surface-variant">Units</span>
+          </div>
+          <span class="font-label-md text-label-md text-primary" id="confirm-units">—</span>
+        </div>
+        <div class="p-5 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-on-surface-variant">bolt</span>
+            <span class="font-label-md text-label-md text-on-surface-variant">Request type</span>
+          </div>
+          <span class="font-label-md text-label-md px-3 py-1 rounded-full" id="confirm-type">—</span>
+        </div>
+      </div>
+      <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-4 flex gap-3 items-start">
+        <span class="material-symbols-outlined text-outline text-[20px]">info</span>
+        <p class="font-body-md text-body-md text-on-surface-variant text-sm">Once dispatched, nearby verified donors and partner blood banks are notified instantly. You can track progress live on the next screen.</p>
+      </div>
+    </main>
+    <div class="fixed bottom-0 w-full bg-surface/90 backdrop-blur-md border-t border-outline-variant pt-4 pb-8 px-margin_mobile z-40" style="max-width:480px;">
+      <button onclick="dispatch()" class="press w-full bg-primary text-on-primary-container font-label-lg text-label-lg py-4 rounded-[20px] glow-button flex justify-center items-center gap-2 hover:brightness-110 transition-all">
+        <span class="material-symbols-outlined">send</span> Dispatch request
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 6: LIVE STATUS ============ -->
+  <section class="screen hidden flex flex-col flex-1" data-screen="status">
+    <header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant" style="max-width:480px;">
+      <div class="flex items-center justify-between px-margin_mobile h-16 w-full">
+        <h1 class="font-headline-sm text-headline-sm text-primary">Live status</h1>
+        <span class="font-label-sm text-label-sm text-secondary px-2 py-1 bg-secondary-container/20 rounded-full border border-secondary-container/50 flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span> Searching
+        </span>
+      </div>
+    </header>
+    <main class="flex-1 px-margin_mobile pt-24 pb-28 flex flex-col gap-6 items-center">
+      <p class="font-body-md text-body-md text-on-surface-variant self-start" id="status-sub">Broadcasting your request to nearby donors...</p>
+
+      <div class="ring-wrap">
+        <div class="ring ring-pulse" style="animation-delay:0s;"></div>
+        <div class="ring ring-pulse" style="animation-delay:0.9s;"></div>
+        <div class="ring ring-pulse" style="animation-delay:1.8s;"></div>
+        <div class="center-dot"></div>
+        <span class="absolute font-label-sm text-label-sm text-on-surface-variant" style="top:calc(50% - 44px); left:calc(50% + 6px);">2km</span>
+        <span class="absolute font-label-sm text-label-sm text-on-surface-variant" style="top:calc(50% - 92px); left:calc(50% + 6px);">5km</span>
+        <span class="absolute font-label-sm text-label-sm text-on-surface-variant" style="top:calc(50% - 132px); left:calc(50% + 6px);">10km+</span>
+      </div>
+
+      <div class="w-full bg-surface-container border border-outline-variant rounded-[20px] p-5 flex flex-col gap-4">
+        <div class="flex items-center justify-between">
+          <span class="font-label-md text-label-md text-on-surface-variant">Urgency</span>
+          <div class="flex items-center gap-2">
+            <span class="light-dot" id="light-red"></span>
+            <span class="light-dot" id="light-amber"></span>
+            <span class="light-dot" id="light-green"></span>
+          </div>
+        </div>
+        <div class="flex items-end justify-between">
+          <div>
+            <p class="font-label-sm text-label-sm text-on-surface-variant mb-1">Units secured</p>
+            <p class="font-numeric-display text-numeric-display text-primary"><span id="secured-count">0</span><span class="text-on-surface-variant text-2xl"> / <span id="target-count">2</span></span></p>
+          </div>
+        </div>
+        <div class="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+          <div id="status-bar" class="h-full bg-secondary transition-all duration-700" style="width:0%"></div>
+        </div>
+      </div>
+    </main>
+    <div class="fixed bottom-0 w-full bg-surface/90 backdrop-blur-md border-t border-outline-variant pt-4 pb-8 px-margin_mobile z-40" style="max-width:480px;">
+      <button onclick="skipToDonor()" class="press w-full bg-transparent border-2 border-outline text-primary font-label-lg text-label-lg py-3 rounded-xl hover:bg-surface-variant transition-colors flex items-center justify-center gap-2">
+        Simulate donor match <span class="material-symbols-outlined text-[18px]">fast_forward</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 7: DONOR COMMITTED ============ -->
+  <section class="screen hidden flex flex-col flex-1" data-screen="donor">
+    <header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant" style="max-width:480px;">
+      <div class="flex items-center justify-between px-margin_mobile h-16 w-full">
+        <h1 class="font-headline-sm text-headline-sm text-primary">Donor found</h1>
+        <span class="font-label-sm text-label-sm text-on-secondary-container px-2 py-1 bg-secondary-container/20 rounded-full border border-secondary-container/50">Matched</span>
+      </div>
+    </header>
+    <main class="flex-1 px-margin_mobile pt-24 pb-28 flex flex-col gap-6">
+      <div class="rounded-[20px] overflow-hidden border border-outline-variant relative h-40 bg-surface-container-high flex items-center justify-center">
+        <div class="absolute w-40 h-40 bg-secondary/10 rounded-full blur-2xl"></div>
+        <span class="material-symbols-outlined text-outline-variant text-[64px] relative">map</span>
+        <span class="absolute bottom-3 right-3 font-label-sm text-label-sm bg-surface-container/90 border border-outline-variant px-2 py-1 rounded-full text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">directions_car</span> En route</span>
+      </div>
+
+      <div class="bg-surface-container border border-secondary/30 rounded-[20px] p-5 flex flex-col gap-4 shadow-[0_0_15px_rgba(255,92,92,0.08)]">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-full bg-surface-variant flex items-center justify-center overflow-hidden border border-outline-variant">
+            <span class="material-symbols-outlined text-on-surface-variant text-3xl">person</span>
+          </div>
+          <div class="flex-1">
+            <p class="font-label-lg text-label-lg text-on-surface">Rohan V.</p>
+            <p class="font-label-sm text-label-sm text-outline">Verified donor &middot; ID D-49281</p>
+          </div>
+          <span class="px-3 py-1 rounded-full bg-error-container text-on-error-container font-label-md text-label-md">O+</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-surface-container-low rounded-lg p-3 text-center">
+            <p class="font-numeric-display text-headline-md text-secondary">8</p>
+            <p class="font-label-sm text-label-sm text-on-surface-variant">min ETA</p>
+          </div>
+          <div class="bg-surface-container-low rounded-lg p-3 text-center">
+            <p class="font-numeric-display text-headline-md text-primary">2.1</p>
+            <p class="font-label-sm text-label-sm text-on-surface-variant">km away</p>
+          </div>
+        </div>
+        <button class="press w-full border-2 border-outline text-primary font-label-lg text-label-lg py-3 rounded-xl hover:bg-surface-variant transition-colors flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined">call</span> Contact donor
+        </button>
+      </div>
+    </main>
+    <div class="fixed bottom-0 w-full bg-surface/90 backdrop-blur-md border-t border-outline-variant pt-4 pb-8 px-margin_mobile z-40" style="max-width:480px;">
+      <button onclick="nav('arrived')" class="press w-full bg-primary text-on-primary-container font-label-lg text-label-lg py-4 rounded-[20px] glow-button flex justify-center items-center gap-2 hover:brightness-110 transition-all">
+        Mark donor as arrived <span class="material-symbols-outlined">arrow_forward</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 8: DONOR ARRIVED ============ -->
+  <section class="screen hidden flex flex-col flex-1 items-center justify-center" data-screen="arrived">
+    <main class="flex-1 w-full px-margin_mobile flex flex-col items-center justify-center gap-6 text-center">
+      <div class="w-20 h-20 rounded-full bg-secondary-container flex items-center justify-center text-secondary-fixed shadow-[0_0_24px_rgba(143,31,31,0.45)]">
+        <span class="material-symbols-outlined" style="font-size:38px;">how_to_reg</span>
+      </div>
+      <div>
+        <h1 class="font-headline-lg text-headline-lg text-primary mb-2">Donor has arrived</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant max-w-[280px] mx-auto">Rohan has reached reception. Show your QR code to staff to complete verification.</p>
+      </div>
+    </main>
+    <div class="w-full px-margin_mobile pb-10">
+      <button onclick="nav('qr')" class="press w-full bg-primary text-on-primary-container font-label-lg text-label-lg py-4 rounded-[20px] glow-button flex justify-center items-center gap-2 hover:brightness-110 transition-all">
+        <span class="material-symbols-outlined">qr_code_2</span> Show QR code
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 9: QR DISPLAY ============ -->
+  <section class="screen hidden flex flex-col flex-1" data-screen="qr">
+    <header class="fixed top-0 w-full z-50 flex justify-between items-center px-margin_mobile h-16" style="max-width:480px;">
+      <button onclick="nav('arrived')" class="press w-10 h-10 rounded-full flex items-center justify-center bg-surface-container-highest/50 backdrop-blur-md text-primary"><span class="material-symbols-outlined">arrow_back</span></button>
+      <div class="font-headline-sm text-headline-sm text-primary tracking-tighter">PULZ</div>
+      <div class="w-10 h-10"></div>
+    </header>
+    <main class="flex-1 px-margin_mobile pt-24 pb-28 flex flex-col items-center justify-center gap-6 text-center">
+      <p class="font-body-md text-body-md text-on-surface-variant max-w-[280px]">Ask staff to scan this code to confirm the donation.</p>
+      <div class="bg-white rounded-[20px] p-6 shadow-[0_0_30px_rgba(255,92,92,0.18)]">
+        <svg viewBox="0 0 100 100" width="220" height="220" class="qr-module">
+          <rect x="0" y="0" width="100" height="100" fill="#ffffff"/>
+          <g fill="#0a0f0d">
+            <rect x="4" y="4" width="22" height="22"/><rect x="8" y="8" width="14" height="14" fill="#fff"/><rect x="12" y="12" width="6" height="6"/>
+            <rect x="74" y="4" width="22" height="22"/><rect x="78" y="8" width="14" height="14" fill="#fff"/><rect x="82" y="12" width="6" height="6"/>
+            <rect x="4" y="74" width="22" height="22"/><rect x="8" y="78" width="14" height="14" fill="#fff"/><rect x="12" y="82" width="6" height="6"/>
+            <rect x="32" y="4" width="4" height="4"/><rect x="40" y="4" width="4" height="4"/><rect x="52" y="4" width="4" height="4"/><rect x="60" y="4" width="4" height="4"/>
+            <rect x="32" y="12" width="4" height="4"/><rect x="44" y="12" width="4" height="4"/><rect x="56" y="12" width="4" height="4"/><rect x="66" y="12" width="4" height="4"/>
+            <rect x="36" y="20" width="4" height="4"/><rect x="48" y="20" width="4" height="4"/><rect x="60" y="20" width="4" height="4"/>
+            <rect x="32" y="32" width="4" height="4"/><rect x="40" y="32" width="4" height="4"/><rect x="48" y="32" width="4" height="4"/><rect x="60" y="32" width="4" height="4"/><rect x="68" y="32" width="4" height="4"/><rect x="80" y="32" width="4" height="4"/>
+            <rect x="36" y="40" width="4" height="4"/><rect x="52" y="40" width="4" height="4"/><rect x="64" y="40" width="4" height="4"/><rect x="76" y="40" width="4" height="4"/><rect x="88" y="40" width="4" height="4"/>
+            <rect x="32" y="48" width="4" height="4"/><rect x="44" y="48" width="4" height="4"/><rect x="56" y="48" width="4" height="4"/><rect x="72" y="48" width="4" height="4"/>
+            <rect x="40" y="56" width="4" height="4"/><rect x="48" y="56" width="4" height="4"/><rect x="60" y="56" width="4" height="4"/><rect x="80" y="56" width="4" height="4"/><rect x="88" y="56" width="4" height="4"/>
+            <rect x="32" y="64" width="4" height="4"/><rect x="52" y="64" width="4" height="4"/><rect x="68" y="64" width="4" height="4"/><rect x="76" y="64" width="4" height="4"/>
+            <rect x="36" y="72" width="4" height="4"/><rect x="44" y="72" width="4" height="4"/><rect x="60" y="72" width="4" height="4"/><rect x="84" y="72" width="4" height="4"/>
+            <rect x="32" y="80" width="4" height="4"/><rect x="48" y="80" width="4" height="4"/><rect x="56" y="80" width="4" height="4"/><rect x="68" y="80" width="4" height="4"/><rect x="88" y="80" width="4" height="4"/>
+            <rect x="36" y="88" width="4" height="4"/><rect x="44" y="88" width="4" height="4"/><rect x="52" y="88" width="4" height="4"/><rect x="64" y="88" width="4" height="4"/><rect x="76" y="88" width="4" height="4"/><rect x="84" y="88" width="4" height="4"/>
+          </g>
+        </svg>
+      </div>
+      <div class="bg-surface-container border border-outline-variant rounded-xl px-5 py-3 flex items-center gap-3">
+        <span class="font-label-sm text-label-sm text-outline">Recipient ID</span>
+        <span class="font-label-md text-label-md text-primary">R-7734</span>
+        <span class="w-px h-4 bg-outline-variant"></span>
+        <span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm">O+</span>
+      </div>
+    </main>
+    <div class="fixed bottom-0 w-full bg-surface/90 backdrop-blur-md border-t border-outline-variant pt-4 pb-8 px-margin_mobile z-40" style="max-width:480px;">
+      <button onclick="goComplete()" class="press w-full bg-primary text-on-primary-container font-label-lg text-label-lg py-4 rounded-[20px] glow-button flex justify-center items-center gap-2 hover:brightness-110 transition-all">
+        <span class="material-symbols-outlined">check</span> I've been scanned
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 10: COMPLETION ============ -->
+  <section class="screen hidden flex flex-col flex-1" data-screen="complete">
+    <main class="flex-1 px-margin_mobile pt-16 pb-10 flex flex-col items-center justify-center gap-6 text-center">
+      <div class="w-20 h-20 rounded-full bg-secondary-container flex items-center justify-center text-secondary-fixed shadow-[0_0_24px_rgba(143,31,31,0.45)]">
+        <span class="material-symbols-outlined" style="font-size:38px;">check_circle</span>
+      </div>
+      <div>
+        <h1 class="font-headline-lg text-headline-lg text-primary mb-2">Donation confirmed</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant max-w-[280px] mx-auto">Thank you — your request has been fulfilled and the log has been verified.</p>
+      </div>
+
+      <div class="w-full bg-surface-container border border-outline-variant rounded-[20px] p-5 text-left flex flex-col gap-3">
+        <div class="flex justify-between"><span class="font-label-md text-label-md text-on-surface-variant">Hospital</span><span class="font-label-md text-label-md text-primary" id="complete-hospital">—</span></div>
+        <div class="flex justify-between"><span class="font-label-md text-label-md text-on-surface-variant">Units received</span><span class="font-label-md text-label-md text-primary" id="complete-units">—</span></div>
+        <div class="flex justify-between"><span class="font-label-md text-label-md text-on-surface-variant">Donor</span><span class="font-label-md text-label-md text-primary">Rohan V.</span></div>
+        <div class="pt-3 border-t border-outline-variant text-center">
+          <span class="font-label-sm text-label-sm text-outline font-mono" id="audit-id">#REQ-0000-0000</span>
+        </div>
+      </div>
+    </main>
+    <div class="w-full px-margin_mobile pb-10 flex flex-col gap-3">
+      <button onclick="nav('home')" class="press w-full bg-primary text-on-primary-container font-label-lg text-label-lg py-4 rounded-[20px] glow-button flex justify-center items-center gap-2 hover:brightness-110 transition-all">
+        Back to home
+      </button>
+      <button onclick="nav('history')" class="press w-full border-2 border-outline text-primary font-label-lg text-label-lg py-3 rounded-xl hover:bg-surface-variant transition-colors">
+        View history
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 11: HISTORY ============ -->
+  <section class="screen hidden flex flex-col flex-1" data-screen="history">
+    <header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant" style="max-width:480px;">
+      <div class="flex justify-between items-center px-margin_mobile h-16 w-full">
+        <span class="font-headline-md text-headline-md font-extrabold text-primary tracking-tighter">History</span>
+      </div>
+    </header>
+    <main class="flex-1 px-margin_mobile pt-24 pb-28 flex flex-col gap-3" id="history-list"></main>
+    <nav class="fixed bottom-0 w-full bg-surface/90 backdrop-blur-md border-t border-outline-variant flex px-margin_mobile pt-2 pb-6 gap-2 z-40" style="max-width:480px;">
+      <button onclick="nav('home')" class="press flex-1 flex flex-col items-center gap-1 py-2 text-on-surface-variant">
+        <span class="material-symbols-outlined">home</span>
+        <span class="font-label-sm text-label-sm">Home</span>
+      </button>
+      <button class="press flex-1 flex flex-col items-center gap-1 py-2 text-primary">
+        <span class="material-symbols-outlined icon-fill">history</span>
+        <span class="font-label-sm text-label-sm">History</span>
+      </button>
+    </nav>
+  </section>
+
+</div>
+
+<script>
+  const state = { type: null, typeLabel: null, hospital: null, bg: 'O+', units: 2, secured: 0, statusInterval: null };
+  const wizardOrder = ['type','hospital','details','confirm','status','donor','arrived','qr','complete'];
+
+  const hospitals = [
+    { name: 'Apollo Speciality', dist: '1.2 km', tag: 'In-network' },
+    { name: 'Fortis Central', dist: '2.8 km', tag: 'In-network' },
+    { name: "St. Mary's Medical Center", dist: '4.1 km', tag: 'Partner' },
+    { name: 'City General Hospital', dist: '5.6 km', tag: 'In-network' },
+  ];
+  const bloodGroups = ['A+','A-','B+','B-','O+','O-','AB+','AB-'];
+  const historyItems = [
+    { hospital: 'Apollo Speciality', units: 2, status: 'Fulfilled', time: '3d ago' },
+    { hospital: 'Fortis Central', units: 1, status: 'Fulfilled', time: '2w ago' },
+    { hospital: 'City General Hospital', units: 3, status: 'Cancelled', time: '1mo ago' },
+  ];
+
+  function renderStaticLists() {
+    const hEl = document.getElementById('hospital-list');
+    hEl.innerHTML = hospitals.map((h, i) => `
+      <button onclick="selectHospital('${h.name.replace(/'/g, "\\'")}', this)" class="press text-left bg-surface-container border-2 border-outline-variant rounded-xl p-4 flex items-center justify-between transition-colors">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-outline">local_hospital</span>
+          <div>
+            <p class="font-label-md text-label-md text-on-surface">${h.name}</p>
+            <p class="font-label-sm text-label-sm text-outline">${h.dist} &middot; ${h.tag}</p>
+          </div>
+        </div>
+        <span class="material-symbols-outlined text-outline check-icon">radio_button_unchecked</span>
+      </button>`).join('');
+
+    const bgEl = document.getElementById('bg-grid');
+    bgEl.innerHTML = bloodGroups.map(g => `
+      <button onclick="selectBg('${g}', this)" data-bg="${g}" class="press bg-chip ${g === state.bg ? 'bg-secondary-container border-secondary-container text-on-secondary-container' : 'bg-surface-container border-outline-variant text-on-surface'} border-2 rounded-xl py-3 font-label-lg text-label-lg text-center transition-colors">${g}</button>`).join('');
+
+    document.getElementById('history-list').innerHTML = historyItems.map(h => `
+      <div class="bg-surface-container border border-outline-variant rounded-xl p-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined ${h.status === 'Fulfilled' ? 'text-secondary' : 'text-outline'}">${h.status === 'Fulfilled' ? 'check_circle' : 'cancel'}</span>
+          <div>
+            <p class="font-label-md text-label-md text-on-surface">${h.hospital}</p>
+            <p class="font-label-sm text-label-sm text-outline">${h.units} unit${h.units>1?'s':''} &middot; ${h.status}</p>
+          </div>
+        </div>
+        <span class="font-label-sm text-label-sm text-outline">${h.time}</span>
+      </div>`).join('');
+  }
+
+  function renderDots() {
+    wizardOrder.forEach(name => {
+      const el = document.getElementById('dots-' + name);
+      if (!el) return;
+      el.innerHTML = wizardOrder.slice(0, 5).map((_, i) => {
+        const active = wizardOrder.indexOf(name) === i;
+        return `<span class="step-dot ${active ? 'active' : ''}"></span>`;
+      }).join('');
+    });
+  }
+
+  function nav(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.toggle('hidden', s.dataset.screen !== name));
+    window.scrollTo(0, 0);
+    if (name === 'status') startStatusSim();
+    if (name !== 'status' && state.statusInterval) { clearInterval(state.statusInterval); state.statusInterval = null; }
+  }
+
+  function selectType(type) {
+    state.type = type;
+    state.typeLabel = type === 'emergency' ? 'Emergency SOS' : 'Standard';
+    ['emergency','static'].forEach(t => {
+      const card = document.getElementById('card-' + t);
+      const icon = card.querySelector('.check-icon');
+      if (t === type) {
+        card.classList.add(t === 'emergency' ? 'border-error' : 'border-primary');
+        card.classList.remove('border-outline-variant');
+        icon.textContent = 'check_circle';
+        icon.classList.add(t === 'emergency' ? 'text-error' : 'text-primary');
+      } else {
+        card.classList.remove('border-error','border-primary');
+        card.classList.add('border-outline-variant');
+        icon.textContent = 'radio_button_unchecked';
+        icon.classList.remove('text-error','text-primary');
+      }
+    });
+    document.getElementById('btn-type-continue').classList.remove('opacity-40','pointer-events-none');
+  }
+
+  function selectHospital(name, btn) {
+    state.hospital = name;
+    document.querySelectorAll('#hospital-list button').forEach(b => {
+      const icon = b.querySelector('.check-icon');
+      if (b === btn) {
+        b.classList.remove('border-outline-variant'); b.classList.add('border-secondary-container');
+        icon.textContent = 'check_circle'; icon.classList.add('text-secondary');
+      } else {
+        b.classList.add('border-outline-variant'); b.classList.remove('border-secondary-container');
+        icon.textContent = 'radio_button_unchecked'; icon.classList.remove('text-secondary');
+      }
+    });
+    document.getElementById('btn-hospital-continue').classList.remove('opacity-40','pointer-events-none');
+  }
+
+  function selectBg(g, btn) {
+    state.bg = g;
+    document.querySelectorAll('#bg-grid button').forEach(b => {
+      b.classList.remove('bg-secondary-container','border-secondary-container','text-on-secondary-container');
+      b.classList.add('bg-surface-container','border-outline-variant','text-on-surface');
+    });
+    btn.classList.remove('bg-surface-container','border-outline-variant','text-on-surface');
+    btn.classList.add('bg-secondary-container','border-secondary-container','text-on-secondary-container');
+    document.getElementById('btn-details-continue').classList.remove('opacity-40','pointer-events-none');
+  }
+
+  function stepUnits(delta) {
+    state.units = Math.min(10, Math.max(1, state.units + delta));
+    document.getElementById('units-value').textContent = state.units;
+    document.getElementById('btn-details-continue').classList.remove('opacity-40','pointer-events-none');
+  }
+
+  function goConfirm() {
+    document.getElementById('confirm-hospital').textContent = state.hospital || 'Apollo Speciality';
+    document.getElementById('confirm-bg').textContent = state.bg;
+    document.getElementById('confirm-units').textContent = state.units + (state.units > 1 ? ' units' : ' unit');
+    const typeEl = document.getElementById('confirm-type');
+    typeEl.textContent = state.typeLabel || 'Standard';
+    typeEl.className = 'font-label-md text-label-md px-3 py-1 rounded-full ' + (state.type === 'emergency' ? 'bg-error-container text-on-error-container' : 'bg-secondary-container/20 text-secondary border border-secondary-container/50');
+    nav('confirm');
+  }
+
+  function dispatch() {
+    state.secured = 0;
+    document.getElementById('secured-count').textContent = 0;
+    document.getElementById('target-count').textContent = state.units;
+    document.getElementById('status-bar').style.width = '0%';
+    nav('status');
+  }
+
+  function startStatusSim() {
+    setLightStage(1);
+    document.getElementById('status-sub').textContent = 'Broadcasting your request to nearby donors...';
+    if (state.statusInterval) clearInterval(state.statusInterval);
+    state.statusInterval = setInterval(() => {
+      if (state.secured < state.units) {
+        state.secured++;
+        document.getElementById('secured-count').textContent = state.secured;
+        document.getElementById('status-bar').style.width = Math.round((state.secured / state.units) * 100) + '%';
+        if (state.secured / state.units >= 0.5) { setLightStage(2); document.getElementById('status-sub').textContent = 'Donors responding — matching in progress...'; }
+      }
+      if (state.secured >= state.units) {
+        setLightStage(3);
+        document.getElementById('status-sub').textContent = 'Match found! Preparing donor details...';
+        clearInterval(state.statusInterval);
+        state.statusInterval = null;
+        setTimeout(() => nav('donor'), 1400);
+      }
+    }, 1100);
+  }
+
+  function setLightStage(stage) {
+    const red = document.getElementById('light-red'), amber = document.getElementById('light-amber'), green = document.getElementById('light-green');
+    [red, amber, green].forEach(l => l.classList.remove('on-red','on-amber','on-green'));
+    if (stage >= 1) red.classList.add('on-red');
+    if (stage >= 2) amber.classList.add('on-amber');
+    if (stage >= 3) green.classList.add('on-green');
+  }
+
+  function skipToDonor() {
+    state.secured = state.units;
+    document.getElementById('secured-count').textContent = state.secured;
+    document.getElementById('status-bar').style.width = '100%';
+    setLightStage(3);
+    if (state.statusInterval) { clearInterval(state.statusInterval); state.statusInterval = null; }
+    setTimeout(() => nav('donor'), 400);
+  }
+
+  function goComplete() {
+    document.getElementById('complete-hospital').textContent = state.hospital || 'Apollo Speciality';
+    document.getElementById('complete-units').textContent = state.units + (state.units > 1 ? ' units' : ' unit');
+    const hex = () => Math.floor(Math.random() * 65536).toString(16).toUpperCase().padStart(4, '0');
+    document.getElementById('audit-id').textContent = '#REQ-' + hex() + '-' + hex();
+    nav('complete');
+  }
+
+  renderStaticLists();
+  renderDots();
+</script>
+</body>
+</html>

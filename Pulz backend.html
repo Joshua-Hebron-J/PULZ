@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>PULZ Backend Test</title>
+<style>
+body{font-family:sans-serif;padding:20px;max-width:700px;margin:0 auto}
+button{padding:10px 16px;font-size:14px;margin-right:10px;cursor:pointer}
+pre{background:#f4f4f4;padding:12px;border-radius:6px;white-space:pre-wrap;word-break:break-all}
+h2{margin-top:30px}
+.note{background:#fff3cd;border:1px solid #ffc107;padding:10px;border-radius:6px;font-size:13px;margin-top:8px}
+</style>
+</head>
+<body>
+
+<h1>PULZ backend test</h1>
+
+<h2>1. Connection test</h2>
+<button onclick="testConnection()">Test Firebase connection</button>
+<pre id="output1">Nothing yet</pre>
+
+<h2>2. Create emergency (urgency + real-timed radius escalation)</h2>
+<button onclick="testEmergency()">Create test emergency</button>
+<pre id="output2">Nothing yet</pre>
+
+<h2>3. Simulate donor commit (units_secured increment — legacy/simple test)</h2>
+<button onclick="simulateDonorCommit()">Simulate donor accepting</button>
+<pre id="output3">Nothing yet — create an emergency first</pre>
+
+<h2>4. Test Auth (sign up)</h2>
+<button onclick="testAuth()">Create test account</button>
+<pre id="output4">Nothing yet</pre>
+
+<h2>5. Donor cooldown check</h2>
+<button onclick="testCooldown()">Check cooldown for last test user</button>
+<pre id="output5">Nothing yet — run Auth test first</pre>
+
+<h2>6. Force hospital transfer check</h2>
+<button onclick="forceTransferCheck()">Force check (test)</button>
+<pre id="output6">Nothing yet</pre>
+
+<h2>7. Send real SMS test (Twilio)</h2>
+<button onclick="testSMS()">Send test SMS</button>
+<pre id="output7">Nothing yet</pre>
+<div class="note">
+Sends to +917305056989 by default — edit testNumber inside testSMS() to change the recipient.
+Recipient must be a verified number on your Twilio trial account.
+Set <code>DEMO_MODE_MOCK_SMS = true</code> below to log a mocked "sent" SMS to Firebase instead of
+hitting the real Twilio API (use this if the trial account is rejecting custom message bodies and
+you haven't upgraded yet).
+</div>
+
+<h2>8. Test donor accept (real version)</h2>
+<button onclick="testDonorAccept()">Simulate real accept</button>
+<button onclick="testDonorDecline()">Simulate decline</button>
+<pre id="output8">Nothing yet</pre>
+
+<h2>9. Test PIN verification</h2>
+<button onclick="testSetPin()">Set test PIN (1234)</button>
+<button onclick="testVerifyPin()">Verify PIN (1234)</button>
+<button onclick="testVerifyPinWrong()">Verify PIN (wrong: 0000)</button>
+<pre id="output9">Nothing yet</pre>
+
+<h2>10. Test QR generation + verification</h2>
+<button onclick="testGenerateQr()">Generate QR token</button>
+<button onclick="testVerifyQr()">Simulate scan (correct token)</button>
+<pre id="output10">Nothing yet</pre>
+
+<h2>11. Test web-form mode (no-app request intake)</h2>
+<button onclick="testWebForm()">Simulate web form submission</button>
+<pre id="output11">Nothing yet</pre>
+<div class="note">
+Signs the submitter in anonymously, then creates an emergency with source: "web_form".
+Requires Anonymous auth enabled in Firebase Console → Authentication → Sign-in method
+(and check Google Cloud API key restrictions — see notes).
+This also resets currentTestReqId to the new request, so buttons 8–10 will act on it next.
+</div>
+
+<h2>12. Test offline-SMS invite (donor replies YES/NO by text, no app)</h2>
+<button onclick="testSendSmsInvite()">Send SMS invite to test donor</button>
+<pre id="output12">Nothing yet — create an emergency first</pre>
+<div class="note">
+This writes a pending invite to <code>sms_invites/{sanitizedPhone}</code> so the Twilio inbound
+webhook (Netlify Function) can match a reply back to this request. The webhook itself lives in
+<code>netlify/functions/twilio-sms-webhook.js</code> — it can't run client-side because Twilio needs
+a public URL to POST incoming messages to.
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+<script>
+// ============================================================
+// FIREBASE CONFIG — do not duplicate this elsewhere in the app
+// ============================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyC5pkUQmkVTzfIDTfCYVIvaYHECw4AoROY",
+  authDomain: "lifestream-9f371.firebaseapp.com",
+  databaseURL: "https://lifestream-9f371-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "lifestream-9f371",
+  storageBucket: "lifestream-9f371.firebasestorage.app",
+  messagingSenderId: "811242018414",
+  appId: "1:811242018414:web:c5ca8e62ba62b527f1b87f"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const auth = firebase.auth();
+
+let currentTestReqId = null;
+let currentTestUid = null;
+let currentTestToken = null;
+
+// ============================================================
+// TWILIO CONFIG
+// ============================================================
+const TWILIO_SID = "AC4286c0f5766e3cf1e9658f54edd78a11";
+const TWILIO_AUTH = "6942579a7baf0be9db4b833726e9c310";
+const TWILIO_FROM = "+17372508034";
+
+// Flip to true if the trial account is rejecting custom message bodies and
+// you haven't upgraded yet. Mocked sends are logged to Firebase under
+// sms_log/ so the demo can still show "SMS sent" — but note this breaks the
+// real two-way reply flow in test 12, since no real SMS goes out and Twilio
+// has nothing to send a webhook for. Only use this for tests 7/12's "outbound"
+// half if you truly can't upgrade before the demo.
+const DEMO_MODE_MOCK_SMS = true;
+
+// ============================================================
+// TEST 1 — basic connection check
+// ============================================================
+function testConnection() {
+  db.ref("test/ping").set({ hello: "world", time: Date.now() });
+  db.ref("test/ping").on("value", (snap) => {
+    document.getElementById("output1").textContent = JSON.stringify(snap.val(), null, 2);
+  });
+}
+
+// ============================================================
+// URGENCY SCORING
+// ============================================================
+function computeUrgency(request, nearbyDonorCount) {
+  const scarcityScore = {'O-':30,'AB-':28,'B-':22,'A-':20,'O+':12,'AB+':14,'B+':10,'A+':8}[request.blood] || 15;
+  const unitsRatio = ((request.units_needed - request.units_secured) / request.units_needed) * 30;
+  const minutesElapsed = (Date.now() - request.ts) / 60000;
+  const timeScore = Math.min(minutesElapsed * 2, 20);
+  const donorScarcityScore = Math.max(0, 20 - (nearbyDonorCount * 2));
+
+  const score = Math.round(scarcityScore + unitsRatio + timeScore + donorScarcityScore);
+  const clamped = Math.min(100, Math.max(0, score));
+
+  let state;
+  if (clamped >= 80) state = "critical";
+  else if (clamped >= 55) state = "urgent";
+  else if (clamped >= 30) state = "needed";
+  else state = "normal";
+
+  return { urgency_score: clamped, urgency_state: state };
+}
+
+// ============================================================
+// HOSPITAL INVENTORY (hardcoded for demo)
+// ============================================================
+const HOSPITAL_INVENTORY = [
+  { id: "hosp_1", name: "Apollo Hospitals, Chennai", stock: { "O-": 2, "A+": 6, "B+": 3, "AB+": 1 } },
+  { id: "hosp_2", name: "Govt General Hospital, Chennai", stock: { "O-": 5, "O+": 8, "B-": 2 } },
+  { id: "hosp_3", name: "SRMC Blood Bank, Chennai", stock: { "O-": 0, "A-": 4, "AB-": 1, "O+": 6 } }
+];
+
+// ============================================================
+// HOSPITAL-TO-HOSPITAL TRANSFER TRIGGER
+// ============================================================
+function checkHospitalTransfer(reqId) {
+  db.ref("emergencies/" + reqId).once("value").then((snap) => {
+    const r = snap.val();
+    if (!r) return;
+    if (r.sos_stage !== 4) return;
+    if (r.units_secured >= r.units_needed) return;
+
+    const neededUnits = r.units_needed - r.units_secured;
+    const match = HOSPITAL_INVENTORY.find(h => (h.stock[r.blood] || 0) >= neededUnits);
+
+    const updates = match
+      ? { transfer_flag: true, transfer_hospital: match.name, transfer_hospital_id: match.id, transfer_units_available: match.stock[r.blood] }
+      : { transfer_flag: true, transfer_hospital: null, transfer_note: "No partner hospital has sufficient stock" };
+
+    db.ref("emergencies/" + reqId).update(updates);
+  });
+}
+
+// ============================================================
+// SOS RADIUS ESCALATION — REAL TIMING (45s / 90s / 120s)
+// ============================================================
+function escalateStage(reqId, stage) {
+  db.ref("emergencies/" + reqId).once("value").then((snap) => {
+    const r = snap.val();
+    if (!r || r.status !== "searching") return;
+    db.ref("emergencies/" + reqId).update({ sos_stage: stage });
+    if (stage === 2) setTimeout(() => escalateStage(reqId, 3), 90000);
+    if (stage === 3) setTimeout(() => escalateStage(reqId, 4), 120000);
+    if (stage === 4) checkHospitalTransfer(reqId);
+  });
+}
+
+// ============================================================
+// CREATE EMERGENCY
+// ============================================================
+function testEmergency() {
+  const reqId = "req_" + Date.now();
+  currentTestReqId = reqId;
+  currentTestToken = null;
+
+  const urgency = computeUrgency(
+    { blood: "O-", units_needed: 4, units_secured: 0, ts: Date.now() },
+    3
+  );
+
+  db.ref("emergencies/" + reqId).set({
+    reqId,
+    blood: "O-",
+    status: "searching",
+    units_needed: 4,
+    units_secured: 0,
+    urgency_score: urgency.urgency_score,
+    urgency_state: urgency.urgency_state,
+    sos_stage: 1,
+    ts: Date.now()
+  });
+
+  setTimeout(() => escalateStage(reqId, 2), 45000);
+
+  db.ref("emergencies/" + reqId).on("value", (snap) => {
+    document.getElementById("output2").textContent = JSON.stringify(snap.val(), null, 2);
+  });
+
+  document.getElementById("output3").textContent = "Ready — reqId: " + reqId;
+  document.getElementById("output12").textContent = "Ready — reqId: " + reqId;
+}
+
+// ============================================================
+// SIMULATE DONOR COMMIT (legacy simple test — kept for button 3)
+// ============================================================
+function simulateDonorCommit() {
+  if (!currentTestReqId) {
+    document.getElementById("output3").textContent = "Create an emergency first (button 2)";
+    return;
+  }
+  db.ref("emergencies/" + currentTestReqId).once("value").then((snap) => {
+    const r = snap.val();
+    const secured = (r.units_secured || 0) + 1;
+    db.ref("emergencies/" + currentTestReqId).update({ units_secured: secured });
+    document.getElementById("output3").textContent =
+      "units_secured updated to: " + secured + " (out of " + r.units_needed + ")";
+  });
+}
+
+// ============================================================
+// AUTH (sign up)
+// ============================================================
+function testAuth() {
+  const testEmail = "test" + Date.now() + "@pulz.demo";
+  auth.createUserWithEmailAndPassword(testEmail, "testpass123")
+    .then((result) => {
+      const uid = result.user.uid;
+      currentTestUid = uid;
+      db.ref("users/" + uid).set({
+        name: "Test User",
+        email: testEmail,
+        blood: "O+",
+        role: "donor",
+        uid: uid,
+        ts: Date.now()
+      });
+      document.getElementById("output4").textContent = "Created user: " + uid + " (" + testEmail + ")";
+    })
+    .catch((err) => {
+      document.getElementById("output4").textContent = "Error: " + err.message;
+    });
+}
+
+// ============================================================
+// DONOR COOLDOWN CHECK
+// ============================================================
+function checkDonorCooldown(uid, callback) {
+  db.ref("users/" + uid).once("value").then((snap) => {
+    const u = snap.val();
+    if (!u || !u.last_donation_date) {
+      callback({ eligible: true, daysRemaining: 0 });
+      return;
+    }
+    const daysSince = (Date.now() - u.last_donation_date) / (1000 * 60 * 60 * 24);
+    callback({
+      eligible: daysSince >= 90,
+      daysRemaining: Math.max(0, Math.ceil(90 - daysSince))
+    });
+  });
+}
+
+function testCooldown() {
+  if (!currentTestUid) {
+    document.getElementById("output5").textContent = "Run Auth test first (button 4)";
+    return;
+  }
+  checkDonorCooldown(currentTestUid, (result) => {
+    document.getElementById("output5").textContent = JSON.stringify(result, null, 2);
+  });
+}
+
+// ============================================================
+// FORCE HOSPITAL TRANSFER CHECK
+// ============================================================
+function forceTransferCheck() {
+  if (!currentTestReqId) {
+    document.getElementById("output6").textContent = "Create an emergency first (button 2)";
+    return;
+  }
+  db.ref("emergencies/" + currentTestReqId).update({ sos_stage: 4 }).then(() => {
+    return db.ref("emergencies/" + currentTestReqId).once("value");
+  }).then((snap) => {
+    const r = snap.val();
+    if (r.units_secured >= r.units_needed) {
+      document.getElementById("output6").textContent = "Already fully secured — no transfer needed";
+      return;
+    }
+    const neededUnits = r.units_needed - r.units_secured;
+    const match = HOSPITAL_INVENTORY.find(h => (h.stock[r.blood] || 0) >= neededUnits);
+    const updates = match
+      ? { transfer_flag: true, transfer_hospital: match.name, transfer_hospital_id: match.id, transfer_units_available: match.stock[r.blood] }
+      : { transfer_flag: true, transfer_hospital: null, transfer_note: "No partner hospital has sufficient stock" };
+
+    db.ref("emergencies/" + currentTestReqId).update(updates).then(() => {
+      db.ref("emergencies/" + currentTestReqId).once("value").then((snap2) => {
+        document.getElementById("output6").textContent = JSON.stringify(snap2.val(), null, 2);
+      });
+    });
+  });
+}
+
+// ============================================================
+// SEND REAL SMS VIA TWILIO (with mock fallback)
+// ============================================================
+function sanitizePhone(num) {
+  return num.replace(/[^0-9]/g, "");
+}
+
+function sendDonorSMS(toNumber, message) {
+  if (DEMO_MODE_MOCK_SMS) {
+    const logId = "mock_" + Date.now();
+    return db.ref("sms_log/" + logId).set({
+      to: toNumber, from: TWILIO_FROM, body: message, ts: Date.now(), mocked: true
+    }).then(() => ({ mocked: true, sid: logId, status: "sent (mocked)" }));
+  }
+
+  const url = "https://api.twilio.com/2010-04-01/Accounts/" + TWILIO_SID + "/Messages.json";
+  const body = new URLSearchParams({ To: toNumber, From: TWILIO_FROM, Body: message });
+
+  return fetch(url, {
+    method: "POST",
+    headers: {
+      "Authorization": "Basic " + btoa(TWILIO_SID + ":" + TWILIO_AUTH),
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: body.toString()
+  }).then(r => r.json());
+}
+
+function testSMS() {
+  const testNumber = "+917305056989";
+  sendDonorSMS(testNumber, "PULZ test: O- needed at Apollo Chennai. Reply YES to accept.")
+    .then((res) => {
+      document.getElementById("output7").textContent = JSON.stringify(res, null, 2);
+    })
+    .catch((err) => {
+      document.getElementById("output7").textContent = "Error: " + err.message;
+    });
+}
+
+// ============================================================
+// OFFLINE-SMS MODE — donor without the app replies YES/NO by text
+// Outbound half runs client-side (sendSmsInvite). Inbound replies are
+// handled by the Netlify Function webhook (twilio-sms-webhook.js), which
+// looks up sms_invites/{phone} and calls the accept/decline logic itself.
+// ============================================================
+function sendSmsInvite(reqId, donorPhone, donorName) {
+  const phoneKey = sanitizePhone(donorPhone);
+  const message = "PULZ: Blood needed nearby. Reply YES to help or NO to skip. Ref " + reqId.slice(-6);
+
+  return sendDonorSMS(donorPhone, message).then((smsRes) => {
+    return db.ref("sms_invites/" + phoneKey).set({
+      reqId: reqId,
+      donorPhone: donorPhone,
+      donorName: donorName || null,
+      status: "pending",
+      sent_ts: Date.now(),
+      sms_result: smsRes
+    }).then(() => ({ success: true, smsRes }));
+  });
+}
+
+function testSendSmsInvite() {
+  if (!currentTestReqId) {
+    document.getElementById("output12").textContent = "Create an emergency first (button 2)";
+    return;
+  }
+  const testNumber = "+917305056989";
+  sendSmsInvite(currentTestReqId, testNumber, "Offline Test Donor")
+    .then((res) => {
+      document.getElementById("output12").textContent =
+        "Invite sent + sms_invites/" + sanitizePhone(testNumber) + " written:\n" + JSON.stringify(res, null, 2);
+    })
+    .catch((err) => {
+      document.getElementById("output12").textContent = "Error: " + err.message;
+    });
+}
+
+// ============================================================
+// DONOR ACCEPT / DECLINE (real version)
+// ============================================================
+function donorAcceptRequest(reqId, donorUid, donorName) {
+  return db.ref("emergencies/" + reqId).once("value").then((snap) => {
+    const r = snap.val();
+    if (!r || r.status !== "searching") {
+      return { success: false, reason: "Request no longer active" };
+    }
+    const secured = (r.units_secured || 0) + 1;
+    const updates = {
+      units_secured: secured,
+      donorUid: donorUid,
+      donorName: donorName,
+      status: secured >= r.units_needed ? "committed" : "searching"
+    };
+    return db.ref("emergencies/" + reqId).update(updates).then(() => {
+      return { success: true, units_secured: secured, units_needed: r.units_needed };
+    });
+  });
+}
+
+function donorDeclineRequest(reqId, donorUid) {
+  return db.ref("emergencies/" + reqId + "/declines/" + donorUid).set({ ts: Date.now() });
+}
+
+function testDonorAccept() {
+  if (!currentTestReqId) {
+    document.getElementById("output8").textContent = "Create an emergency first (button 2)";
+    return;
+  }
+  donorAcceptRequest(currentTestReqId, "test_donor_uid", "Test Donor").then((res) => {
+    document.getElementById("output8").textContent = JSON.stringify(res, null, 2);
+  });
+}
+
+function testDonorDecline() {
+  if (!currentTestReqId) {
+    document.getElementById("output8").textContent = "Create an emergency first (button 2)";
+    return;
+  }
+  donorDeclineRequest(currentTestReqId, "test_donor_uid").then(() => {
+    document.getElementById("output8").textContent = "Decline recorded for test_donor_uid on " + currentTestReqId;
+  });
+}
+
+// ============================================================
+// PIN VERIFICATION
+// ============================================================
+function setDonorPin(uid, pin) {
+  return db.ref("users/" + uid).update({ pin: pin });
+}
+
+function verifyPin(reqId, uid, enteredPin) {
+  return db.ref("users/" + uid + "/pin").once("value").then((snap) => {
+    const storedPin = snap.val();
+    if (storedPin === enteredPin) {
+      return db.ref("emergencies/" + reqId).update({ status: "in_transit" }).then(() => {
+        return { success: true, message: "PIN verified, status set to in_transit" };
+      });
+    } else {
+      return { success: false, message: "Incorrect PIN" };
+    }
+  });
+}
+
+function testSetPin() {
+  if (!currentTestUid) {
+    document.getElementById("output9").textContent = "Run Auth test first (button 4)";
+    return;
+  }
+  setDonorPin(currentTestUid, "1234").then(() => {
+    document.getElementById("output9").textContent = "PIN set to 1234 for " + currentTestUid;
+  });
+}
+
+function testVerifyPin() {
+  if (!currentTestUid || !currentTestReqId) {
+    document.getElementById("output9").textContent = "Need both a test user (button 4) and emergency (button 2)";
+    return;
+  }
+  verifyPin(currentTestReqId, currentTestUid, "1234").then((res) => {
+    document.getElementById("output9").textContent = JSON.stringify(res, null, 2);
+  });
+}
+
+function testVerifyPinWrong() {
+  if (!currentTestUid || !currentTestReqId) {
+    document.getElementById("output9").textContent = "Need both a test user (button 4) and emergency (button 2)";
+    return;
+  }
+  verifyPin(currentTestReqId, currentTestUid, "0000").then((res) => {
+    document.getElementById("output9").textContent = JSON.stringify(res, null, 2);
+  });
+}
+
+// ============================================================
+// QR TOKEN GENERATION + VERIFICATION
+// ============================================================
+function generateQrToken(reqId) {
+  const token = Math.random().toString(36).substring(2, 10).toUpperCase();
+  return db.ref("emergencies/" + reqId).update({ qr_token: token }).then(() => token);
+}
+
+function verifyQrScan(reqId, scannedToken) {
+  return db.ref("emergencies/" + reqId).once("value").then((snap) => {
+    const r = snap.val();
+    if (!r) return { success: false, message: "Request not found" };
+    if (r.qr_token === scannedToken) {
+      return db.ref("emergencies/" + reqId).update({
+        status: "completed",
+        completed_ts: Date.now()
+      }).then(() => {
+        return { success: true, message: "QR verified, donation marked completed" };
+      });
+    } else {
+      return { success: false, message: "QR token mismatch" };
+    }
+  });
+}
+
+function testGenerateQr() {
+  if (!currentTestReqId) {
+    document.getElementById("output10").textContent = "Create an emergency first (button 2)";
+    return;
+  }
+  generateQrToken(currentTestReqId).then((token) => {
+    currentTestToken = token;
+    document.getElementById("output10").textContent = "QR token generated: " + token;
+  });
+}
+
+function testVerifyQr() {
+  if (!currentTestReqId || !currentTestToken) {
+    document.getElementById("output10").textContent = "Generate a QR token first";
+    return;
+  }
+  verifyQrScan(currentTestReqId, currentTestToken).then((res) => {
+    document.getElementById("output10").textContent = JSON.stringify(res, null, 2);
+  });
+}
+
+// ============================================================
+// WEB-FORM MODE (no-app request intake — e.g. hospital/blood bank)
+// ============================================================
+function submitWebFormRequest(formData) {
+  // formData: { blood, units_needed, contactName, contactPhone, hospitalName, location, nearbyDonorCount }
+  return auth.signInAnonymously().then((result) => {
+    const reqId = "req_" + Date.now();
+    const urgency = computeUrgency(
+      { blood: formData.blood, units_needed: formData.units_needed, units_secured: 0, ts: Date.now() },
+      formData.nearbyDonorCount || 3
+    );
+    const record = {
+      reqId,
+      blood: formData.blood,
+      status: "searching",
+      units_needed: formData.units_needed,
+      units_secured: 0,
+      urgency_score: urgency.urgency_score,
+      urgency_state: urgency.urgency_state,
+      sos_stage: 1,
+      ts: Date.now(),
+      source: "web_form",
+      submittedByUid: result.user.uid,
+      contactName: formData.contactName || null,
+      contactPhone: formData.contactPhone || null,
+      hospitalName: formData.hospitalName || null,
+      location: formData.location || null
+    };
+    return db.ref("emergencies/" + reqId).set(record).then(() => {
+      setTimeout(() => escalateStage(reqId, 2), 45000);
+      return { success: true, reqId };
+    });
+  }).catch((err) => {
+    // Surface the real Firebase error code so you can tell which of the
+    // three anonymous-auth gotchas you're hitting (see notes above the button).
+    return { success: false, error: err.message, code: err.code };
+  });
+}
+
+function testWebForm() {
+  submitWebFormRequest({
+    blood: "B-",
+    units_needed: 2,
+    contactName: "Nurse Priya",
+    contactPhone: "+919876543210",
+    hospitalName: "Govt General Hospital, Chennai"
+  }).then((res) => {
+    if (!res.success) {
+      document.getElementById("output11").textContent = "Error [" + res.code + "]: " + res.error;
+      return;
+    }
+    currentTestReqId = res.reqId;
+    currentTestToken = null;
+    db.ref("emergencies/" + res.reqId).on("value", (snap) => {
+      document.getElementById("output11").textContent = JSON.stringify(snap.val(), null, 2);
+    });
+  });
+}
+</script>
+
+</body>
+</html>
